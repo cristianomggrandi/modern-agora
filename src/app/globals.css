@@ -27,6 +27,10 @@ body {
     }
 }
 
-.neon-text * {
+.neon-text-sm {
     text-shadow: 0 0 0.5em #9543dc;
+}
+
+.neon-text-2lg {
+    text-shadow: 0.1em 0.1em 0.25em #9543dc;
 }

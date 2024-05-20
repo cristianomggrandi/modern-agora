@@ -1,6 +1,7 @@
 "use client"
 
 import { NDKAuctionContent } from "@/utils/ndk"
+import Link from "next/link"
 import { useEffect, useState } from "react"
 
 const AuctionCountdown = ({ auction }: { auction: NDKAuctionContent }) => {
@@ -20,15 +21,15 @@ const AuctionCountdown = ({ auction }: { auction: NDKAuctionContent }) => {
     const seconds = (minutes % 1) * 60
 
     return (
-        <div className="grid grid-cols-4 gap-x-4 neon-text text-lg font-bold *:w-12 *:flex *:items-center *:justify-center">
-            <span>D</span>
-            <span>H</span>
-            <span>M</span>
-            <span>S</span>
-            <span>{Math.floor(days)}</span>
-            <span>{Math.floor(hours)}</span>
-            <span>{Math.floor(minutes)} </span>
-            <span>{Math.floor(seconds)}</span>
+        <div className="grid grid-cols-4 gap-x-4  text-lg font-bold *:w-12 *:flex *:items-center *:justify-center">
+            <span className="neon-text-sm">D</span>
+            <span className="neon-text-sm">H</span>
+            <span className="neon-text-sm">M</span>
+            <span className="neon-text-sm">S</span>
+            <span className="neon-text-sm">{Math.floor(days)}</span>
+            <span className="neon-text-sm">{Math.floor(hours)}</span>
+            <span className="neon-text-sm">{Math.floor(minutes)} </span>
+            <span className="neon-text-sm">{Math.floor(seconds)}</span>
         </div>
     )
 }
@@ -64,7 +65,7 @@ export default function Teste() {
 
     return (
         <div className="m-12 px-4 divide-y divide-nostr shadow-nostr shadow-sm rounded-lg">
-            <div className="flex gap-4">
+            <Link className="flex gap-4" href={"/auction/" + event.content.id}>
                 <div className="h-24 w-24 flex-shrink-0 flex items-center p-2">
                     <img className="w-full max-w-24" src={event.content.images[0]} alt={event.content.name} width={48} height={48} />
                 </div>
@@ -73,8 +74,8 @@ export default function Teste() {
                     <span className="line-clamp-2 text-sm">{event.content.description}</span>
                 </div>
                 <AuctionCountdown auction={event.content} />
-            </div>
-            <div className="flex gap-4">
+            </Link>
+            <Link className="flex gap-4" href={"/auction/" + event.content.id}>
                 <div className="h-24 w-24 flex-shrink-0 flex items-center p-2">
                     <img className="w-full max-w-24" src={event.content.images[0]} alt={event.content.name} width={48} height={48} />
                 </div>
@@ -83,7 +84,7 @@ export default function Teste() {
                     <span className="line-clamp-2 text-sm">{event.content.description}</span>
                 </div>
                 <AuctionCountdown auction={event.content} />
-            </div>
+            </Link>
         </div>
     )
 }

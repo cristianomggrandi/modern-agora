@@ -1,3 +1,4 @@
+import { NDKParsedAuctionEvent } from "@/hooks/useNDK"
 import { NDKEvent } from "@nostr-dev-kit/ndk"
 import { z } from "zod"
 
@@ -58,6 +59,10 @@ export function getParsedAuctionContent(event: NDKEvent): NDKAuctionContent {
     }
 }
 
+export function getAuctionEndDate(auction: NDKParsedAuctionEvent) {
+    return auction.content.start_date + auction.content.duration
+}
+
 export function getParsedBidContent(event: NDKEvent): NDKBidContent {
     try {
         const content = JSON.parse(event.content)
@@ -70,4 +75,8 @@ export function getParsedBidContent(event: NDKEvent): NDKBidContent {
         if (error.message && !error.message.includes("is not valid JSON")) console.error(error)
         return {} as NDKBidContent
     }
+}
+
+export function parseDescription(description: string) {
+    return description.replaceAll("&amp;", "&")
 }

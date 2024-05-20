@@ -1,13 +1,9 @@
 "use client"
 
-import useNDK from "@/hooks/useNDK"
-import { NDKAuctionContent, getParsedAuctionContent, getParsedBidContent } from "@/utils/ndk"
-import { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
+import { useAuctions, useBids } from "@/hooks/useNDK"
+import { NDKAuctionContent } from "@/utils/ndk"
+import Link from "next/link"
 import { useEffect, useState } from "react"
-
-export type NDKParsedAuctionEvent = ReturnType<typeof addContentToAuctionEvent>
-
-const getAuctionEndDate = (auction: NDKParsedAuctionEvent) => auction.content.start_date + auction.content.duration
 
 const AuctionCountdown = ({ auction }: { auction: NDKAuctionContent }) => {
     const until = new Date((auction.start_date + auction.duration) * 1000)
@@ -26,15 +22,15 @@ const AuctionCountdown = ({ auction }: { auction: NDKAuctionContent }) => {
     const seconds = (minutes % 1) * 60
 
     return (
-        <div className="grid grid-cols-4 gap-x-4 neon-text text-lg font-bold *:w-12 *:flex *:items-center *:justify-center">
-            <span>D</span>
-            <span>H</span>
-            <span>M</span>
-            <span>S</span>
-            <span>{Math.floor(days)}</span>
-            <span>{Math.floor(hours)}</span>
-            <span>{Math.floor(minutes)} </span>
-            <span>{Math.floor(seconds)}</span>
+        <div className="grid grid-cols-4 gap-x-4 text-lg font-bold *:w-12 *:flex *:items-center *:justify-center">
+            <span className="neon-text-sm">D</span>
+            <span className="neon-text-sm">H</span>
+            <span className="neon-text-sm">M</span>
+            <span className="neon-text-sm">S</span>
+            <span className="neon-text-sm">{Math.floor(days)}</span>
+            <span className="neon-text-sm">{Math.floor(hours)}</span>
+            <span className="neon-text-sm">{Math.floor(minutes)} </span>
+            <span className="neon-text-sm">{Math.floor(seconds)}</span>
         </div>
     )
 }
@@ -43,10 +39,16 @@ const AuctionCard = ({ event, highestBid }: { event: NDKParsedAuctionEvent; high
     if (!event.content) return null
 
     return (
-        <div className="flex gap-4">
+        <Link className="flex gap-4" href={"/auction/" + event.content.id}>
             <div className="h-24 w-24 flex-shrink-0 flex items-center p-2">
                 {event.content.images ? (
-                    <img className="w-full max-w-24" src={event.content.images[0]} alt={event.content.name} width={48} height={48} />
+                    <img
+                        className="w-full max-w-20 max-h-20 rounded"
+                        src={event.content.images[0]}
+                        alt={event.content.name}
+                        width={48}
+                        height={48}
+                    />
                 ) : null}
             </div>
             <div className="flex-1 flex flex-col justify-center">
@@ -54,75 +56,19 @@ const AuctionCard = ({ event, highestBid }: { event: NDKParsedAuctionEvent; high
                 <span className="line-clamp-2 text-sm">{event.content.description}</span>
             </div>
             <AuctionCountdown auction={event.content} />
-        </div>
+        </Link>
     )
 }
 
-const orderAuctions = (event: NDKParsedAuctionEvent, prev: NDKParsedAuctionEvent[]) => {
-    if (!event.content) return prev
-
-    // const currentDate = Math.floor(Date.now() / 1000)
-    const newFinishDate = getAuctionEndDate(event)
-
-    // TODO: Toggle to get only active auctions
-    // if (newFinishDate < currentDate) return prev
-
-    for (let i = 0; i < prev.length; i++) {
-        const currFinishDate = getAuctionEndDate(prev[i])
-
-        if (newFinishDate < currFinishDate) {
-            prev.splice(i, 0, event)
-            return [...prev]
-        }
-    }
-
-    return [...prev, event]
-}
-
-function handleBid(event: NDKEvent, bids: Map<any, any>) {
-    const auctionIdTag = event.tags.find(t => t[0] === "e")
-
-    if (!auctionIdTag) return
-
-    const auctionId = auctionIdTag[1] as string
-
-    const bidAmount = getParsedBidContent(event)
-    const highestBid = bids.get(auctionId)
-
-    if (highestBid) bids.set(auctionId, Math.max(bidAmount, highestBid))
-    else bids.set(auctionId, bidAmount)
-}
-
-function addContentToAuctionEvent(event: NDKEvent) {
-    const content = getParsedAuctionContent(event)
-
-    return { ...event, content }
-}
-
 export default function Auctions() {
-    const { subscribeAndHandle } = useNDK()
-
-    const [auctions, setAuctions] = useState<NDKParsedAuctionEvent[]>([])
-    const [bids] = useState(new Map<string, number>())
-
-    useEffect(() => {
-        subscribeAndHandle(
-            { kinds: [30020 as NDKKind] }, // NDK doesn't have auction types
-            // (event: NDKEvent) => setAuctions(prev => orderAuctions(addContentToAuctionEvent(event), prev))
-            (event: NDKEvent) =>
-                setAuctions(prev => (!prev.find(e => e.id === event.id) ? orderAuctions(addContentToAuctionEvent(event), prev) : prev))
-        )
-        subscribeAndHandle(
-            { kinds: [1021 as NDKKind] }, // NDK doesn't have bid types
-            event => handleBid(event, bids)
-        )
-    }, [])
+    const auctions = useAuctions()
+    const bids = useBids()
 
     return (
         <main className="flex items-center justify-center p-16">
-            <div className="px-4 divide-y divide-nostr shadow-nostr shadow-sm rounded-lg">
+            <div className="px-4 divide-y divide-nostr border border-nostr shadow-nostr shadow-sm rounded-lg">
                 {/* TODO: Handle auction limiting better, maybe paginate */}
-                {auctions.slice(0, 50).map((auctionEvent, index) => (
+                {auctions.slice(0, 20).map((auctionEvent, index) => (
                     <AuctionCard key={auctionEvent.id + index} event={auctionEvent} highestBid={bids.get(auctionEvent.id)} />
                 ))}
             </div>
