@@ -55,6 +55,7 @@ const AuctionCard = ({ event, highestBid }: { event: NDKParsedAuctionEvent; high
                 <span className="font-semibold">{event.content.name}</span>
                 <span className="line-clamp-2 text-sm">{event.content.description}</span>
             </div>
+            {/* TODO: Add highest bid  */}
             <AuctionCountdown auction={event.content} />
         </Link>
     )
