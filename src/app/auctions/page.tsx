@@ -1,6 +1,7 @@
 "use client"
 
-import { useAuctions, useBids } from "@/hooks/useNDK"
+import { NDKParsedAuctionEvent, useAuctions, useBids } from "@/hooks/useNDK"
+import { nFormatter } from "@/utils/functions"
 import { NDKAuctionContent } from "@/utils/ndk"
 import Link from "next/link"
 import { useEffect, useState } from "react"
@@ -39,7 +40,7 @@ const AuctionCard = ({ event, highestBid }: { event: NDKParsedAuctionEvent; high
     if (!event.content) return null
 
     return (
-        <Link className="flex gap-4" href={"/auction/" + event.content.id}>
+        <Link className="flex justify-center divide-x divide-nostr divide-spa *:px-3" href={"/auction/" + event.content.id}>
             <div className="h-24 w-24 flex-shrink-0 flex items-center p-2">
                 {event.content.images ? (
                     <img
@@ -55,6 +56,11 @@ const AuctionCard = ({ event, highestBid }: { event: NDKParsedAuctionEvent; high
                 <span className="font-semibold">{event.content.name}</span>
                 <span className="line-clamp-2 text-sm">{event.content.description}</span>
             </div>
+            <div className="flex flex-col items-center justify-around w-16">
+                <span>Bid</span>
+                {/* TODO: Add currency */}
+                <span>{nFormatter(highestBid ?? event.content.starting_bid, 2)}</span>
+            </div>
             {/* TODO: Add highest bid  */}
             <AuctionCountdown auction={event.content} />
         </Link>
@@ -67,7 +73,7 @@ export default function Auctions() {
 
     return (
         <main className="flex items-center justify-center p-16">
-            <div className="px-4 divide-y divide-nostr border border-nostr shadow-nostr shadow-sm rounded-lg">
+            <div className="divide-y divide-nostr border border-nostr shadow-nostr shadow-sm rounded-lg">
                 {/* TODO: Handle auction limiting better, maybe paginate */}
                 {auctions.slice(0, 20).map((auctionEvent, index) => (
                     <AuctionCard key={auctionEvent.id + index} event={auctionEvent} highestBid={bids.get(auctionEvent.id)} />
