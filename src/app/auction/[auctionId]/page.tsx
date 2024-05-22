@@ -36,8 +36,8 @@ export default function Auction(props: { params: { auctionId: string } }) {
     const prevImage = () => (auction.content.images ? setImageIndex(prev => (prev > 0 ? prev - 1 : auction.content.images!.length - 1)) : 0)
 
     return (
-        <main className="flex flex-col p-16 gap-8">
-            <div className="flex items-stretch justify-center gap-8">
+        <main className="flex flex-col p-6 sm:p-16 gap-8">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch justify-center gap-8">
                 <div className="flex-1 flex gap-4">
                     <div className="flex flex-col gap-2 justify-center">
                         {auction.content.images?.map((img, index) => (
@@ -49,10 +49,16 @@ export default function Auction(props: { params: { auctionId: string } }) {
                             </div>
                         ))}
                     </div>
-                    <div className="flex items-center flex-1">
+                    <div className="flex w-[90%] h-96 items-center justify-center relative">
                         {auction.content.images ? (
-                            <div className="relative bg-no-repeat bg-contain border border-nostr bg-center shadow-md shadow-nostr">
-                                <img src={auction.content.images[imageIndex]} alt={auction.content.name} className="max-w-full" />
+                            <>
+                                <div className="border border-nostr bg-center shadow-md shadow-nostr">
+                                    <img
+                                        src={auction.content.images[imageIndex]}
+                                        alt={auction.content.name}
+                                        className="max-w-full max-h-96"
+                                    />
+                                </div>
                                 <button
                                     className="absolute top-1/2 left-0 transform translate-x-1/2 -translate-y-1/2 flex items-center justify-center rounded-full h-8 opacity-85 aspect-square bg-nostr font-bold"
                                     onClick={prevImage}
@@ -65,7 +71,7 @@ export default function Auction(props: { params: { auctionId: string } }) {
                                 >
                                     {">"}
                                 </button>
-                            </div>
+                            </>
                         ) : (
                             "No images"
                         )}
