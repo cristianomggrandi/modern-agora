@@ -22,16 +22,21 @@ const AuctionCountdown = ({ auction }: { auction: NDKAuctionContent }) => {
     const minutes = (hours % 1) * 60
     const seconds = (minutes % 1) * 60
 
+    const significantTimerName = days !== 0 ? "Days" : hours !== 0 ? "Hours" : minutes !== 0 ? "Min." : "Sec."
+    const significantTimer = days !== 0 ? days : hours !== 0 ? hours : minutes !== 0 ? minutes : seconds
+
     return (
-        <div className="grid grid-cols-4 gap-x-4 text-lg font-bold *:w-12 *:flex *:items-center *:justify-center">
-            <span className="neon-text-sm">D</span>
-            <span className="neon-text-sm">H</span>
-            <span className="neon-text-sm">M</span>
-            <span className="neon-text-sm">S</span>
-            <span className="neon-text-sm">{Math.floor(days)}</span>
-            <span className="neon-text-sm">{Math.floor(hours)}</span>
-            <span className="neon-text-sm">{Math.floor(minutes)} </span>
-            <span className="neon-text-sm">{Math.floor(seconds)}</span>
+        <div className="grid md:grid-cols-4 gap-x-4 text-lg font-bold *:w-12 text-center *:m-auto *:neon-text-sm">
+            <span className="hidden md:block">D</span>
+            <span className="hidden md:block">H</span>
+            <span className="hidden md:block">M</span>
+            <span className="hidden md:block">S</span>
+            <span className="md:hidden">{significantTimerName}</span>
+            <span className="hidden md:block">{Math.floor(days)}</span>
+            <span className="hidden md:block">{Math.floor(hours)}</span>
+            <span className="hidden md:block">{Math.floor(minutes)} </span>
+            <span className="hidden md:block">{Math.floor(seconds)}</span>
+            <span className="md:hidden">{Math.floor(significantTimer)}</span>
         </div>
     )
 }
@@ -39,8 +44,10 @@ const AuctionCountdown = ({ auction }: { auction: NDKAuctionContent }) => {
 const AuctionCard = ({ event, highestBid }: { event: NDKParsedAuctionEvent; highestBid?: number }) => {
     if (!event.content) return null
 
+    // TODO: Change layout to grid instead of list when on mobile
+
     return (
-        <Link className="flex justify-center divide-x divide-nostr divide-spa *:px-3" href={"/auction/" + event.content.id}>
+        <Link className="flex justify-center divide-x divide-nostr divide-spa *:px-1 md:*:px-3" href={"/auction/" + event.content.id}>
             <div className="h-24 w-24 flex-shrink-0 flex items-center p-2">
                 {event.content.images ? (
                     <img
@@ -56,12 +63,11 @@ const AuctionCard = ({ event, highestBid }: { event: NDKParsedAuctionEvent; high
                 <span className="font-semibold">{event.content.name}</span>
                 <span className="line-clamp-2 text-sm">{event.content.description}</span>
             </div>
-            <div className="flex flex-col items-center justify-around w-16">
-                <span>Bid</span>
+            <div className="flex flex-col items-center justify-around max-w-20">
+                <span className="font-bold uppercase neon-text-sm">Bid</span>
                 {/* TODO: Add currency */}
-                <span>{nFormatter(highestBid ?? event.content.starting_bid, 2)}</span>
+                <span className="font-bold uppercase neon-text-sm">{nFormatter(highestBid ?? event.content.starting_bid, 2)}</span>
             </div>
-            {/* TODO: Add highest bid  */}
             <AuctionCountdown auction={event.content} />
         </Link>
     )
@@ -75,7 +81,7 @@ export default function Auctions() {
         <main className="flex items-center justify-center p-16">
             <div className="divide-y divide-nostr border border-nostr shadow-nostr shadow-sm rounded-lg">
                 {/* TODO: Handle auction limiting better, maybe paginate */}
-                {auctions.slice(0, 20).map((auctionEvent, index) => (
+                {auctions.slice(0, 3).map((auctionEvent, index) => (
                     <AuctionCard key={auctionEvent.id + index} event={auctionEvent} highestBid={bids.get(auctionEvent.id)} />
                 ))}
             </div>

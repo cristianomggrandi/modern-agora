@@ -12,7 +12,7 @@ function ParsedDescription({ description }: { description: string | undefined })
 
     return (
         // TODO: Create scroller for description (http://localhost:3000/auction/90cb2433-6d75-468b-b0b6-7d40ac209bc7)
-        <div className="flex-1 justify-center flex flex-col gap-1">
+        <div className="flex-1 justify-center text-justify flex flex-col gap-1">
             {parsedDescription.map((desc, i) => (
                 <p key={i} className="neon-text-sm">
                     {desc}
@@ -56,8 +56,9 @@ export default function Auction(props: { params: { auctionId: string } }) {
 
     return (
         <main className="flex flex-col p-6 sm:p-[4%] gap-8">
-            <div className="flex flex-col-reverse sm:flex-row items-center sm:items-stretch justify-center gap-8">
-                <div className="flex-1 flex flex-col-reverse items-center md:flex-row gap-4">
+            <h1 className="text-lg sm:text-2xl neon-text-2lg font-semibold text-center">{auction.content.name}</h1>
+            <div className="flex flex-col-reverse md:flex-row items-center sm:items-stretch justify-center gap-8">
+                <div className="flex-1 flex flex-col-reverse md:flex-row items-center justify-center gap-4">
                     <div className="flex md:flex-col gap-2 justify-center">
                         {auction.content.images?.length! > 1
                             ? auction.content.images!.map((img, index) => (
@@ -104,13 +105,12 @@ export default function Auction(props: { params: { auctionId: string } }) {
                     </div>
                 </div>
                 <div className="flex-1 flex flex-col justify-between gap-6">
-                    <h1 className="text-lg sm:text-2xl neon-text-2lg font-semibold text-center">{auction.content.name}</h1>
                     <ParsedDescription description={auction.content.description} />
                     {/* TODO: Add currency */}
                     <div>Current highest bid: {highestBid ?? auction.content.starting_bid}</div>
-                    <form onSubmit={e => sendBid(e, props.params.auctionId)} className="flex gap-2">
-                        <input name="bid" placeholder="Place your bid here" className="p-2 rounded text-black" />
-                        <button type="submit" className="p-2 rounded bg-nostr shadow shadow-nostr text-white uppercase font-semibold">
+                    <form onSubmit={e => sendBid(e, props.params.auctionId)} className="flex gap-2 max-w-24">
+                        <input name="bid" placeholder="Place your bid here" className="p-2 rounded text-black flex-1" />
+                        <button type="submit" className="p-2 rounded bg-nostr shadow-nostr text-white uppercase font-semibold">
                             Bid
                         </button>
                     </form>

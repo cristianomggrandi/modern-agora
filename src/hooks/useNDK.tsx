@@ -15,16 +15,17 @@ export type NDKParsedAuctionEvent = ReturnType<typeof addContentToAuctionEvent>
 const defaultRelays = [
     "wss://relay.damus.io",
     "wss://relay.nostr.bg",
-    "wss://nostr.mom",
-    "wss://nos.lol",
-    "wss://nostr.bitcoiner.social",
-    "wss://nostr-pub.wellorder.net",
-    "wss://nostr.wine",
-    "wss://eden.nostr.land",
-    "wss://relay.orangepill.dev",
-    "wss://puravida.nostr.land",
-    "wss://relay.nostr.com.au",
-    "wss://nostr.inosta.cc",
+    // TODO: Return with relays
+    // "wss://nostr.mom",
+    // "wss://nos.lol",
+    // "wss://nostr.bitcoiner.social",
+    // "wss://nostr-pub.wellorder.net",
+    // "wss://nostr.wine",
+    // "wss://eden.nostr.land",
+    // "wss://relay.orangepill.dev",
+    // "wss://puravida.nostr.land",
+    // "wss://relay.nostr.com.au",
+    // "wss://nostr.inosta.cc",
 ]
 
 const nip07signer = new NDKNip07Signer()
