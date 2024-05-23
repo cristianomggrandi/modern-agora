@@ -10,7 +10,7 @@ function ParsedDescription({ description }: { description: string | undefined })
     const parsedDescription = parseDescription(description).split("\n")
 
     return (
-        <div className="flex flex-col gap-1">
+        <div className="flex-1 justify-center flex flex-col gap-1">
             {parsedDescription.map((desc, i) => (
                 <p key={i} className="neon-text-sm">
                     {desc}
@@ -36,10 +36,10 @@ export default function Auction(props: { params: { auctionId: string } }) {
     const prevImage = () => (auction.content.images ? setImageIndex(prev => (prev > 0 ? prev - 1 : auction.content.images!.length - 1)) : 0)
 
     return (
-        <main className="flex flex-col p-6 sm:p-16 gap-8">
-            <div className="flex flex-col-reverse sm:flex-row items-stretch justify-center gap-8">
-                <div className="flex-1 flex gap-4">
-                    <div className="flex flex-col gap-2 justify-center">
+        <main className="flex flex-col p-6 sm:p-[4%] gap-8">
+            <div className="flex flex-col-reverse sm:flex-row items-center sm:items-stretch justify-center gap-8">
+                <div className="flex-1 flex flex-col-reverse items-center md:flex-row gap-4">
+                    <div className="flex md:flex-col gap-2 justify-center">
                         {auction.content.images?.map((img, index) => (
                             <div
                                 className="h-12 w-12 border border-nostr shadow-nostr shadow rounded overflow-hidden flex items-center cursor-pointer"
@@ -49,7 +49,7 @@ export default function Auction(props: { params: { auctionId: string } }) {
                             </div>
                         ))}
                     </div>
-                    <div className="flex w-[90%] h-96 items-center justify-center relative">
+                    <div className="flex w-[90%] md:h-96 items-center justify-center relative">
                         {auction.content.images ? (
                             <>
                                 <div className="border border-nostr bg-center shadow-md shadow-nostr">
@@ -78,7 +78,7 @@ export default function Auction(props: { params: { auctionId: string } }) {
                     </div>
                 </div>
                 <div className="flex-1 flex flex-col justify-between gap-6">
-                    <h1 className="text-2xl neon-text-2lg font-semibold underline underline-offset-4">{auction.content.name}</h1>
+                    <h1 className="text-lg sm:text-2xl neon-text-2lg font-semibold text-center">{auction.content.name}</h1>
                     <ParsedDescription description={auction.content.description} />
                 </div>
             </div>
