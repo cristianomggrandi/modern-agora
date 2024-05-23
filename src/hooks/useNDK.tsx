@@ -29,7 +29,7 @@ const defaultRelays = [
 
 const nip07signer = new NDKNip07Signer()
 
-const ndk = new NDK({
+export const ndk = new NDK({
     explicitRelayUrls: defaultRelays,
     signer: nip07signer,
 })
@@ -98,6 +98,7 @@ export function NDKContextProvider({ children }: { children: any }) {
             (event: NDKEvent) =>
                 setAuctions(prev => (!prev.find(e => e.id === event.id) ? orderAuctions(addContentToAuctionEvent(event), prev) : prev))
         )
+        // TODO: Confirm bids with 1022 events
         subscribeAndHandle(
             { kinds: [1021 as NDKKind] }, // NDK doesn't have bid types
             event => handleBid(event, bids)
@@ -122,6 +123,7 @@ export function useAuctions() {
 
     return context.auctions
 }
+
 export function useBids() {
     const context = useContext(NDKContext)
 
