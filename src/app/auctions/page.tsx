@@ -63,7 +63,7 @@ const AuctionCard = ({ event, highestBid }: { event: NDKParsedAuctionEvent; high
                 <span className="font-semibold">{event.content.name}</span>
                 <span className="line-clamp-2 text-sm">{event.content.description}</span>
             </div>
-            <div className="flex flex-col items-center justify-around max-w-20">
+            <div className="flex flex-col items-center justify-around sm:w-16">
                 <span className="font-bold uppercase neon-text-sm">Bid</span>
                 {/* TODO: Add currency */}
                 <span className="font-bold uppercase neon-text-sm">{nFormatter(highestBid ?? event.content.starting_bid, 2)}</span>
@@ -81,7 +81,7 @@ export default function Auctions() {
         <main className="flex items-center justify-center p-16">
             <div className="divide-y divide-nostr border border-nostr shadow-nostr shadow-sm rounded-lg">
                 {/* TODO: Handle auction limiting better, maybe paginate */}
-                {auctions.slice(0, 3).map((auctionEvent, index) => (
+                {auctions.slice(0, 20).map((auctionEvent, index) => (
                     <AuctionCard key={auctionEvent.id + index} event={auctionEvent} highestBid={bids.get(auctionEvent.id)} />
                 ))}
             </div>

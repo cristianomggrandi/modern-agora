@@ -2,7 +2,7 @@
 
 import { getAuctionEndDate, getParsedAuctionContent, getParsedBidContent } from "@/utils/ndk"
 import NDK, { NDKEvent, NDKFilter, NDKKind, NDKNip07Signer, NDKSubscriptionOptions } from "@nostr-dev-kit/ndk"
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useEffect, useRef, useState } from "react"
 
 type NDKContextType = {
     subscribeAndHandle: (filter: NDKFilter, handler: (event: NDKEvent) => void, opts?: NDKSubscriptionOptions) => void
@@ -90,14 +90,37 @@ export function NDKContextProvider({ children }: { children: any }) {
         .catch(error => console.log("ndk error connecting", error))
 
     const [auctions, setAuctions] = useState<NDKParsedAuctionEvent[]>([])
+    const fetchedAuctions = useRef<NDKParsedAuctionEvent[]>([])
+
+    const updateFetchedAuctions = (event: NDKEvent) => {
+        fetchedAuctions.current = !fetchedAuctions.current.find(e => e.id === event.id)
+            ? orderAuctions(addContentToAuctionEvent(event), fetchedAuctions.current)
+            : fetchedAuctions.current
+    }
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setAuctions(prev => {
+                console.log("teste:", fetchedAuctions.current)
+
+                if (fetchedAuctions.current === prev) {
+                    console.log("finalizado")
+                    clearInterval(interval)
+                }
+
+                return fetchedAuctions.current
+            })
+        }, 1000)
+
+        return () => clearInterval(interval)
+    }, [])
+
     const [bids] = useState(new Map<string, number>())
 
     useEffect(() => {
         subscribeAndHandle(
             { kinds: [30020 as NDKKind] }, // NDK doesn't have auction types
-            // (event: NDKEvent) => setAuctions(prev => orderAuctions(addContentToAuctionEvent(event), prev))
-            (event: NDKEvent) =>
-                setAuctions(prev => (!prev.find(e => e.id === event.id) ? orderAuctions(addContentToAuctionEvent(event), prev) : prev))
+            updateFetchedAuctions
         )
         // TODO: Confirm bids with 1022 events
         subscribeAndHandle(
