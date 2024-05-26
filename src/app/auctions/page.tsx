@@ -54,7 +54,7 @@ const AuctionCard = ({ event, highestBid }: { event: NDKParsedAuctionEvent; high
 
     return (
         <Link
-            className="flex flex-col grow gap-2 md:gap-0 p-1 md:p-0 md:flex-row w-40 md:w-auto justify-center md:divide-x divide-nostr border md:border-x-0 md:first:border-none border-nostr rounded-lg md:rounded-none *:px-1 md:*:px-3"
+            className="flex flex-col gap-2 md:gap-0 p-1 md:p-0 md:flex-row md:w-auto justify-center md:divide-x divide-nostr border md:border-x-0 md:first:border-none border-nostr rounded-lg md:rounded-none *:px-1 md:*:px-3"
             href={"/auction/" + event.content.id}
         >
             <div className="h-24 w-full md:w-24 flex-shrink-0 flex items-center justify-center md:p-2">
@@ -90,7 +90,7 @@ export default function Auctions() {
 
     return (
         <main className="flex items-center justify-center p-8 md:p-16">
-            <div className="flex flex-wrap gap-4 md:gap-0 md:block md:divide-y divide-nostr md:border border-nostr shadow-nostr md:shadow-sm rounded-lg">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4 md:gap-0 md:block md:divide-y divide-nostr md:border border-nostr shadow-nostr md:shadow-sm rounded-lg">
                 {/* TODO: Handle auction limiting better, maybe paginate */}
                 {auctions.slice(0, 10).map((event, index) => (
                     <AuctionCard key={event.id + index} event={event} highestBid={bids.get(event.id)} />
