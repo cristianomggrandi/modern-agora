@@ -1,16 +1,19 @@
 "use client"
 
-import { getAuctionEndDate, getParsedAuctionContent, getParsedBidContent } from "@/utils/ndk"
+import { getAuctionEndDate, getParsedAuctionContent, getParsedBidContent, getParsedStallContent } from "@/utils/ndk"
 import NDK, { NDKEvent, NDKFilter, NDKKind, NDKNip07Signer, NDKSubscriptionOptions } from "@nostr-dev-kit/ndk"
 import { createContext, useContext, useEffect, useRef, useState } from "react"
 
 type NDKContextType = {
     subscribeAndHandle: (filter: NDKFilter, handler: (event: NDKEvent) => void, opts?: NDKSubscriptionOptions) => void
     auctions: NDKParsedAuctionEvent[]
+    stalls: NDKParsedStallEvent[]
     bids: Map<string, number>
 }
 
 export type NDKParsedAuctionEvent = ReturnType<typeof addContentToAuctionEvent>
+
+export type NDKParsedStallEvent = ReturnType<typeof addContentToStallEvent>
 
 const defaultRelays = [
     "wss://relay.damus.io",
@@ -82,15 +85,26 @@ function addContentToAuctionEvent(event: NDKEvent) {
     return { ...event, content }
 }
 
+function addContentToStallEvent(event: NDKEvent) {
+    const content = getParsedStallContent(event)
+
+    return { ...event, content }
+}
+
 const NDKContext = createContext<NDKContextType | null>(null)
 
 export function NDKContextProvider({ children }: { children: any }) {
     ndk.connect()
         .then(() => console.log("ndk connected"))
-        .catch(error => console.log("ndk error connecting", error))
+        .catch(error => console.error("ndk error connecting", error))
 
     const [auctions, setAuctions] = useState<NDKParsedAuctionEvent[]>([])
     const fetchedAuctions = useRef<NDKParsedAuctionEvent[]>([])
+
+    const [bids] = useState(new Map<string, number>())
+
+    const [stalls, setStalls] = useState<NDKParsedStallEvent[]>([])
+    const fetchedStalls = useRef<NDKParsedStallEvent[]>([])
 
     const updateFetchedAuctions = (event: NDKEvent) => {
         fetchedAuctions.current = !fetchedAuctions.current.find(e => e.id === event.id)
@@ -98,30 +112,44 @@ export function NDKContextProvider({ children }: { children: any }) {
             : fetchedAuctions.current
     }
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setAuctions(prev => {
-                console.log("teste:", fetchedAuctions.current)
+    const updateFetchedStalls = (event: NDKEvent) => {
+        if (!fetchedStalls.current.find(e => e.id === event.id)) fetchedStalls.current.push(addContentToStallEvent(event))
+    }
 
-                if (fetchedAuctions.current === prev) {
-                    console.log("finalizado")
-                    clearInterval(interval)
-                }
+    useEffect(() => {
+        const auctionsInterval = setInterval(() => {
+            setAuctions(prev => {
+                if (fetchedAuctions.current === prev) clearInterval(auctionsInterval)
 
                 return fetchedAuctions.current
             })
         }, 1000)
 
-        return () => clearInterval(interval)
-    }, [])
+        const stallsInterval = setInterval(() => {
+            setStalls(prev => {
+                if (fetchedStalls.current === prev) clearInterval(stallsInterval)
 
-    const [bids] = useState(new Map<string, number>())
+                return fetchedStalls.current
+            })
+        }, 1000)
+
+        return () => {
+            clearInterval(auctionsInterval)
+            clearInterval(stallsInterval)
+        }
+    }, [])
 
     useEffect(() => {
         subscribeAndHandle(
             { kinds: [30020 as NDKKind] }, // NDK doesn't have auction types
             updateFetchedAuctions
         )
+
+        subscribeAndHandle(
+            { kinds: [30017 as NDKKind] }, // NDK doesn't have stall types
+            updateFetchedStalls
+        )
+
         // TODO: Confirm bids with 1022 events
         subscribeAndHandle(
             { kinds: [1021 as NDKKind] }, // NDK doesn't have bid types
@@ -129,7 +157,7 @@ export function NDKContextProvider({ children }: { children: any }) {
         )
     }, [])
 
-    return <NDKContext.Provider value={{ subscribeAndHandle, auctions, bids }}>{children}</NDKContext.Provider>
+    return <NDKContext.Provider value={{ subscribeAndHandle, auctions, stalls, bids }}>{children}</NDKContext.Provider>
 }
 
 export default function useNDK() {
@@ -146,6 +174,14 @@ export function useAuctions() {
     if (!context) throw new Error("useAuctions must be within a Context Provider")
 
     return context.auctions
+}
+
+export function useStalls() {
+    const context = useContext(NDKContext)
+
+    if (!context) throw new Error("useStalls must be within a Context Provider")
+
+    return context.stalls
 }
 
 export function useBids() {
