@@ -84,18 +84,67 @@ const AuctionCard = ({ event, highestBid }: { event: NDKParsedAuctionEvent; high
     )
 }
 
+const ITEMS_PER_PAGE = 5
+
 export default function Auctions() {
     const auctions = useAuctions()
     const bids = useBids()
 
+    const [page, setPage] = useState(1)
+    const pagesArray = Array.from({ length: Math.floor(auctions.length / 5) }, (v, i) => i + 1)
+    const prevPage = () => setPage(prev => prev - 1)
+    const nextPage = () => setPage(prev => prev + 1)
+
     return (
-        <main className="flex items-center justify-center p-8 md:p-16">
+        <main className="flex flex-col items-center justify-center p-8 md:p-16">
             <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4 md:gap-0 md:block md:divide-y divide-nostr md:border border-nostr shadow-nostr md:shadow-sm rounded-lg">
-                {/* TODO: Handle auction limiting better, maybe paginate */}
-                {auctions.slice(0, 10).map((event, index) => (
+                {auctions.slice(ITEMS_PER_PAGE * (page - 1), ITEMS_PER_PAGE * page).map((event, index) => (
                     <AuctionCard key={event.id + index} event={event} highestBid={bids.get(event.id)} />
                 ))}
             </div>
+            {auctions.length ? (
+                <div className="flex gap-1 mt-4">
+                    <button
+                        onClick={() => setPage(1)}
+                        disabled={page === 1}
+                        className="text-nostr border border-nostr w-6 h-6 text-center rounded-full font-bold"
+                    >
+                        {"<<"}
+                    </button>
+                    <button
+                        onClick={prevPage}
+                        disabled={page === 1}
+                        className="text-nostr border border-nostr w-6 h-6 text-center rounded-full font-bold"
+                    >
+                        {"<"}
+                    </button>
+                    {pagesArray.map(i => (
+                        <button
+                            onClick={() => setPage(i)}
+                            key={i}
+                            className={
+                                "w-6 h-6 text-center rounded-full border border-nostr " + (page === i ? "bg-nostr" : "text-nostr font-bold")
+                            }
+                        >
+                            {i}
+                        </button>
+                    ))}
+                    <button
+                        onClick={nextPage}
+                        disabled={page === pagesArray.length}
+                        className="text-nostr border border-nostr w-6 h-6 text-center rounded-full font-bold"
+                    >
+                        {">"}
+                    </button>
+                    <button
+                        onClick={() => setPage(pagesArray.length)}
+                        disabled={page === pagesArray.length}
+                        className="text-nostr border border-nostr w-6 h-6 text-center rounded-full font-bold"
+                    >
+                        {">>"}
+                    </button>
+                </div>
+            ) : null}
         </main>
     )
 }
