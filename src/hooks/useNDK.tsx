@@ -7,7 +7,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react"
 type NDKContextType = {
     subscribeAndHandle: (filter: NDKFilter, handler: (event: NDKEvent) => void, opts?: NDKSubscriptionOptions) => void
     auctions: NDKParsedAuctionEvent[]
-    stalls: NDKParsedStallEvent[]
+    stalls: Map<string, NDKParsedStallEvent>
     bids: Map<string, number>
 }
 
@@ -65,7 +65,15 @@ const orderAuctions = (event: NDKParsedAuctionEvent, prev: NDKParsedAuctionEvent
     return [...prev, event]
 }
 
-function handleBid(event: NDKEvent, bids: Map<any, any>) {
+function handleStall(event: NDKEvent, stalls: Map<string, NDKParsedStallEvent>) {
+    const parsedStall = addContentToStallEvent(event)
+
+    if (!parsedStall) return
+
+    stalls.set(parsedStall.content.id, parsedStall)
+}
+
+function handleBid(event: NDKEvent, bids: Map<string, number>) {
     const auctionIdTag = event.tags.find(t => t[0] === "e")
 
     if (!auctionIdTag) return
@@ -103,17 +111,12 @@ export function NDKContextProvider({ children }: { children: any }) {
 
     const [bids] = useState(new Map<string, number>())
 
-    const [stalls, setStalls] = useState<NDKParsedStallEvent[]>([])
-    const fetchedStalls = useRef<NDKParsedStallEvent[]>([])
+    const [stalls] = useState(new Map<string, NDKParsedStallEvent>())
 
     const updateFetchedAuctions = (event: NDKEvent) => {
         fetchedAuctions.current = !fetchedAuctions.current.find(e => e.id === event.id)
             ? orderAuctions(addContentToAuctionEvent(event), fetchedAuctions.current)
             : fetchedAuctions.current
-    }
-
-    const updateFetchedStalls = (event: NDKEvent) => {
-        if (!fetchedStalls.current.find(e => e.id === event.id)) fetchedStalls.current.push(addContentToStallEvent(event))
     }
 
     useEffect(() => {
@@ -125,36 +128,18 @@ export function NDKContextProvider({ children }: { children: any }) {
             })
         }, 1000)
 
-        const stallsInterval = setInterval(() => {
-            setStalls(prev => {
-                if (fetchedStalls.current === prev) clearInterval(stallsInterval)
-
-                return fetchedStalls.current
-            })
-        }, 1000)
-
         return () => {
             clearInterval(auctionsInterval)
-            clearInterval(stallsInterval)
         }
     }, [])
 
     useEffect(() => {
-        subscribeAndHandle(
-            { kinds: [30020 as NDKKind] }, // NDK doesn't have auction types
-            updateFetchedAuctions
-        )
+        subscribeAndHandle({ kinds: [30020 as NDKKind] }, updateFetchedAuctions)
 
-        subscribeAndHandle(
-            { kinds: [30017 as NDKKind] }, // NDK doesn't have stall types
-            updateFetchedStalls
-        )
+        subscribeAndHandle({ kinds: [30017 as NDKKind] }, event => handleStall(event, stalls))
 
         // TODO: Confirm bids with 1022 events
-        subscribeAndHandle(
-            { kinds: [1021 as NDKKind] }, // NDK doesn't have bid types
-            event => handleBid(event, bids)
-        )
+        subscribeAndHandle({ kinds: [1021 as NDKKind] }, event => handleBid(event, bids))
     }, [])
 
     return <NDKContext.Provider value={{ subscribeAndHandle, auctions, stalls, bids }}>{children}</NDKContext.Provider>

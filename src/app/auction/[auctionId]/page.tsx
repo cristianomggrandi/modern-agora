@@ -50,7 +50,7 @@ export default function Auction(props: { params: { auctionId: string } }) {
 
     if (!auction) return <div>Loading...</div>
 
-    const stall = stalls.find(s => auction.content.stall_id === s.content.id)
+    const stall = stalls.get(auction.content.stall_id)
 
     const highestBid = bids.get(String(auction.id))
 

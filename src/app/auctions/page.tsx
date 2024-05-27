@@ -46,7 +46,7 @@ const AuctionCard = ({ event, highestBid }: { event: NDKParsedAuctionEvent; high
 
     if (!event.content) return null
 
-    const stall = stalls.find(s => event.content.stall_id === s.content.id)
+    const stall = stalls.get(event.content.stall_id)
 
     if (!stall) return null
 
