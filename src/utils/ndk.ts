@@ -30,7 +30,11 @@ export type NDKStallContent = {
 
 export type NDKBidContent = number
 
-// export type NDKParsedAuctionEvent = Omit<NDKEvent, "content"> & { content: NDKAuctionContent }
+export type NDKConfirmationBidContent = {
+    status: string
+    message?: string
+    duration_extended?: number
+}
 
 const auctionContentParser = z.object({
     id: z.string(),
@@ -63,6 +67,12 @@ const stallContentParser = z.object({
             regions: z.array(z.string()),
         })
     ),
+})
+
+const confirmationBidContentParser = z.object({
+    status: z.string(),
+    message: z.string().optional(),
+    duration_extended: z.number().optional(),
 })
 
 function isAuctionContentValid(auctionContent: NDKAuctionContent) {
@@ -125,6 +135,34 @@ export function getParsedStallContent(event: NDKEvent): NDKStallContent {
         if (error.message && !error.message.includes("is not valid JSON")) console.error(error)
         return {} as NDKStallContent
     }
+}
+
+function isConfirmationBidContentValid(confirmationBidContent: NDKConfirmationBidContent) {
+    try {
+        return confirmationBidContentParser.parse(confirmationBidContent)
+    } catch (error) {
+        return false
+    }
+}
+
+export function getParsedConfirmationBidContent(event: NDKEvent): NDKConfirmationBidContent {
+    try {
+        const content = JSON.parse(event.content)
+
+        const isValid = isConfirmationBidContentValid(content)
+
+        return isValid ? content : ({} as NDKConfirmationBidContent)
+    } catch (error) {
+        // TODO: Check Typescript
+        if (error.message && !error.message.includes("is not valid JSON")) console.error(error)
+        return {} as NDKConfirmationBidContent
+    }
+}
+
+export function getBidStatus(event: NDKEvent) {
+    const content = getParsedConfirmationBidContent(event)
+
+    return content.status
 }
 
 export function parseDescription(description: string) {

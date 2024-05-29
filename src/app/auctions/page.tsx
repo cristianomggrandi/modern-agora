@@ -1,6 +1,6 @@
 "use client"
 
-import { NDKParsedAuctionEvent, useAuctions, useBids, useStalls } from "@/hooks/useNDK"
+import { NDKParsedAuctionEvent, useAuctions, useBids, useBidStatus, useStalls } from "@/hooks/useNDK"
 import { nFormatter } from "@/utils/functions"
 import { NDKAuctionContent } from "@/utils/ndk"
 import Link from "next/link"
@@ -41,14 +41,19 @@ const AuctionCountdown = ({ auction }: { auction: NDKAuctionContent }) => {
     )
 }
 
-const AuctionCard = ({ event, highestBid }: { event: NDKParsedAuctionEvent; highestBid?: number }) => {
+const AuctionCard = ({ event, bids }: { event: NDKParsedAuctionEvent; bids: { id: string; amount: number; pubkey: string }[] }) => {
     const stalls = useStalls()
+    const bidStatus = useBidStatus()
 
     if (!event.content) return null
 
     const stall = stalls.get(event.content.stall_id)
 
     if (!stall) return null
+
+    const highestBid = bids.find(
+        bid => event.pubkey === bid.pubkey && (bidStatus.get(bid.id) === "accepted" || bidStatus.get(bid.id) === "winner")
+    )
 
     // TODO: Avaliate: When on mobile, make img the background so the text is over it
 
@@ -76,7 +81,7 @@ const AuctionCard = ({ event, highestBid }: { event: NDKParsedAuctionEvent; high
                 <span className="font-bold uppercase neon-text-sm">Bid</span>
                 <span className="font-bold uppercase neon-text-sm md:hidden mr-1">:</span>
                 <span className="font-bold uppercase neon-text-sm">
-                    {nFormatter(highestBid ?? event.content.starting_bid, 2)} {stall.content.currency}
+                    {nFormatter(highestBid?.amount ?? event.content.starting_bid, 2)} {stall.content.currency}
                 </span>
             </div>
             <AuctionCountdown auction={event.content} />
@@ -99,7 +104,7 @@ export default function Auctions() {
         <main className="flex flex-col items-center justify-center p-8 md:p-16">
             <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4 md:gap-0 md:block md:divide-y divide-nostr md:border border-nostr shadow-nostr md:shadow-sm rounded-lg">
                 {auctions.slice(ITEMS_PER_PAGE * (page - 1), ITEMS_PER_PAGE * page).map((event, index) => (
-                    <AuctionCard key={event.id + index} event={event} highestBid={bids.get(event.id)} />
+                    <AuctionCard key={event.id + index} event={event} bids={bids.get(event.id) ?? []} />
                 ))}
             </div>
             {auctions.length ? (

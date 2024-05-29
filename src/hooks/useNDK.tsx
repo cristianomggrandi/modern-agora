@@ -1,6 +1,6 @@
 "use client"
 
-import { getAuctionEndDate, getParsedAuctionContent, getParsedBidContent, getParsedStallContent } from "@/utils/ndk"
+import { getAuctionEndDate, getBidStatus, getParsedAuctionContent, getParsedBidContent, getParsedStallContent } from "@/utils/ndk"
 import NDK, { NDKEvent, NDKFilter, NDKKind, NDKNip07Signer, NDKSubscriptionOptions } from "@nostr-dev-kit/ndk"
 import { createContext, useContext, useEffect, useRef, useState } from "react"
 
@@ -8,12 +8,17 @@ type NDKContextType = {
     subscribeAndHandle: (filter: NDKFilter, handler: (event: NDKEvent) => void, opts?: NDKSubscriptionOptions) => void
     auctions: NDKParsedAuctionEvent[]
     stalls: Map<string, NDKParsedStallEvent>
-    bids: Map<string, number>
+    bids: AuctionBids
+    bidStatus: Map<string, "accepted" | "rejected" | "pending" | "winner">
 }
 
 export type NDKParsedAuctionEvent = ReturnType<typeof addContentToAuctionEvent>
 
 export type NDKParsedStallEvent = ReturnType<typeof addContentToStallEvent>
+
+// export type NDKParsedConfirmationBidEvent = ReturnType<typeof addContentToConfirmationBidEvent>
+
+export type AuctionBids = Map<string, { id: string; amount: number; pubkey: string }[]>
 
 const defaultRelays = [
     "wss://relay.damus.io",
@@ -73,7 +78,7 @@ function handleStall(event: NDKEvent, stalls: Map<string, NDKParsedStallEvent>) 
     stalls.set(parsedStall.content.id, parsedStall)
 }
 
-function handleBid(event: NDKEvent, bids: Map<string, number>) {
+function handleBid(event: NDKEvent, bids: AuctionBids) {
     const auctionIdTag = event.tags.find(t => t[0] === "e")
 
     if (!auctionIdTag) return
@@ -81,10 +86,28 @@ function handleBid(event: NDKEvent, bids: Map<string, number>) {
     const auctionId = auctionIdTag[1] as string
 
     const bidAmount = getParsedBidContent(event)
-    const highestBid = bids.get(auctionId)
+    const prevBids = bids.get(auctionId)
 
-    if (highestBid) bids.set(auctionId, Math.max(bidAmount, highestBid))
-    else bids.set(auctionId, bidAmount)
+    bids.set(
+        auctionId,
+        [...(prevBids ?? []), { id: event.id, amount: bidAmount, pubkey: event.pubkey }].sort((a, b) => b.amount - a.amount)
+    )
+}
+
+function handleConfirmBid(event: NDKEvent, bidStatus: Map<string, string>) {
+    // TODO: Check if it is the right pubkey
+
+    const bidIdTag = event.tags[0]
+    const auctionIdTag = event.tags[1]
+
+    if (!bidIdTag || !auctionIdTag) return
+
+    const bidId = bidIdTag[1] as string
+    // const auctionId = auctionIdTag[1] as string
+
+    const status = getBidStatus(event)
+
+    bidStatus.set(bidId, status)
 }
 
 function addContentToAuctionEvent(event: NDKEvent) {
@@ -99,6 +122,12 @@ function addContentToStallEvent(event: NDKEvent) {
     return { ...event, content }
 }
 
+// function addContentToConfirmationBidEvent(event: NDKEvent) {
+//     const content = getParsedConfirmationBidContent(event)
+
+//     return { ...event, content }
+// }
+
 const NDKContext = createContext<NDKContextType | null>(null)
 
 export function NDKContextProvider({ children }: { children: any }) {
@@ -109,7 +138,8 @@ export function NDKContextProvider({ children }: { children: any }) {
     const [auctions, setAuctions] = useState<NDKParsedAuctionEvent[]>([])
     const fetchedAuctions = useRef<NDKParsedAuctionEvent[]>([])
 
-    const [bids] = useState(new Map<string, number>())
+    const [bids] = useState<AuctionBids>(new Map())
+    const [bidStatus] = useState(new Map<string, "accepted" | "rejected" | "pending" | "winner">())
 
     const [stalls] = useState(new Map<string, NDKParsedStallEvent>())
 
@@ -140,9 +170,10 @@ export function NDKContextProvider({ children }: { children: any }) {
 
         // TODO: Confirm bids with 1022 events
         subscribeAndHandle({ kinds: [1021 as NDKKind] }, event => handleBid(event, bids))
+        subscribeAndHandle({ kinds: [1022 as NDKKind] }, event => handleConfirmBid(event, bidStatus))
     }, [])
 
-    return <NDKContext.Provider value={{ subscribeAndHandle, auctions, stalls, bids }}>{children}</NDKContext.Provider>
+    return <NDKContext.Provider value={{ subscribeAndHandle, auctions, stalls, bids, bidStatus }}>{children}</NDKContext.Provider>
 }
 
 export default function useNDK() {
@@ -174,5 +205,17 @@ export function useBids() {
 
     if (!context) throw new Error("useBids must be within a Context Provider")
 
+    // TODO: Filter bids that are confirmed
+
     return context.bids
+}
+
+export function useBidStatus() {
+    const context = useContext(NDKContext)
+
+    if (!context) throw new Error("useBidStatus must be within a Context Provider")
+
+    // TODO: Filter bids that are confirmed
+
+    return context.bidStatus
 }
