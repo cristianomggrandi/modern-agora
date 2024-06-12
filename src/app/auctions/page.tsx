@@ -66,7 +66,7 @@ const AuctionCard = ({ event, bids }: { event: NDKParsedAuctionEvent; bids: { id
             <div className="h-24 w-full md:w-24 flex-shrink-0 flex items-center justify-center md:p-2">
                 {event.content.images ? (
                     <img
-                        className="h-24 max-w-full md:max-w-20 md:max-h-20 rounded"
+                        className="max-h-24 max-w-full md:max-w-20 md:max-h-20 rounded"
                         src={event.content.images[0]}
                         alt={event.content.name}
                         height={96}
@@ -97,7 +97,7 @@ export default function Auctions() {
     const bids = useBids()
 
     const [page, setPage] = useState(1)
-    const pages = Array.from({ length: Math.floor(auctions.length / 5) }, (v, i) => i + 1)
+    const pages = Array.from({ length: Math.floor(auctions.length / ITEMS_PER_PAGE) }, (v, i) => i + 1)
     const prevPage = () => setPage(prev => prev - 1)
     const nextPage = () => setPage(prev => prev + 1)
 

@@ -1,16 +1,26 @@
 "use client"
 
-import { getAuctionEndDate, getBidStatus, getParsedAuctionContent, getParsedBidContent, getParsedStallContent } from "@/utils/ndk"
+import {
+    getAuctionEndDate,
+    getBidStatus,
+    getParsedAuctionContent,
+    getParsedBidContent,
+    getParsedProductContent,
+    getParsedStallContent,
+} from "@/utils/ndk"
 import NDK, { NDKEvent, NDKFilter, NDKKind, NDKNip07Signer, NDKSubscriptionOptions } from "@nostr-dev-kit/ndk"
 import { createContext, useContext, useEffect, useRef, useState } from "react"
 
 type NDKContextType = {
     subscribeAndHandle: (filter: NDKFilter, handler: (event: NDKEvent) => void, opts?: NDKSubscriptionOptions) => void
+    products: NDKParsedProductEvent[]
     auctions: NDKParsedAuctionEvent[]
     stalls: Map<string, NDKParsedStallEvent>
     bids: AuctionBids
     bidStatus: Map<string, "accepted" | "rejected" | "pending" | "winner">
 }
+
+export type NDKParsedProductEvent = ReturnType<typeof addContentToProductEvent>
 
 export type NDKParsedAuctionEvent = ReturnType<typeof addContentToAuctionEvent>
 
@@ -47,6 +57,21 @@ const subscribeAndHandle = (filter: NDKFilter, handler: (event: NDKEvent) => voi
     const sub = ndk.subscribe(filter, opts)
 
     sub.on("event", (e: NDKEvent) => handler(e))
+}
+
+const orderProducts = (event: NDKParsedProductEvent, prev: NDKParsedProductEvent[]) => {
+    if (!event.content || !event.created_at || Object.keys(event.content).length === 0) return prev
+
+    for (let i = 0; i < prev.length; i++) {
+        const e = prev[i]
+
+        if (event.created_at > e.created_at!) {
+            prev.splice(i, 0, event)
+            return [...prev]
+        }
+    }
+
+    return [...prev, event]
 }
 
 const orderAuctions = (event: NDKParsedAuctionEvent, prev: NDKParsedAuctionEvent[]) => {
@@ -110,6 +135,12 @@ function handleConfirmBid(event: NDKEvent, bidStatus: Map<string, string>) {
     bidStatus.set(bidId, status)
 }
 
+function addContentToProductEvent(event: NDKEvent) {
+    const content = getParsedProductContent(event)
+
+    return { ...event, content }
+}
+
 function addContentToAuctionEvent(event: NDKEvent) {
     const content = getParsedAuctionContent(event)
 
@@ -122,12 +153,6 @@ function addContentToStallEvent(event: NDKEvent) {
     return { ...event, content }
 }
 
-// function addContentToConfirmationBidEvent(event: NDKEvent) {
-//     const content = getParsedConfirmationBidContent(event)
-
-//     return { ...event, content }
-// }
-
 const NDKContext = createContext<NDKContextType | null>(null)
 
 export function NDKContextProvider({ children }: { children: any }) {
@@ -138,10 +163,19 @@ export function NDKContextProvider({ children }: { children: any }) {
     const [auctions, setAuctions] = useState<NDKParsedAuctionEvent[]>([])
     const fetchedAuctions = useRef<NDKParsedAuctionEvent[]>([])
 
+    const [products, setProducts] = useState<NDKParsedProductEvent[]>([])
+    const fetchedProducts = useRef<NDKParsedProductEvent[]>([])
+
     const [bids] = useState<AuctionBids>(new Map())
     const [bidStatus] = useState(new Map<string, "accepted" | "rejected" | "pending" | "winner">())
 
     const [stalls] = useState(new Map<string, NDKParsedStallEvent>())
+
+    const updateFetchedProducts = (event: NDKEvent) => {
+        fetchedProducts.current = !fetchedProducts.current.find(e => e.id === event.id)
+            ? orderProducts(addContentToProductEvent(event), fetchedProducts.current)
+            : fetchedProducts.current
+    }
 
     const updateFetchedAuctions = (event: NDKEvent) => {
         fetchedAuctions.current = !fetchedAuctions.current.find(e => e.id === event.id)
@@ -158,22 +192,32 @@ export function NDKContextProvider({ children }: { children: any }) {
             })
         }, 1000)
 
+        const productsInterval = setInterval(() => {
+            setProducts(prev => {
+                if (fetchedProducts.current === prev) clearInterval(productsInterval)
+
+                return fetchedProducts.current
+            })
+        }, 1000)
+
         return () => {
             clearInterval(auctionsInterval)
+            clearInterval(productsInterval)
         }
     }, [])
 
     useEffect(() => {
-        subscribeAndHandle({ kinds: [30020 as NDKKind] }, updateFetchedAuctions)
+        subscribeAndHandle({ kinds: [30018 as NDKKind] }, updateFetchedProducts)
 
-        subscribeAndHandle({ kinds: [30017 as NDKKind] }, event => handleStall(event, stalls))
+        // subscribeAndHandle({ kinds: [30020 as NDKKind] }, updateFetchedAuctions)
 
-        // TODO: Confirm bids with 1022 events
-        subscribeAndHandle({ kinds: [1021 as NDKKind] }, event => handleBid(event, bids))
-        subscribeAndHandle({ kinds: [1022 as NDKKind] }, event => handleConfirmBid(event, bidStatus))
+        // subscribeAndHandle({ kinds: [30017 as NDKKind] }, event => handleStall(event, stalls))
+
+        // subscribeAndHandle({ kinds: [1021 as NDKKind] }, event => handleBid(event, bids))
+        // subscribeAndHandle({ kinds: [1022 as NDKKind] }, event => handleConfirmBid(event, bidStatus))
     }, [])
 
-    return <NDKContext.Provider value={{ subscribeAndHandle, auctions, stalls, bids, bidStatus }}>{children}</NDKContext.Provider>
+    return <NDKContext.Provider value={{ subscribeAndHandle, products, auctions, stalls, bids, bidStatus }}>{children}</NDKContext.Provider>
 }
 
 export default function useNDK() {
@@ -182,6 +226,14 @@ export default function useNDK() {
     if (!context) throw new Error("useNDK must be within a Context Provider")
 
     return context
+}
+
+export function useProducts() {
+    const context = useContext(NDKContext)
+
+    if (!context) throw new Error("useProducts must be within a Context Provider")
+
+    return context.products
 }
 
 export function useAuctions() {

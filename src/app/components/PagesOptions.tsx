@@ -25,7 +25,8 @@ export default function PagesOptions({ page, setPage, nextPage, prevPage, pages 
             >
                 {"<"}
             </button>
-            {pages.map(i => (
+            {/* TODO: Handle pagination moving the boundaries */}
+            {pages.slice(0, 10).map(i => (
                 <button
                     onClick={() => setPage(i)}
                     key={i}

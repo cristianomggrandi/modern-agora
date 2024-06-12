@@ -2,6 +2,45 @@ import { NDKParsedAuctionEvent } from "@/hooks/useNDK"
 import { NDKEvent } from "@nostr-dev-kit/ndk"
 import { z } from "zod"
 
+export type NDKProductContent = {
+    id: string
+    stall_id: string
+    name: string
+    description?: string
+    images?: string[]
+    currency: string
+    price: number
+    quantity: number | null
+    specs?: [string, string][]
+    shipping: { id: string; cost: number }[]
+}
+
+const productContentParser = z.object({
+    id: z.string(),
+    stall_id: z.string(),
+    name: z.string(),
+    description: z.string().optional(),
+    images: z.array(z.string()).optional(),
+    currency: z.string(),
+    price: z.number(),
+    quantity: z.union([z.number(), z.null()]),
+    specs: z.array(z.tuple([z.string(), z.string()])).optional(),
+    shipping: z.array(
+        z.object({
+            id: z.string(),
+            cost: z.number(),
+        })
+    ),
+})
+
+function isProductContentValid(productContent: NDKAuctionContent) {
+    try {
+        return productContentParser.parse(productContent)
+    } catch (error) {
+        return false
+    }
+}
+
 export type NDKAuctionContent = {
     id: string
     stall_id: string
@@ -80,6 +119,20 @@ function isAuctionContentValid(auctionContent: NDKAuctionContent) {
         return auctionContentParser.parse(auctionContent)
     } catch (error) {
         return false
+    }
+}
+
+export function getParsedProductContent(event: NDKEvent): NDKProductContent {
+    try {
+        const content = JSON.parse(event.content)
+
+        const isValid = isProductContentValid(content)
+
+        return isValid ? content : ({} as NDKAuctionContent)
+    } catch (error) {
+        // TODO: Check Typescript
+        if (error.message && !error.message.includes("is not valid JSON")) console.error(error)
+        return {} as NDKAuctionContent
     }
 }
 
