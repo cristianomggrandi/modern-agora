@@ -5,6 +5,7 @@ import { nFormatter } from "@/utils/functions"
 import { NDKAuctionContent } from "@/utils/ndk"
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import PagesOptions from "../components/PagesOptions"
 
 const AuctionCountdown = ({ auction }: { auction: NDKAuctionContent }) => {
     const until = new Date((auction.start_date + auction.duration) * 1000)
@@ -96,7 +97,7 @@ export default function Auctions() {
     const bids = useBids()
 
     const [page, setPage] = useState(1)
-    const pagesArray = Array.from({ length: Math.floor(auctions.length / 5) }, (v, i) => i + 1)
+    const pages = Array.from({ length: Math.floor(auctions.length / 5) }, (v, i) => i + 1)
     const prevPage = () => setPage(prev => prev - 1)
     const nextPage = () => setPage(prev => prev + 1)
 
@@ -107,49 +108,7 @@ export default function Auctions() {
                     <AuctionCard key={event.id + index} event={event} bids={bids.get(event.id) ?? []} />
                 ))}
             </div>
-            {auctions.length ? (
-                <div className="flex gap-1 mt-4">
-                    <button
-                        onClick={() => setPage(1)}
-                        disabled={page === 1}
-                        className="text-nostr border border-nostr w-6 h-6 text-center rounded-full font-bold"
-                    >
-                        {"<<"}
-                    </button>
-                    <button
-                        onClick={prevPage}
-                        disabled={page === 1}
-                        className="text-nostr border border-nostr w-6 h-6 text-center rounded-full font-bold"
-                    >
-                        {"<"}
-                    </button>
-                    {pagesArray.map(i => (
-                        <button
-                            onClick={() => setPage(i)}
-                            key={i}
-                            className={
-                                "w-6 h-6 text-center rounded-full border border-nostr " + (page === i ? "bg-nostr" : "text-nostr font-bold")
-                            }
-                        >
-                            {i}
-                        </button>
-                    ))}
-                    <button
-                        onClick={nextPage}
-                        disabled={page === pagesArray.length}
-                        className="text-nostr border border-nostr w-6 h-6 text-center rounded-full font-bold"
-                    >
-                        {">"}
-                    </button>
-                    <button
-                        onClick={() => setPage(pagesArray.length)}
-                        disabled={page === pagesArray.length}
-                        className="text-nostr border border-nostr w-6 h-6 text-center rounded-full font-bold"
-                    >
-                        {">>"}
-                    </button>
-                </div>
-            ) : null}
+            {auctions.length ? <PagesOptions page={page} setPage={setPage} prevPage={prevPage} nextPage={nextPage} pages={pages} /> : null}
         </main>
     )
 }
