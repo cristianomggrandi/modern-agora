@@ -1,6 +1,6 @@
 "use client"
 
-import { ndk, useAuctions, useBids, useStalls } from "@/hooks/useNDK"
+import { ndk, useAuctions, useBidStatus, useBids, useStalls } from "@/hooks/useNDK"
 import { parseDescription } from "@/utils/ndk"
 import { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
 import { useState } from "react"
@@ -42,6 +42,7 @@ function sendBid(e: React.FormEvent<HTMLFormElement>, auctionId: string) {
 export default function Auction(props: { params: { auctionId: string } }) {
     const auctions = useAuctions()
     const bids = useBids()
+    const bidStatus = useBidStatus()
     const stalls = useStalls()
 
     const [imageIndex, setImageIndex] = useState(0)
@@ -52,7 +53,22 @@ export default function Auction(props: { params: { auctionId: string } }) {
 
     const stall = stalls.get(auction.content.stall_id)
 
-    const highestBid = bids.get(String(auction.id))
+    const auctionBids = bids.get(String(auction.id))
+    const highestBid = auctionBids?.reduce(
+        (max, curr) => {
+            if (auction.pubkey !== curr.pubkey) return max // Confirmation came from someone else
+            if (bidStatus.get(max.id) === "winner") return max // Already found the winner
+            if (bidStatus.get(curr.id) === "winner") return curr // Is the winner
+            if (bidStatus.get(curr.id) === "pending" || bidStatus.get(curr.id) === "rejected") return max
+
+            if (!max) return curr
+
+            if (curr.amount > max.amount) return curr
+
+            return max
+        },
+        { id: "0", amount: 0, pubkey: "default" }
+    )
 
     const nextImage = () => (auction.content.images ? setImageIndex(prev => (prev + 1) % auction.content.images!.length) : 0)
     const prevImage = () => (auction.content.images ? setImageIndex(prev => (prev > 0 ? prev - 1 : auction.content.images!.length - 1)) : 0)
@@ -110,7 +126,7 @@ export default function Auction(props: { params: { auctionId: string } }) {
                 <div className="flex-1 flex flex-col justify-between gap-6">
                     <ParsedDescription description={auction.content.description} />
                     <div>
-                        Current highest bid: {highestBid ?? auction.content.starting_bid} {stall?.content.currency}
+                        Current highest bid: {highestBid?.amount ?? auction.content.starting_bid} {stall?.content.currency}
                     </div>
                     <form onSubmit={e => sendBid(e, props.params.auctionId)} className="flex gap-2 max-w-24">
                         <input name="bid" placeholder="Place your bid here" className="p-2 rounded text-black flex-1" />

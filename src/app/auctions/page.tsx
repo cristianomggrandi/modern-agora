@@ -42,8 +42,9 @@ const AuctionCountdown = ({ auction }: { auction: NDKAuctionContent }) => {
     )
 }
 
-const AuctionCard = ({ event, bids }: { event: NDKParsedAuctionEvent; bids: { id: string; amount: number; pubkey: string }[] }) => {
+const AuctionCard = ({ event }: { event: NDKParsedAuctionEvent }) => {
     const stalls = useStalls()
+    const bids = useBids()
     const bidStatus = useBidStatus()
 
     if (!event.content) return null
@@ -52,9 +53,9 @@ const AuctionCard = ({ event, bids }: { event: NDKParsedAuctionEvent; bids: { id
 
     if (!stall) return null
 
-    const highestBid = bids.find(
-        bid => event.pubkey === bid.pubkey && (bidStatus.get(bid.id) === "accepted" || bidStatus.get(bid.id) === "winner")
-    )
+    const highestBid = bids
+        ?.get(event.id)
+        ?.find(bid => event.pubkey === bid.pubkey && (bidStatus.get(bid.id) === "accepted" || bidStatus.get(bid.id) === "winner"))
 
     // TODO: Avaliate: When on mobile, make img the background so the text is over it
 
@@ -94,7 +95,6 @@ const ITEMS_PER_PAGE = 5
 
 export default function Auctions() {
     const auctions = useAuctions()
-    const bids = useBids()
 
     const [page, setPage] = useState(1)
     const pages = Array.from({ length: Math.floor(auctions.length / ITEMS_PER_PAGE) }, (v, i) => i + 1)
@@ -105,7 +105,7 @@ export default function Auctions() {
         <main className="flex flex-col items-center justify-center p-8 md:p-16">
             <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4 md:gap-0 md:block md:divide-y divide-nostr md:border border-nostr shadow-nostr md:shadow-sm rounded-lg">
                 {auctions.slice(ITEMS_PER_PAGE * (page - 1), ITEMS_PER_PAGE * page).map((event, index) => (
-                    <AuctionCard key={event.id + index} event={event} bids={bids.get(event.id) ?? []} />
+                    <AuctionCard key={event.id + index} event={event} />
                 ))}
             </div>
             {auctions.length ? <PagesOptions page={page} setPage={setPage} prevPage={prevPage} nextPage={nextPage} pages={pages} /> : null}
