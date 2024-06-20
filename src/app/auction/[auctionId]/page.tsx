@@ -130,7 +130,7 @@ export default function Auction(props: { params: { auctionId: string } }) {
                     </div>
                     <form onSubmit={e => sendBid(e, props.params.auctionId)} className="flex gap-2 max-w-24">
                         <input name="bid" placeholder="Place your bid here" className="p-2 rounded text-black flex-1" />
-                        <button type="submit" className="p-2 rounded bg-nostr shadow-nostr text-white uppercase font-semibold">
+                        <button type="submit" className="p-2 rounded bg-nostr shadow shadow-nostr text-white uppercase font-semibold">
                             Bid
                         </button>
                     </form>

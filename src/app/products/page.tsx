@@ -1,10 +1,10 @@
 "use client"
 
-import { NDKParsedProductEvent, useProducts } from "@/hooks/useNDK"
+import { NDKParsedProductEvent, useProducts, useStalls } from "@/hooks/useNDK"
+import { nFormatter } from "@/utils/functions"
 import Link from "next/link"
 import { useState } from "react"
 import PagesOptions from "../components/PagesOptions"
-import { nFormatter } from "@/utils/functions"
 
 const ProductCard = ({ event }: { event: NDKParsedProductEvent }) => {
     if (!event.content) return null
@@ -15,7 +15,7 @@ const ProductCard = ({ event }: { event: NDKParsedProductEvent }) => {
             href={"/product/" + event.content.id}
         >
             <div className="h-24 w-full md:w-24 flex-shrink-0 flex items-center justify-center md:p-2">
-                {event.content.images ? (
+                {event.content.images?.length ? (
                     <img
                         className="max-h-24 max-w-full md:max-w-20 md:max-h-20 rounded"
                         src={event.content.images[0]}
@@ -40,23 +40,27 @@ const ProductCard = ({ event }: { event: NDKParsedProductEvent }) => {
 
 const ITEMS_PER_PAGE = 5
 
-export default function Auctions() {
+export default function Products() {
     const products = useProducts()
+    const stalls = useStalls()
+
+    const productsWithStalls = products.filter(p => stalls.get(p.content.stall_id))
 
     const [page, setPage] = useState(1)
-    const pages = Array.from({ length: Math.floor(products.length / ITEMS_PER_PAGE) }, (v, i) => i + 1)
+    const pages = Array.from({ length: Math.floor(productsWithStalls.length / ITEMS_PER_PAGE) }, (v, i) => i + 1)
     const prevPage = () => setPage(prev => prev - 1)
     const nextPage = () => setPage(prev => prev + 1)
 
     return (
-        <main className="flex flex-col items-center justify-center p-8 md:p-16">
+        <main className="flex flex-col items-center justify-center p-8 md:p-12">
             <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4 md:gap-0 md:block md:divide-y divide-nostr md:border border-nostr shadow-nostr md:shadow-sm rounded-lg">
-                {products.slice(ITEMS_PER_PAGE * (page - 1), ITEMS_PER_PAGE * page).map((event, index) => (
-                    // <div>{event.created_at}</div>
-                    <ProductCard event={event} />
+                {productsWithStalls.slice(ITEMS_PER_PAGE * (page - 1), ITEMS_PER_PAGE * page).map(event => (
+                    <ProductCard key={event.id} event={event} />
                 ))}
             </div>
-            {products.length ? <PagesOptions page={page} setPage={setPage} prevPage={prevPage} nextPage={nextPage} pages={pages} /> : null}
+            {productsWithStalls.length ? (
+                <PagesOptions page={page} setPage={setPage} prevPage={prevPage} nextPage={nextPage} pages={pages} />
+            ) : null}
         </main>
     )
 }

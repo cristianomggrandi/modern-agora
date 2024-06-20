@@ -102,7 +102,7 @@ export default function Auctions() {
     const nextPage = () => setPage(prev => prev + 1)
 
     return (
-        <main className="flex flex-col items-center justify-center p-8 md:p-16">
+        <main className="flex flex-col items-center justify-center p-8 md:p-12">
             <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4 md:gap-0 md:block md:divide-y divide-nostr md:border border-nostr shadow-nostr md:shadow-sm rounded-lg">
                 {auctions.slice(ITEMS_PER_PAGE * (page - 1), ITEMS_PER_PAGE * page).map((event, index) => (
                     <AuctionCard key={event.id + index} event={event} />

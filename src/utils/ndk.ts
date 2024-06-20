@@ -2,6 +2,42 @@ import { NDKParsedAuctionEvent } from "@/hooks/useNDK"
 import { NDKEvent } from "@nostr-dev-kit/ndk"
 import { z } from "zod"
 
+export type NDKCheckoutContent =
+    | {
+          type: 0
+          id: string
+          name?: string
+          address?: string
+          message?: string
+          contact: {
+              nostr: string
+              phone?: string
+              email?: string
+          }
+          items: {
+              product_id: string
+              quantity: number
+          }[]
+          shipping_id: string
+      }
+    | {
+          type: 1
+          id: string
+
+          message?: string
+          payment_options: {
+              type: string
+              link: string
+          }[]
+      }
+    | {
+          type: 2
+          id: string
+          message: string
+          paid: boolean
+          shipped: boolean
+      }
+
 export type NDKProductContent = {
     id: string
     stall_id: string
