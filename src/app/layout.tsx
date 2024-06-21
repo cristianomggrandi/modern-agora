@@ -1,9 +1,10 @@
 import { NDKContextProvider } from "@/hooks/useNDK"
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import { Familjen_Grotesk } from "next/font/google"
+import Link from "next/link"
 import "./globals.css"
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Familjen_Grotesk({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
     title: "Create Next App",
@@ -17,8 +18,46 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body className={inter.className + " h-screen"}>
-                <NDKContextProvider>{children}</NDKContextProvider>
+            <body className={inter.className + " h-screen flex flex-col"}>
+                <NDKContextProvider>
+                    <header className="bg-light">
+                        <nav className="flex flex-row items-center justify-around h-full">
+                            <ul className="flex flex-row items-center justify-around w-full">
+                                {/* TODO: Replace with logo (to be created) */}
+                                <li>
+                                    <Link className="my-2 px-6 flex items-center justify-center h-12" href="/">
+                                        Logo
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link className="my-2 px-6 flex items-center justify-center h-12" href="/products">
+                                        Products
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link className="my-2 px-6 flex items-center justify-center h-12" href="/products">
+                                        Stalls
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link className="my-2 px-6 flex items-center justify-center h-12" href="/products">
+                                        Auctions
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link className="my-2 px-6 flex items-center justify-center h-12" href="/products">
+                                        About Us
+                                    </Link>
+                                </li>
+                                <li>
+                                    {/* <HeaderUser /> */}
+                                    User
+                                </li>
+                            </ul>
+                        </nav>
+                    </header>
+                    {children}
+                </NDKContextProvider>
             </body>
         </html>
     )

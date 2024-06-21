@@ -27,10 +27,48 @@ body {
     }
 }
 
+.neon-text-xs {
+    text-shadow: 0 0 0.5em #9543dc77;
+}
+
 .neon-text-sm {
     text-shadow: 0 0 0.5em #9543dc;
 }
 
 .neon-text-2lg {
     text-shadow: 0.1em 0.1em 0.25em #9543dc;
+}
+
+@keyframes agora-animation {
+    from {
+        background-position: left;
+    }
+
+    to {
+        background-position: right;
+    }
+}
+
+@media not (prefers-reduced-motion) {
+    @supports (background-clip: text) {
+        h1>span.agora {
+            background-image: linear-gradient(135deg, #9543dc, #9543dc22, #9543dc);
+            background-size: 1000%;
+            background-clip: text;
+            color: transparent;
+            animation: agora-animation 4s infinite alternate;
+        }
+    }
+}
+
+@media (prefers-reduced-motion) {
+    h1>span.agora {
+        color: #9543dc;
+    }
+}
+
+@supports not (background-clip: text) {
+    h1>span.agora {
+        color: #9543dc;
+    }
 }
