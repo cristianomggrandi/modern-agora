@@ -3,13 +3,15 @@ import Link from "next/link"
 export default function Home() {
     return (
         <main className="bg-dark flex-1 flex flex-col items-center justify-center p-8 md:p-12 gap-14">
-            <h1 className="text-8xl">
+            <h1 className="text-8xl text-center">
                 Modern <span className="neon-text-xs agora from-nostr via-dark to-nostr">Agora</span>
             </h1>
-            <h2 className="text-2xl">
-                Discover exciting products and auctions in a secure, decentralized marketplace powered by the{" "}
-                <span className="text-nostr neon-text-xs">Nostr</span> Protocol
-            </h2>
+            <div>
+                <p className="text-2xl text-center">Discover exciting products and auctions in a secure,</p>
+                <p className="text-2xl text-center">
+                    decentralized marketplace powered by the <span className="text-nostr neon-text-xs">Nostr</span> Protocol
+                </p>
+            </div>
             <div className="flex gap-4">
                 <Link
                     href="/products"

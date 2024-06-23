@@ -207,11 +207,11 @@ export function NDKContextProvider({ children }: { children: any }) {
     }, [])
 
     useEffect(() => {
-        subscribeAndHandle({ kinds: [30018 as NDKKind] }, updateFetchedProducts)
+        // subscribeAndHandle({ kinds: [30018 as NDKKind] }, updateFetchedProducts)
 
         // subscribeAndHandle({ kinds: [30020 as NDKKind] }, updateFetchedAuctions)
 
-        subscribeAndHandle({ kinds: [30017 as NDKKind] }, event => handleStall(event, stalls))
+        // subscribeAndHandle({ kinds: [30017 as NDKKind] }, event => handleStall(event, stalls))
 
         // subscribeAndHandle({ kinds: [1021 as NDKKind] }, event => handleBid(event, bids))
         // subscribeAndHandle({ kinds: [1022 as NDKKind] }, event => handleConfirmBid(event, bidStatus))

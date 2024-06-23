@@ -3,6 +3,8 @@ import type { Metadata } from "next"
 import { Familjen_Grotesk } from "next/font/google"
 import Link from "next/link"
 import "./globals.css"
+import { GeistSans } from 'geist/font/sans';
+import { GeistMono } from 'geist/font/mono';
 
 const inter = Familjen_Grotesk({ subsets: ["latin"] })
 
@@ -18,7 +20,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body className={inter.className + " h-screen flex flex-col"}>
+            <body className={GeistSans.className + " h-screen flex flex-col"}>
                 <NDKContextProvider>
                     <header className="bg-light">
                         <nav className="flex flex-row items-center justify-around h-full">
