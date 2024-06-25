@@ -8,7 +8,7 @@ import {
     getParsedProductContent,
     getParsedStallContent,
 } from "@/utils/ndk"
-import NDK, { NDKEvent, NDKFilter, NDKKind, NDKNip07Signer, NDKSubscriptionOptions } from "@nostr-dev-kit/ndk"
+import NDK, { NDKEvent, NDKFilter, NDKNip07Signer, NDKSubscriptionOptions } from "@nostr-dev-kit/ndk"
 import { createContext, useContext, useEffect, useRef, useState } from "react"
 
 type NDKContextType = {
@@ -34,16 +34,16 @@ const defaultRelays = [
     "wss://relay.damus.io",
     "wss://relay.nostr.bg",
     // TODO: Return with relays
-    // "wss://nostr.mom",
-    // "wss://nos.lol",
-    // "wss://nostr.bitcoiner.social",
-    // "wss://nostr-pub.wellorder.net",
-    // "wss://nostr.wine",
-    // "wss://eden.nostr.land",
-    // "wss://relay.orangepill.dev",
-    // "wss://puravida.nostr.land",
-    // "wss://relay.nostr.com.au",
-    // "wss://nostr.inosta.cc",
+    "wss://nostr.mom",
+    "wss://nos.lol",
+    "wss://nostr.bitcoiner.social",
+    "wss://nostr-pub.wellorder.net",
+    "wss://nostr.wine",
+    "wss://eden.nostr.land",
+    "wss://relay.orangepill.dev",
+    "wss://puravida.nostr.land",
+    "wss://relay.nostr.com.au",
+    "wss://nostr.inosta.cc",
 ]
 
 const nip07signer = new NDKNip07Signer()
@@ -53,13 +53,15 @@ export const ndk = new NDK({
     signer: nip07signer,
 })
 
-const subscribeAndHandle = (filter: NDKFilter, handler: (event: NDKEvent) => void, opts?: NDKSubscriptionOptions) => {
+export const subscribeAndHandle = (filter: NDKFilter, handler: (event: NDKEvent) => void, opts?: NDKSubscriptionOptions) => {
     const sub = ndk.subscribe(filter, opts)
 
     sub.on("event", (e: NDKEvent) => handler(e))
+
+    return sub
 }
 
-const orderProducts = (event: NDKParsedProductEvent, prev: NDKParsedProductEvent[]) => {
+export const orderProducts = (event: NDKParsedProductEvent, prev: NDKParsedProductEvent[]) => {
     if (!event.content || !event.created_at || Object.keys(event.content).length === 0) return prev
 
     for (let i = 0; i < prev.length; i++) {
@@ -74,7 +76,7 @@ const orderProducts = (event: NDKParsedProductEvent, prev: NDKParsedProductEvent
     return [...prev, event]
 }
 
-const orderAuctions = (event: NDKParsedAuctionEvent, prev: NDKParsedAuctionEvent[]) => {
+export const orderAuctions = (event: NDKParsedAuctionEvent, prev: NDKParsedAuctionEvent[]) => {
     if (!event.content) return prev
 
     // const currentDate = Math.floor(Date.now() / 1000)
@@ -95,7 +97,7 @@ const orderAuctions = (event: NDKParsedAuctionEvent, prev: NDKParsedAuctionEvent
     return [...prev, event]
 }
 
-function handleStall(event: NDKEvent, stalls: Map<string, NDKParsedStallEvent>) {
+export function handleStall(event: NDKEvent, stalls: Map<string, NDKParsedStallEvent>) {
     const parsedStall = addContentToStallEvent(event)
 
     if (!parsedStall) return
@@ -103,7 +105,7 @@ function handleStall(event: NDKEvent, stalls: Map<string, NDKParsedStallEvent>) 
     stalls.set(parsedStall.content.id, parsedStall)
 }
 
-function handleBid(event: NDKEvent, bids: AuctionBids) {
+export function handleBid(event: NDKEvent, bids: AuctionBids) {
     const auctionIdTag = event.tags.find(t => t[0] === "e")
 
     if (!auctionIdTag) return
@@ -119,7 +121,7 @@ function handleBid(event: NDKEvent, bids: AuctionBids) {
     )
 }
 
-function handleConfirmBid(event: NDKEvent, bidStatus: Map<string, string>) {
+export function handleConfirmBid(event: NDKEvent, bidStatus: Map<string, string>) {
     // TODO: Check if it is the right pubkey
 
     const bidIdTag = event.tags[0]
@@ -135,19 +137,19 @@ function handleConfirmBid(event: NDKEvent, bidStatus: Map<string, string>) {
     bidStatus.set(bidId, status)
 }
 
-function addContentToProductEvent(event: NDKEvent) {
+export function addContentToProductEvent(event: NDKEvent) {
     const content = getParsedProductContent(event)
 
     return { ...event, content }
 }
 
-function addContentToAuctionEvent(event: NDKEvent) {
+export function addContentToAuctionEvent(event: NDKEvent) {
     const content = getParsedAuctionContent(event)
 
     return { ...event, content }
 }
 
-function addContentToStallEvent(event: NDKEvent) {
+export function addContentToStallEvent(event: NDKEvent) {
     const content = getParsedStallContent(event)
 
     return { ...event, content }
@@ -208,11 +210,8 @@ export function NDKContextProvider({ children }: { children: any }) {
 
     useEffect(() => {
         // subscribeAndHandle({ kinds: [30018 as NDKKind] }, updateFetchedProducts)
-
         // subscribeAndHandle({ kinds: [30020 as NDKKind] }, updateFetchedAuctions)
-
         // subscribeAndHandle({ kinds: [30017 as NDKKind] }, event => handleStall(event, stalls))
-
         // subscribeAndHandle({ kinds: [1021 as NDKKind] }, event => handleBid(event, bids))
         // subscribeAndHandle({ kinds: [1022 as NDKKind] }, event => handleConfirmBid(event, bidStatus))
     }, [])
@@ -226,6 +225,14 @@ export default function useNDK() {
     if (!context) throw new Error("useNDK must be within a Context Provider")
 
     return context
+}
+
+export function useSubscribe() {
+    const context = useContext(NDKContext)
+
+    if (!context) throw new Error("useNDK must be within a Context Provider")
+
+    return context.subscribeAndHandle
 }
 
 export function useProducts() {

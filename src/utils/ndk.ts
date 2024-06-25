@@ -160,6 +160,8 @@ function isAuctionContentValid(auctionContent: NDKAuctionContent) {
 
 export function getParsedProductContent(event: NDKEvent): NDKProductContent {
     try {
+        if (!event.content) return {} as NDKAuctionContent
+
         const content = JSON.parse(event.content)
 
         const isValid = isProductContentValid(content)

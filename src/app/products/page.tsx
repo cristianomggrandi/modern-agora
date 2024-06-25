@@ -1,9 +1,10 @@
 "use client"
 
-import { NDKParsedProductEvent, useProducts, useStalls } from "@/hooks/useNDK"
+import { NDKParsedProductEvent, addContentToProductEvent, orderProducts, subscribeAndHandle } from "@/hooks/useNDK"
 import { nFormatter } from "@/utils/functions"
+import { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import PagesOptions from "../components/PagesOptions"
 
 const ProductCard = ({ event }: { event: NDKParsedProductEvent }) => {
@@ -41,26 +42,44 @@ const ProductCard = ({ event }: { event: NDKParsedProductEvent }) => {
 const ITEMS_PER_PAGE = 5
 
 export default function Products() {
-    const products = useProducts()
-    const stalls = useStalls()
+    const [products, setProducts] = useState<NDKParsedProductEvent[]>([])
+    const fetchedProducts = useRef<NDKParsedProductEvent[]>([])
 
-    const productsWithStalls = products.filter(p => stalls.get(p.content.stall_id))
+    const updateFetchedProducts = (event: NDKEvent) => {
+        fetchedProducts.current = !fetchedProducts.current.find(e => e.id === event.id)
+            ? orderProducts(addContentToProductEvent(event), fetchedProducts.current)
+            : fetchedProducts.current
+    }
+
+    useEffect(() => {
+        subscribeAndHandle({ kinds: [NDKKind.MarketProduct] }, updateFetchedProducts)
+
+        const productsInterval = setInterval(() => {
+            setProducts(prev => {
+                if (fetchedProducts.current === prev) clearInterval(productsInterval)
+
+                return fetchedProducts.current
+            })
+        }, 1000)
+
+        return () => {
+            clearInterval(productsInterval)
+        }
+    }, [])
 
     const [page, setPage] = useState(1)
-    const pages = Array.from({ length: Math.floor(productsWithStalls.length / ITEMS_PER_PAGE) }, (v, i) => i + 1)
+    const pages = Array.from({ length: Math.floor(products.length / ITEMS_PER_PAGE) }, (v, i) => i + 1)
     const prevPage = () => setPage(prev => prev - 1)
     const nextPage = () => setPage(prev => prev + 1)
 
     return (
-        <main className="flex flex-col items-center justify-center p-8 md:p-12">
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4 md:gap-0 md:block md:divide-y divide-nostr md:border border-nostr shadow-nostr md:shadow-sm rounded-lg">
-                {productsWithStalls.slice(ITEMS_PER_PAGE * (page - 1), ITEMS_PER_PAGE * page).map(event => (
+        <main className="flex flex-col items-center justify-stretch p-4">
+            <div className="w-full grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4 md:block md:divide-y divide-nostr md:border border-nostr shadow-nostr md:shadow-sm rounded-lg">
+                {products.slice(ITEMS_PER_PAGE * (page - 1), ITEMS_PER_PAGE * page).map(event => (
                     <ProductCard key={event.id} event={event} />
                 ))}
             </div>
-            {productsWithStalls.length ? (
-                <PagesOptions page={page} setPage={setPage} prevPage={prevPage} nextPage={nextPage} pages={pages} />
-            ) : null}
+            {products.length ? <PagesOptions page={page} setPage={setPage} prevPage={prevPage} nextPage={nextPage} pages={pages} /> : null}
         </main>
     )
 }

@@ -1,9 +1,17 @@
 "use client"
 
-import { ndk, useProducts, useStalls } from "@/hooks/useNDK"
+import {
+    NDKParsedProductEvent,
+    NDKParsedStallEvent,
+    addContentToProductEvent,
+    addContentToStallEvent,
+    ndk,
+    subscribeAndHandle,
+} from "@/hooks/useNDK"
 import { NDKCheckoutContent, parseDescription } from "@/utils/ndk"
 import { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { v4 as uuidv4 } from "uuid"
 
 function ParsedDescription({ description }: { description: string | undefined }) {
     if (!description) return null
@@ -22,23 +30,6 @@ function ParsedDescription({ description }: { description: string | undefined })
     )
 }
 
-function sendBid(e: React.FormEvent<HTMLFormElement>, auctionId: string) {
-    e.preventDefault()
-
-    const target = e.currentTarget
-
-    const bid = target.bid.value
-
-    if (!bid) return
-
-    const ndkEvent = new NDKEvent(ndk)
-
-    ndkEvent.kind = 1021 as NDKKind
-    ndkEvent.content = bid
-    ndkEvent.tags = [["e", auctionId]]
-    ndkEvent.publish()
-}
-
 const handleBuy = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const target = e.currentTarget
@@ -53,7 +44,7 @@ const handleBuy = async (e: React.FormEvent<HTMLFormElement>) => {
 
     const eventContent: NDKCheckoutContent = {
         type: 0,
-        id: "teste",
+        id: uuidv4(),
         name: target.customer.value,
         address: target.address.value,
         message: target.message.value,
@@ -78,19 +69,37 @@ const handleBuy = async (e: React.FormEvent<HTMLFormElement>) => {
 }
 
 export default function Product(props: { params: { productId: string } }) {
-    const products = useProducts()
-    const stalls = useStalls()
+    const [stall, setStall] = useState<NDKParsedStallEvent>()
+    const [product, setProduct] = useState<NDKParsedProductEvent>()
+
+    useEffect(() => {
+        const findProductById = (event: NDKEvent) => {
+            const parsedProduct = addContentToProductEvent(event)
+
+            if (parsedProduct.content.id === props.params.productId) {
+                setProduct(parsedProduct)
+                productSub.stop()
+
+                const findStallById = (event: NDKEvent) => {
+                    const parsedStall = addContentToStallEvent(event)
+
+                    if (parsedStall.content.id === parsedProduct.content.stall_id) {
+                        setStall(parsedStall)
+                        stallSub.stop()
+                    }
+                }
+
+                const stallSub = subscribeAndHandle({ kinds: [NDKKind.MarketStall] }, findStallById)
+            }
+        }
+
+        const productSub = subscribeAndHandle({ kinds: [NDKKind.MarketProduct] }, findProductById)
+    }, [])
 
     const [imageIndex, setImageIndex] = useState(0)
     const modalRef = useRef<HTMLDialogElement>(null)
 
-    const product = products.find(a => a.content.id === props.params.productId)
-
-    if (!product) return <div>Loading...</div>
-
-    const stall = stalls.get(product.content.stall_id)
-
-    if (!stall) return <div>Loading...</div>
+    if (!product || !stall) return <div>Loading...</div>
 
     const nextImage = () => (product.content.images ? setImageIndex(prev => (prev + 1) % product.content.images!.length) : 0)
     const prevImage = () => (product.content.images ? setImageIndex(prev => (prev > 0 ? prev - 1 : product.content.images!.length - 1)) : 0)
