@@ -1,12 +1,8 @@
 import { NDKContextProvider } from "@/hooks/useNDK"
+import { GeistSans } from "geist/font/sans"
 import type { Metadata } from "next"
-import { Familjen_Grotesk } from "next/font/google"
 import Link from "next/link"
 import "./globals.css"
-import { GeistSans } from 'geist/font/sans';
-import { GeistMono } from 'geist/font/mono';
-
-const inter = Familjen_Grotesk({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
     title: "Create Next App",
@@ -31,22 +27,22 @@ export default function RootLayout({
                                         Logo
                                     </Link>
                                 </li>
-                                <li>
+                                <li className="flex-1 max-w-36 transition-colors duration-300 hover:bg-dark hover:text-nostr">
                                     <Link className="my-2 px-6 flex items-center justify-center h-12" href="/products">
                                         Products
                                     </Link>
                                 </li>
-                                <li>
+                                <li className="flex-1 max-w-36 transition-colors duration-300 hover:bg-dark hover:text-nostr">
                                     <Link className="my-2 px-6 flex items-center justify-center h-12" href="/products">
                                         Stalls
                                     </Link>
                                 </li>
-                                <li>
+                                <li className="flex-1 max-w-36 transition-colors duration-300 hover:bg-dark hover:text-nostr">
                                     <Link className="my-2 px-6 flex items-center justify-center h-12" href="/products">
                                         Auctions
                                     </Link>
                                 </li>
-                                <li>
+                                <li className="flex-1 max-w-36 transition-colors duration-300 hover:bg-dark hover:text-nostr">
                                     <Link className="my-2 px-6 flex items-center justify-center h-12" href="/products">
                                         About Us
                                     </Link>
