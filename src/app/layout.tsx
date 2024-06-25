@@ -2,6 +2,7 @@ import { NDKContextProvider } from "@/hooks/useNDK"
 import { GeistSans } from "geist/font/sans"
 import type { Metadata } from "next"
 import Link from "next/link"
+import HeaderUser from "./components/HeaderUser"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -16,40 +17,39 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body className={GeistSans.className + " h-screen flex flex-col"}>
+            <body className={GeistSans.className + " [&>main]:bg-dark [&>main]:flex-1 min-h-screen flex flex-col"}>
                 <NDKContextProvider>
                     <header className="bg-light">
                         <nav className="flex flex-row items-center justify-around h-full">
                             <ul className="flex flex-row items-center justify-around w-full">
                                 {/* TODO: Replace with logo (to be created) */}
                                 <li>
-                                    <Link className="my-2 px-6 flex items-center justify-center h-12" href="/">
+                                    <Link className="py-2 px-6 flex items-center justify-center h-16" href="/">
                                         Logo
                                     </Link>
                                 </li>
                                 <li className="flex-1 max-w-36 transition-colors duration-300 hover:bg-dark hover:text-nostr">
-                                    <Link className="my-2 px-6 flex items-center justify-center h-12" href="/products">
+                                    <Link className="py-2 px-6 flex items-center justify-center h-16" href="/products">
                                         Products
                                     </Link>
                                 </li>
                                 <li className="flex-1 max-w-36 transition-colors duration-300 hover:bg-dark hover:text-nostr">
-                                    <Link className="my-2 px-6 flex items-center justify-center h-12" href="/products">
-                                        Stalls
-                                    </Link>
-                                </li>
-                                <li className="flex-1 max-w-36 transition-colors duration-300 hover:bg-dark hover:text-nostr">
-                                    <Link className="my-2 px-6 flex items-center justify-center h-12" href="/products">
+                                    <Link className="py-2 px-6 flex items-center justify-center h-16" href="/auctions">
                                         Auctions
                                     </Link>
                                 </li>
                                 <li className="flex-1 max-w-36 transition-colors duration-300 hover:bg-dark hover:text-nostr">
-                                    <Link className="my-2 px-6 flex items-center justify-center h-12" href="/products">
+                                    <Link className="py-2 px-6 flex items-center justify-center h-16" href="/stalls">
+                                        Stalls
+                                    </Link>
+                                </li>
+                                <li className="flex-1 max-w-36 transition-colors duration-300 hover:bg-dark hover:text-nostr">
+                                    <Link className="py-2 px-6 flex items-center justify-center h-16" href="/aboutus">
                                         About Us
                                     </Link>
                                 </li>
                                 <li>
-                                    {/* <HeaderUser /> */}
-                                    User
+                                    <HeaderUser />
                                 </li>
                             </ul>
                         </nav>

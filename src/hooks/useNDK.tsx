@@ -8,7 +8,7 @@ import {
     getParsedProductContent,
     getParsedStallContent,
 } from "@/utils/ndk"
-import NDK, { NDKEvent, NDKFilter, NDKNip07Signer, NDKSubscriptionOptions } from "@nostr-dev-kit/ndk"
+import NDK, { NDKEvent, NDKFilter, NDKNip07Signer, NDKSubscriptionOptions, NDKUser } from "@nostr-dev-kit/ndk"
 import { createContext, useContext, useEffect, useRef, useState } from "react"
 
 type NDKContextType = {
@@ -18,6 +18,8 @@ type NDKContextType = {
     stalls: Map<string, NDKParsedStallEvent>
     bids: AuctionBids
     bidStatus: Map<string, "accepted" | "rejected" | "pending" | "winner">
+    loginWithNIP07: () => void
+    user?: NDKUser
 }
 
 export type NDKParsedProductEvent = ReturnType<typeof addContentToProductEvent>
@@ -185,7 +187,27 @@ export function NDKContextProvider({ children }: { children: any }) {
             : fetchedAuctions.current
     }
 
+    const [user, setUser] = useState<NDKUser>()
+
+    const loginWithNIP07 = () => {
+        if (!ndk.signer) throw new Error("No NDK NIP-07 Signer")
+
+        ndk.signer.user().then(user => {
+            if (!user.npub) throw new Error("Failed to fetch for your user")
+
+            user.fetchProfile().then(userProfile => {
+                if (!userProfile) throw new Error("User profile not found")
+
+                setUser(user)
+
+                localStorage.setItem("user", JSON.stringify(user))
+            })
+        })
+    }
+
     useEffect(() => {
+        loginWithNIP07()
+
         const auctionsInterval = setInterval(() => {
             setAuctions(prev => {
                 if (fetchedAuctions.current === prev) clearInterval(auctionsInterval)
@@ -216,7 +238,11 @@ export function NDKContextProvider({ children }: { children: any }) {
         // subscribeAndHandle({ kinds: [1022 as NDKKind] }, event => handleConfirmBid(event, bidStatus))
     }, [])
 
-    return <NDKContext.Provider value={{ subscribeAndHandle, products, auctions, stalls, bids, bidStatus }}>{children}</NDKContext.Provider>
+    return (
+        <NDKContext.Provider value={{ subscribeAndHandle, products, auctions, stalls, bids, bidStatus, loginWithNIP07, user }}>
+            {children}
+        </NDKContext.Provider>
+    )
 }
 
 export default function useNDK() {
@@ -277,4 +303,20 @@ export function useBidStatus() {
     // TODO: Filter bids that are confirmed
 
     return context.bidStatus
+}
+
+export function useLogin() {
+    const context = useContext(NDKContext)
+
+    if (!context) throw new Error("useLogin must be within a Context Provider")
+
+    return context.loginWithNIP07
+}
+
+export function useUser() {
+    const context = useContext(NDKContext)
+
+    if (!context) throw new Error("useUser must be within a Context Provider")
+
+    return context.user
 }

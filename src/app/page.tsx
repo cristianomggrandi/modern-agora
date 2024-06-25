@@ -2,7 +2,7 @@ import Link from "next/link"
 
 export default function Home() {
     return (
-        <main className="bg-dark flex-1 flex flex-col items-center justify-center p-8 md:p-12 gap-14">
+        <main className="flex-1 flex flex-col items-center justify-center p-8 md:p-12 gap-14">
             <h1 className="text-8xl text-center">
                 Modern <span className="neon-text-xs agora from-nostr via-dark to-nostr">Agora</span>
             </h1>
