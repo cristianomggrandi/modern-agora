@@ -15,14 +15,14 @@ const ProductCard = ({ event }: { event: NDKParsedProductEvent }) => {
             className="relative flex flex-col gap-2 p-1 justify-center hover:outline outline-nostr rounded-lg"
             href={"/product/" + event.content.id}
         >
-            <div className="relative aspect-square w-full flex-shrink-0 flex items-center justify-center overflow-hidden">
+            <div className="relative aspect-square w-full flex-shrink-0 flex items-center justify-center rounded overflow-hidden">
                 <div
                     className="absolute w-full h-full blur-sm bg-center bg-cover bg-no-repeat"
                     style={{ backgroundImage: event.content.images ? `url(${event.content.images[0]})` : undefined }}
                 />
                 {event.content.images?.length ? (
                     <img
-                        className="z-10 max-h-full max-w-full rounded"
+                        className="z-10 max-h-full max-w-full"
                         src={event.content.images[0]}
                         alt={event.content.name}
                         height={96}
