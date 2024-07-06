@@ -15,6 +15,7 @@ export default function RootLayout({
 }: Readonly<{
     children: React.ReactNode
 }>) {
+    // TODO: Maybe change layout to template so that state updates (I can try to select active page)
     return (
         <html lang="en">
             <body className={GeistSans.className + " [&>main]:bg-dark [&>main]:flex-1 min-h-screen flex flex-col"}>
