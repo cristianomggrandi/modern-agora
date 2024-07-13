@@ -4,6 +4,7 @@ import { NDKParsedProductEvent, addContentToProductEvent, orderProducts, subscri
 import { nFormatter } from "@/utils/functions"
 import { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { SyntheticEvent, useEffect, useRef, useState } from "react"
 import SearchField from "../components/SearchField"
 
@@ -53,7 +54,9 @@ const filterProductsWithSearch = (products: NDKParsedProductEvent[], search: str
 export default function Products() {
     const [products, setProducts] = useState<NDKParsedProductEvent[]>([])
     const fetchedProducts = useRef<NDKParsedProductEvent[]>([])
-    const [search, setSearch] = useState("")
+
+    const searchParams = useSearchParams()
+    const [search, setSearch] = useState(searchParams.get("search") ?? "")
 
     const handleSearch = (e: SyntheticEvent) => {
         e.preventDefault()

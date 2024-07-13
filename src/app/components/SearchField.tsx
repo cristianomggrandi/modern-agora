@@ -2,6 +2,7 @@
 
 import { faCircleXmark } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { useSearchParams } from "next/navigation"
 import { SyntheticEvent, useState } from "react"
 
 type Props = {
@@ -11,7 +12,8 @@ type Props = {
 }
 
 const SearchField = (props: Props) => {
-    const [search, setSearch] = useState("")
+    const searchParams = useSearchParams()
+    const [search, setSearch] = useState(searchParams.get("search") ?? "")
 
     const handleClear = () => {
         setSearch("")
