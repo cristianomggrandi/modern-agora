@@ -9,9 +9,79 @@ import {
     subscribeAndHandle,
 } from "@/hooks/useNDK"
 import { NDKCheckoutContent, parseDescription } from "@/utils/ndk"
+import { faAngleLeft, faAngleRight } from "@fortawesome/free-solid-svg-icons"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
 import { useEffect, useRef, useState } from "react"
 import { v4 as uuidv4 } from "uuid"
+
+function ProductImages({ product }: { product: NDKParsedProductEvent }) {
+    const [imageIndex, setImageIndex] = useState(0)
+
+    const nextImage = () => (product.content.images ? setImageIndex(prev => (prev + 1) % product.content.images!.length) : 0)
+    const prevImage = () => (product.content.images ? setImageIndex(prev => (prev > 0 ? prev - 1 : product.content.images!.length - 1)) : 0)
+
+    return (
+        <div className="flex-1 flex flex-col-reverse md:flex-row items-center justify-center gap-4">
+            <div className="flex md:flex-col gap-2 justify-center">
+                {product.content.images?.length! > 1
+                    ? product.content.images!.map((img, index) => (
+                          <div
+                              className="h-12 w-12 overflow-hidden flex items-center cursor-pointer"
+                              onClick={() => setImageIndex(index)}
+                              onMouseOver={() => setImageIndex(index)}
+                              key={index}
+                          >
+                              <img src={img} alt={"Image " + index} height={48} width={48} />
+                          </div>
+                      ))
+                    : null}
+            </div>
+            <div className="flex border border-nostr shadow-nostr shadow rounded w-[90%] md:h-96 items-center justify-center relative">
+                {product.content.images ? (
+                    <>
+                        {product.content.images.map((image, index) => (
+                            <div className="bg-center">
+                                <img
+                                    src={image}
+                                    className={`absolute left-0 w-full h-full blur-sm object-center object-cover ${
+                                        imageIndex === index ? "block" : "hidden"
+                                    }`}
+                                    loading="lazy"
+                                    role="presentation"
+                                />
+                                <img
+                                    src={image}
+                                    alt={product.content.name}
+                                    className={`relative max-w-full max-h-96 z-10 ${imageIndex === index ? "block" : "hidden"}`}
+                                    loading="lazy"
+                                />
+                            </div>
+                        ))}
+                        {product.content.images?.length > 1 ? (
+                            <>
+                                <button
+                                    className="absolute z-10 top-1/2 left-0 transform translate-x-1/2 -translate-y-1/2 flex items-center justify-center rounded-full h-8 opacity-85 aspect-square bg-nostr font-bold"
+                                    onClick={prevImage}
+                                >
+                                    <FontAwesomeIcon icon={faAngleLeft} />
+                                </button>
+                                <button
+                                    className="absolute z-10 top-1/2 right-0 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center rounded-full h-8 opacity-85 aspect-square bg-nostr font-bold"
+                                    onClick={nextImage}
+                                >
+                                    <FontAwesomeIcon icon={faAngleRight} />
+                                </button>
+                            </>
+                        ) : null}
+                    </>
+                ) : (
+                    "No images"
+                )}
+            </div>
+        </div>
+    )
+}
 
 function ParsedDescription({ description }: { description: string | undefined }) {
     if (!description) return null
@@ -96,13 +166,9 @@ export default function Product(props: { params: { productId: string } }) {
         const productSub = subscribeAndHandle({ kinds: [NDKKind.MarketProduct] }, findProductById)
     }, [])
 
-    const [imageIndex, setImageIndex] = useState(0)
     const modalRef = useRef<HTMLDialogElement>(null)
 
     if (!product || !stall) return <div>Loading...</div>
-
-    const nextImage = () => (product.content.images ? setImageIndex(prev => (prev + 1) % product.content.images!.length) : 0)
-    const prevImage = () => (product.content.images ? setImageIndex(prev => (prev > 0 ? prev - 1 : product.content.images!.length - 1)) : 0)
 
     const openModal = () => modalRef.current?.showModal()
     const closeModal = () => modalRef.current?.close()
@@ -111,52 +177,7 @@ export default function Product(props: { params: { productId: string } }) {
         <main className="flex flex-col justify-center p-6 sm:p-[4%] gap-8 min-h-full">
             <h1 className="text-lg sm:text-2xl neon-text-2lg font-semibold text-center">{product.content.name}</h1>
             <div className="flex flex-col-reverse md:flex-row items-center sm:items-stretch justify-center gap-8">
-                <div className="flex-1 flex flex-col-reverse md:flex-row items-center justify-center gap-4">
-                    <div className="flex md:flex-col gap-2 justify-center">
-                        {product.content.images?.length! > 1
-                            ? product.content.images!.map((img, index) => (
-                                  <div
-                                      className="h-12 w-12 border border-nostr shadow-nostr shadow rounded overflow-hidden flex items-center cursor-pointer"
-                                      onClick={() => setImageIndex(index)}
-                                      key={index}
-                                  >
-                                      <img src={img} alt={"Image " + index} height={48} width={48} />
-                                  </div>
-                              ))
-                            : null}
-                    </div>
-                    <div className="flex w-[90%] md:h-96 items-center justify-center relative">
-                        {product.content.images ? (
-                            <>
-                                <div className="border border-nostr bg-center shadow-md shadow-nostr">
-                                    <img
-                                        src={product.content.images[imageIndex]}
-                                        alt={product.content.name}
-                                        className="max-w-full max-h-96"
-                                    />
-                                </div>
-                                {product.content.images?.length > 1 ? (
-                                    <>
-                                        <button
-                                            className="absolute top-1/2 left-0 transform translate-x-1/2 -translate-y-1/2 flex items-center justify-center rounded-full h-8 opacity-85 aspect-square bg-nostr font-bold"
-                                            onClick={prevImage}
-                                        >
-                                            {"<"}
-                                        </button>
-                                        <button
-                                            className="absolute top-1/2 right-0 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center rounded-full h-8 opacity-85 aspect-square bg-nostr font-bold"
-                                            onClick={nextImage}
-                                        >
-                                            {">"}
-                                        </button>
-                                    </>
-                                ) : null}
-                            </>
-                        ) : (
-                            "No images"
-                        )}
-                    </div>
-                </div>
+                <ProductImages product={product} />
                 <div className="flex-1 flex flex-col justify-between gap-6">
                     <ParsedDescription description={product.content.description} />
                     <div>
