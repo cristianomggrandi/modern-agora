@@ -1,7 +1,7 @@
 "use client"
 
 import { NDKParsedProductEvent, addContentToProductEvent, orderProducts, subscribeAndHandle } from "@/hooks/useNDK"
-import { nFormatter } from "@/utils/functions"
+import { nFormatter, setCookie } from "@/utils/functions"
 import { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
@@ -35,6 +35,10 @@ const ProductCard = ({
             <Link
                 className="max-w-52 h-full relative flex flex-col gap-2 p-1 justify-center hover:outline outline-nostr rounded-lg"
                 href={"/product/" + event.content.id}
+                onClick={() => {
+                    const originalEvent = { ...event, content: JSON.stringify(event.content) }
+                    setCookie(event.content.id, (originalEvent as NDKEvent).serialize(), 0.05)
+                }}
             >
                 <div className="relative aspect-square w-full flex-shrink-0 flex items-center justify-center rounded overflow-hidden">
                     <div
@@ -88,6 +92,8 @@ export default function Products() {
     const clearSearch = () => setSearch("")
 
     const updateFetchedProducts = (event: NDKEvent) => {
+        // TODO: Create map with original events to pass to Product
+
         fetchedProducts.current = !fetchedProducts.current.find(e => e.id === event.id)
             ? orderProducts(addContentToProductEvent(event), fetchedProducts.current)
             : fetchedProducts.current
