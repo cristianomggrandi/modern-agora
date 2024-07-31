@@ -12,7 +12,7 @@ type Props = {
 
 export default function PagesOptions({ page, setPage, nextPage, prevPage, pages }: Props) {
     return (
-        <div className="flex gap-1 mt-4">
+        <div className="flex items-center gap-1 h-8">
             <button onClick={() => setPage(1)} disabled={page === 1} className="w-6 h-6 text-center border border-nostr bg-nostr">
                 <FontAwesomeIcon icon={faAnglesLeft} />
             </button>
