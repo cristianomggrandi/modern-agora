@@ -1,18 +1,10 @@
 "use client"
 
-import {
-    addContentToProductEvent,
-    addContentToStallEvent,
-    ndk,
-    NDKParsedProductEvent,
-    NDKParsedStallEvent,
-    subscribeAndHandle,
-} from "@/hooks/useNDK"
-import { getCookie } from "@/utils/functions"
+import { getProductById, getStallById, ndk, NDKParsedProductEvent, NDKParsedStallEvent } from "@/hooks/useNDK"
 import { NDKCheckoutContent, parseDescription } from "@/utils/ndk"
 import { faAngleLeft, faAngleRight } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { deserialize, NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
+import { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
 import { useEffect, useRef, useState } from "react"
 import { v4 as uuidv4 } from "uuid"
 
@@ -144,47 +136,12 @@ export default function Product(props: { params: { productId: string } }) {
     const [product, setProduct] = useState<NDKParsedProductEvent>()
 
     useEffect(() => {
-        const storedProduct = getCookie(props.params.productId)
-
-        if (storedProduct) {
-            const parsedProduct = addContentToProductEvent(deserialize(storedProduct) as unknown as NDKEvent)
-
-            setProduct(parsedProduct)
-
-            const findStallById = (event: NDKEvent) => {
-                const parsedStall = addContentToStallEvent(event)
-
-                if (parsedStall.content.id === parsedProduct.content.stall_id) {
-                    console.log("event", event)
-                    setStall(parsedStall)
-                    stallSub.stop()
-                }
+        getProductById(props.params.productId).then(product => {
+            if (product) {
+                setProduct(product)
+                getStallById(product.content.stall_id).then(setStall)
             }
-
-            const stallSub = subscribeAndHandle({ kinds: [NDKKind.MarketStall] }, findStallById)
-        } else {
-            const findProductById = (event: NDKEvent) => {
-                const parsedProduct = addContentToProductEvent(event)
-
-                if (parsedProduct.content.id === props.params.productId) {
-                    setProduct(parsedProduct)
-                    productSub.stop()
-
-                    const findStallById = (event: NDKEvent) => {
-                        const parsedStall = addContentToStallEvent(event)
-
-                        if (parsedStall.content.id === parsedProduct.content.stall_id) {
-                            setStall(parsedStall)
-                            stallSub.stop()
-                        }
-                    }
-
-                    const stallSub = subscribeAndHandle({ kinds: [NDKKind.MarketStall] }, findStallById)
-                }
-            }
-
-            const productSub = subscribeAndHandle({ kinds: [NDKKind.MarketProduct] }, findProductById)
-        }
+        })
     }, [])
 
     const modalRef = useRef<HTMLDialogElement>(null)

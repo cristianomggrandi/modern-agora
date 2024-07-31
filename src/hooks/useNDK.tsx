@@ -1,5 +1,6 @@
 "use client"
 
+import { getCookie, setCookie } from "@/utils/functions"
 import {
     getAuctionEndDate,
     getBidStatus,
@@ -8,7 +9,7 @@ import {
     getParsedProductContent,
     getParsedStallContent,
 } from "@/utils/ndk"
-import NDK, { NDKEvent, NDKFilter, NDKNip07Signer, NDKSubscriptionOptions, NDKUser } from "@nostr-dev-kit/ndk"
+import NDK, { deserialize, NDKEvent, NDKFilter, NDKKind, NDKNip07Signer, NDKSubscriptionOptions, NDKUser } from "@nostr-dev-kit/ndk"
 import { createContext, useContext, useEffect, useRef, useState } from "react"
 
 type NDKContextType = {
@@ -61,6 +62,34 @@ export const subscribeAndHandle = (filter: NDKFilter, handler: (event: NDKEvent)
     sub.on("event", (e: NDKEvent) => handler(e))
 
     return sub
+}
+
+export const getProductById = async (id: string) => {
+    const storedProduct = getCookie(id)
+
+    if (storedProduct) return addContentToProductEvent(deserialize(storedProduct) as unknown as NDKEvent)
+
+    const event = await ndk.fetchEvent({ "#d": [id], kinds: [NDKKind.MarketProduct] })
+
+    if (!event) return undefined
+
+    setCookie(id, event.serialize(), 0.05)
+
+    return addContentToProductEvent(event)
+}
+
+export const getStallById = async (id: string) => {
+    const storedStall = getCookie(id)
+
+    if (storedStall) return addContentToStallEvent(deserialize(storedStall) as unknown as NDKEvent)
+
+    const event = await ndk.fetchEvent({ "#d": [id], kinds: [NDKKind.MarketStall] })
+
+    if (!event) return undefined
+
+    setCookie(id, event.serialize(), 0.05)
+
+    return addContentToStallEvent(event)
 }
 
 export const orderProducts = (event: NDKParsedProductEvent, prev: NDKParsedProductEvent[]) => {
