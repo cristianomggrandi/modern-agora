@@ -18,9 +18,10 @@ export default function RootLayout({
     // TODO: Maybe change layout to template so that state updates (I can try to select active page)
     return (
         <html lang="en">
+            <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
             <body className={GeistSans.className + " [&>main]:bg-dark [&>main]:flex-1 min-h-screen flex flex-col"}>
                 <NDKContextProvider>
-                    <header className="bg-light">
+                    <header className="hidden sm:block bg-light">
                         <nav className="flex flex-row items-center justify-around h-full">
                             <ul className="flex flex-row items-center justify-around w-full">
                                 {/* TODO: Replace with logo (to be created) */}
