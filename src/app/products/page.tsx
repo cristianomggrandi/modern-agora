@@ -124,7 +124,7 @@ export default function Products() {
             <div className="w-full flex justify-end">
                 <SearchField handleSearch={handleSearch} clearSearch={clearSearch} />
             </div>
-            <div className="w-full grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] auto-rows-min gap-6 rounded-lg">
+            <div className="w-full grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] justify-items-center auto-rows-min gap-6 rounded-lg">
                 {/* TODO: Limit amount of products and show button for "Show More" on the bottom with grandient (transparent on top and filled on the bottom) */}
                 {(search ? filterProductsWithSearch(products, search) : products)
                     .slice(0, numberOfProductsToShow)
