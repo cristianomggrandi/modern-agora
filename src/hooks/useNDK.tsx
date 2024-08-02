@@ -12,8 +12,17 @@ import {
 import NDK, { deserialize, NDKEvent, NDKFilter, NDKKind, NDKNip07Signer, NDKSubscriptionOptions, NDKUser } from "@nostr-dev-kit/ndk"
 import { createContext, useContext, useEffect, useRef, useState } from "react"
 
+export type NDKParsedProductEvent = ReturnType<typeof addContentToProductEvent>
+
+export type NDKParsedAuctionEvent = ReturnType<typeof addContentToAuctionEvent>
+
+export type NDKParsedStallEvent = ReturnType<typeof addContentToStallEvent>
+
 type NDKContextType = {
-    subscribeAndHandle: (ndk: NDK, filter: NDKFilter, handler: (event: NDKEvent) => void, opts?: NDKSubscriptionOptions) => void
+    ndk?: NDK
+    subscribeAndHandle: (filter: NDKFilter, handler: (event: NDKEvent) => void, opts?: NDKSubscriptionOptions) => void
+    getProductById: (id: string) => Promise<NDKParsedProductEvent | undefined>
+    getStallById: (id: string) => Promise<NDKParsedStallEvent | undefined>
     products: NDKParsedProductEvent[]
     auctions: NDKParsedAuctionEvent[]
     stalls: Map<string, NDKParsedStallEvent>
@@ -22,12 +31,6 @@ type NDKContextType = {
     loginWithNIP07: () => void
     user?: NDKUser
 }
-
-export type NDKParsedProductEvent = ReturnType<typeof addContentToProductEvent>
-
-export type NDKParsedAuctionEvent = ReturnType<typeof addContentToAuctionEvent>
-
-export type NDKParsedStallEvent = ReturnType<typeof addContentToStallEvent>
 
 // export type NDKParsedConfirmationBidEvent = ReturnType<typeof addContentToConfirmationBidEvent>
 
@@ -48,42 +51,6 @@ const defaultRelays = [
     "wss://relay.nostr.com.au",
     "wss://nostr.inosta.cc",
 ]
-
-export const subscribeAndHandle = (ndk: NDK, filter: NDKFilter, handler: (event: NDKEvent) => void, opts?: NDKSubscriptionOptions) => {
-    const sub = ndk.subscribe(filter, opts)
-
-    sub.on("event", (e: NDKEvent) => handler(e))
-
-    return sub
-}
-
-export const getProductById = async (ndk: NDK, id: string) => {
-    const storedProduct = getCookie(id)
-
-    if (storedProduct) return addContentToProductEvent(deserialize(storedProduct) as unknown as NDKEvent)
-
-    const event = await ndk.fetchEvent({ "#d": [id], kinds: [NDKKind.MarketProduct] })
-
-    if (!event) return undefined
-
-    setCookie(id, event.serialize(), 0.05)
-
-    return addContentToProductEvent(event)
-}
-
-export const getStallById = async (ndk: NDK, id: string) => {
-    const storedStall = getCookie(id)
-
-    if (storedStall) return addContentToStallEvent(deserialize(storedStall) as unknown as NDKEvent)
-
-    const event = await ndk.fetchEvent({ "#d": [id], kinds: [NDKKind.MarketStall] })
-
-    if (!event) return undefined
-
-    setCookie(id, event.serialize(), 0.05)
-
-    return addContentToStallEvent(event)
-}
 
 export const orderProducts = (event: NDKParsedProductEvent, prev: NDKParsedProductEvent[]) => {
     if (!event.content || !event.created_at || Object.keys(event.content).length === 0) return prev
@@ -260,16 +227,64 @@ export function NDKContextProvider({ children }: { children: any }) {
         }
     }, [])
 
-    useEffect(() => {
-        // subscribeAndHandle({ kinds: [30018 as NDKKind] }, updateFetchedProducts)
-        // subscribeAndHandle({ kinds: [30020 as NDKKind] }, updateFetchedAuctions)
-        // subscribeAndHandle({ kinds: [30017 as NDKKind] }, event => handleStall(event, stalls))
-        // subscribeAndHandle({ kinds: [1021 as NDKKind] }, event => handleBid(event, bids))
-        // subscribeAndHandle({ kinds: [1022 as NDKKind] }, event => handleConfirmBid(event, bidStatus))
-    }, [])
+    const subscribeAndHandle = (filter: NDKFilter, handler: (event: NDKEvent) => void, opts?: NDKSubscriptionOptions) => {
+        if (!ndk) return
+
+        const sub = ndk.subscribe(filter, opts)
+
+        sub.on("event", (e: NDKEvent) => handler(e))
+
+        return sub
+    }
+
+    const getProductById = async (id: string) => {
+        if (!ndk) return undefined
+
+        const storedProduct = getCookie(id)
+
+        if (storedProduct) return addContentToProductEvent(deserialize(storedProduct) as unknown as NDKEvent)
+
+        const event = await ndk.fetchEvent({ "#d": [id], kinds: [NDKKind.MarketProduct] })
+
+        if (!event) return undefined
+
+        setCookie(id, event.serialize(), 0.05)
+
+        return addContentToProductEvent(event)
+    }
+
+    const getStallById = async (id: string) => {
+        if (!ndk) return undefined
+
+        const storedStall = getCookie(id)
+
+        if (storedStall) return addContentToStallEvent(deserialize(storedStall) as unknown as NDKEvent)
+
+        const event = await ndk.fetchEvent({ "#d": [id], kinds: [NDKKind.MarketStall] })
+
+        if (!event) return undefined
+
+        setCookie(id, event.serialize(), 0.05)
+
+        return addContentToStallEvent(event)
+    }
 
     return (
-        <NDKContext.Provider value={{ subscribeAndHandle, products, auctions, stalls, bids, bidStatus, loginWithNIP07, user }}>
+        <NDKContext.Provider
+            value={{
+                ndk,
+                subscribeAndHandle,
+                getProductById,
+                getStallById,
+                products,
+                auctions,
+                stalls,
+                bids,
+                bidStatus,
+                loginWithNIP07,
+                user,
+            }}
+        >
             {children}
         </NDKContext.Provider>
     )
@@ -279,6 +294,14 @@ export default function useNDK() {
     const context = useContext(NDKContext)
 
     if (!context) throw new Error("useNDK must be within a Context Provider")
+
+    return context.ndk
+}
+
+export function useNDKContext() {
+    const context = useContext(NDKContext)
+
+    if (!context) throw new Error("useNDKContext must be within a Context Provider")
 
     return context
 }

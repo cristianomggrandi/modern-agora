@@ -1,6 +1,6 @@
 "use client"
 
-import { NDKParsedProductEvent, addContentToProductEvent, orderProducts, subscribeAndHandle } from "@/hooks/useNDK"
+import { NDKParsedProductEvent, addContentToProductEvent, orderProducts, useSubscribe } from "@/hooks/useNDK"
 import { nFormatter, setCookie } from "@/utils/functions"
 import { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
 import Link from "next/link"
@@ -84,6 +84,8 @@ export default function Products() {
 
     const searchParams = useSearchParams()
     const [search, setSearch] = useState(searchParams.get("search") ?? "")
+
+    const subscribeAndHandle = useSubscribe()
 
     const handleSearch = (e: SyntheticEvent) => {
         e.preventDefault()

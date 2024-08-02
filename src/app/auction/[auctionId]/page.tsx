@@ -1,8 +1,8 @@
 "use client"
 
-import { ndk, useAuctions, useBidStatus, useBids, useStalls } from "@/hooks/useNDK"
+import useNDK, { useAuctions, useBidStatus, useBids, useStalls } from "@/hooks/useNDK"
 import { parseDescription } from "@/utils/ndk"
-import { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
+import NDK, { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
 import { useState } from "react"
 
 function ParsedDescription({ description }: { description: string | undefined }) {
@@ -22,7 +22,8 @@ function ParsedDescription({ description }: { description: string | undefined })
     )
 }
 
-function sendBid(e: React.FormEvent<HTMLFormElement>, auctionId: string) {
+function sendBid(e: React.FormEvent<HTMLFormElement>, auctionId: string, ndk: NDK) {
+    // TODO: Move to NDKContext
     e.preventDefault()
 
     const target = e.currentTarget
@@ -40,6 +41,7 @@ function sendBid(e: React.FormEvent<HTMLFormElement>, auctionId: string) {
 }
 
 export default function Auction(props: { params: { auctionId: string } }) {
+    const ndk = useNDK()
     const auctions = useAuctions()
     const bids = useBids()
     const bidStatus = useBidStatus()
@@ -128,7 +130,7 @@ export default function Auction(props: { params: { auctionId: string } }) {
                     <div>
                         Current highest bid: {highestBid?.amount ?? auction.content.starting_bid} {stall?.content.currency}
                     </div>
-                    <form onSubmit={e => sendBid(e, props.params.auctionId)} className="flex gap-2 max-w-24">
+                    <form onSubmit={e => sendBid(e, props.params.auctionId, ndk)} className="flex gap-2 max-w-24">
                         <input name="bid" placeholder="Place your bid here" className="p-2 rounded text-black flex-1" />
                         <button type="submit" className="p-2 rounded bg-nostr shadow shadow-nostr text-white uppercase font-semibold">
                             Bid

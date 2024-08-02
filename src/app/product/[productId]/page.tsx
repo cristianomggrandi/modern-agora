@@ -1,10 +1,10 @@
 "use client"
 
-import { getProductById, getStallById, ndk, NDKParsedProductEvent, NDKParsedStallEvent } from "@/hooks/useNDK"
+import useNDK, { NDKParsedProductEvent, NDKParsedStallEvent, useNDKContext } from "@/hooks/useNDK"
 import { NDKCheckoutContent, parseDescription } from "@/utils/ndk"
 import { faAngleLeft, faAngleRight } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
+import NDK, { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
 import { useEffect, useRef, useState } from "react"
 import { v4 as uuidv4 } from "uuid"
 
@@ -93,8 +93,12 @@ function ParsedDescription({ description }: { description: string | undefined })
     )
 }
 
-const handleBuy = async (e: React.FormEvent<HTMLFormElement>) => {
+const handleBuy = async (e: React.FormEvent<HTMLFormElement>, ndk?: NDK) => {
+    // TODO: Move to NDKContext
     e.preventDefault()
+
+    if (!ndk) return
+
     const target = e.currentTarget
 
     const ndkEvent = new NDKEvent(ndk)
@@ -132,6 +136,8 @@ const handleBuy = async (e: React.FormEvent<HTMLFormElement>) => {
 }
 
 export default function Product(props: { params: { productId: string } }) {
+    const ndk = useNDK()
+    const { getProductById, getStallById } = useNDKContext()
     const [stall, setStall] = useState<NDKParsedStallEvent>()
     const [product, setProduct] = useState<NDKParsedProductEvent>()
 
@@ -176,7 +182,7 @@ export default function Product(props: { params: { productId: string } }) {
                     className="h-full sm:h-fit w-full sm:max-w-[36rem] bg-black text-white border sm:border-none border-nostr shadow sm:shadow-none shadow-nostr rounded-xl sm:backdrop:bg-gradient-radial backdrop:from-nostr backdrop:to-80%"
                 >
                     <form
-                        onSubmit={handleBuy}
+                        onSubmit={e => handleBuy(e, ndk)}
                         method="dialog"
                         className="h-full p-[5%] flex gap-6 flex-col sm:flex-row sm:flex-wrap sm:justify-between text-black"
                     >
