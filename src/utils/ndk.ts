@@ -2,6 +2,8 @@ import { NDKParsedAuctionEvent } from "@/hooks/useNDK"
 import { NDKEvent } from "@nostr-dev-kit/ndk"
 import { z } from "zod"
 
+// TODO: Remove "return {} as SomeType"
+
 export type NDKCheckoutContent =
     | {
           type: 0
@@ -169,7 +171,7 @@ export function getParsedProductContent(event: NDKEvent): NDKProductContent {
         return isValid ? content : ({} as NDKAuctionContent)
     } catch (error) {
         // TODO: Check Typescript
-        if (error.message && !error.message.includes("is not valid JSON")) console.error(error)
+        // if (error.message && !error.message.includes("is not valid JSON")) console.error(error)
         return {} as NDKProductContent
     }
 }
@@ -183,7 +185,7 @@ export function getParsedAuctionContent(event: NDKEvent): NDKAuctionContent {
         return isValid ? content : ({} as NDKAuctionContent)
     } catch (error) {
         // TODO: Check Typescript
-        if (error.message && !error.message.includes("is not valid JSON")) console.error(error)
+        // if (error.message && !error.message.includes("is not valid JSON")) console.error(error)
         return {} as NDKAuctionContent
     }
 }
@@ -201,7 +203,7 @@ export function getParsedBidContent(event: NDKEvent): NDKBidContent {
         return isValid ? content : ({} as NDKBidContent)
     } catch (error) {
         // TODO: Check Typescript
-        if (error.message && !error.message.includes("is not valid JSON")) console.error(error)
+        // if (error.message && !error.message.includes("is not valid JSON")) console.error(error)
         return {} as NDKBidContent
     }
 }
@@ -223,7 +225,7 @@ export function getParsedStallContent(event: NDKEvent): NDKStallContent {
         return isValid ? content : ({} as NDKStallContent)
     } catch (error) {
         // TODO: Check Typescript
-        if (error.message && !error.message.includes("is not valid JSON")) console.error(error)
+        // if (error.message && !error.message.includes("is not valid JSON")) console.error(error)
         return {} as NDKStallContent
     }
 }
@@ -245,7 +247,7 @@ export function getParsedConfirmationBidContent(event: NDKEvent): NDKConfirmatio
         return isValid ? content : ({} as NDKConfirmationBidContent)
     } catch (error) {
         // TODO: Check Typescript
-        if (error.message && !error.message.includes("is not valid JSON")) console.error(error)
+        // if (error.message && !error.message.includes("is not valid JSON")) console.error(error)
         return {} as NDKConfirmationBidContent
     }
 }
