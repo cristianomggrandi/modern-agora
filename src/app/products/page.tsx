@@ -4,7 +4,6 @@ import { NDKParsedProductEvent, addContentToProductEvent, orderProducts, useSubs
 import { nFormatter, setCookie } from "@/utils/functions"
 import { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
 import { ReactNode, SyntheticEvent, useEffect, useRef, useState } from "react"
 import { InView } from "react-intersection-observer"
 import SearchField from "../components/SearchField"
@@ -82,8 +81,7 @@ export default function Products() {
     const fetchedProducts = useRef<NDKParsedProductEvent[]>([])
     const [numberOfProductsToShow, setNumberOfProductsToShow] = useState(24)
 
-    const searchParams = useSearchParams()
-    const [search, setSearch] = useState(searchParams.get("search") ?? "")
+    const [search, setSearch] = useState("")
 
     const subscribeAndHandle = useSubscribe()
 
