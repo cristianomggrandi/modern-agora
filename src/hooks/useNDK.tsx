@@ -184,20 +184,6 @@ const NDKContext = createContext<NDKContextType | null>(null)
 export function NDKContextProvider({ children }: { children: any }) {
     const [ndk, setNdk] = useState<NDK>()
 
-    useEffect(() => {
-        const ndkTemp = new NDK({
-            explicitRelayUrls: defaultRelays,
-            signer: new NDKNip07Signer(),
-        })
-
-        setNdk(ndkTemp)
-
-        ndkTemp
-            .connect()
-            .then(() => console.log("ndk connected"))
-            .catch(error => console.error("ndk error connecting", error))
-    }, [])
-
     const [auctions, setAuctions] = useState<NDKParsedAuctionEvent[]>([])
     const fetchedAuctions = useRef<NDKParsedAuctionEvent[]>([])
 
@@ -223,10 +209,10 @@ export function NDKContextProvider({ children }: { children: any }) {
 
     const [user, setUser] = useState<NDKUser>()
 
-    const loginWithNIP07 = () => {
-        if (!ndk?.signer) throw new Error("No NDK NIP-07 Signer")
+    const loginWithNIP07 = (ndkInstance: NDK | undefined = ndk) => {
+        if (!ndkInstance?.signer) throw new Error("No NDK NIP-07 Signer")
 
-        ndk.signer.user().then(user => {
+        ndkInstance.signer.user().then(user => {
             if (!user.npub) throw new Error("Failed to fetch for your user")
 
             user.fetchProfile().then(userProfile => {
@@ -240,7 +226,17 @@ export function NDKContextProvider({ children }: { children: any }) {
     }
 
     useEffect(() => {
-        loginWithNIP07()
+        const ndkTemp = new NDK({
+            explicitRelayUrls: defaultRelays,
+            signer: new NDKNip07Signer(),
+        })
+
+        setNdk(ndkTemp)
+
+        ndkTemp
+            .connect()
+            .then(() => loginWithNIP07(ndkTemp))
+            .catch(error => console.error("ndk error connecting", error))
 
         const auctionsInterval = setInterval(() => {
             setAuctions(prev => {
