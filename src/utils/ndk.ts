@@ -160,7 +160,7 @@ function isAuctionContentValid(auctionContent: NDKAuctionContent) {
 
 export function getParsedProductContent(event: NDKEvent): NDKProductContent {
     try {
-        if (!event.content) return {} as NDKAuctionContent
+        if (!event.content) return {} as NDKProductContent
 
         const content = JSON.parse(event.content)
 
@@ -170,7 +170,7 @@ export function getParsedProductContent(event: NDKEvent): NDKProductContent {
     } catch (error) {
         // TODO: Check Typescript
         if (error.message && !error.message.includes("is not valid JSON")) console.error(error)
-        return {} as NDKAuctionContent
+        return {} as NDKProductContent
     }
 }
 
