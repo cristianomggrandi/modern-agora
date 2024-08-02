@@ -13,7 +13,7 @@ import NDK, { deserialize, NDKEvent, NDKFilter, NDKKind, NDKNip07Signer, NDKSubs
 import { createContext, useContext, useEffect, useRef, useState } from "react"
 
 type NDKContextType = {
-    subscribeAndHandle: (filter: NDKFilter, handler: (event: NDKEvent) => void, opts?: NDKSubscriptionOptions) => void
+    subscribeAndHandle: (ndk: NDK, filter: NDKFilter, handler: (event: NDKEvent) => void, opts?: NDKSubscriptionOptions) => void
     products: NDKParsedProductEvent[]
     auctions: NDKParsedAuctionEvent[]
     stalls: Map<string, NDKParsedStallEvent>
@@ -49,14 +49,7 @@ const defaultRelays = [
     "wss://nostr.inosta.cc",
 ]
 
-const nip07signer = new NDKNip07Signer()
-
-export const ndk = new NDK({
-    explicitRelayUrls: defaultRelays,
-    signer: nip07signer,
-})
-
-export const subscribeAndHandle = (filter: NDKFilter, handler: (event: NDKEvent) => void, opts?: NDKSubscriptionOptions) => {
+export const subscribeAndHandle = (ndk: NDK, filter: NDKFilter, handler: (event: NDKEvent) => void, opts?: NDKSubscriptionOptions) => {
     const sub = ndk.subscribe(filter, opts)
 
     sub.on("event", (e: NDKEvent) => handler(e))
@@ -64,7 +57,7 @@ export const subscribeAndHandle = (filter: NDKFilter, handler: (event: NDKEvent)
     return sub
 }
 
-export const getProductById = async (id: string) => {
+export const getProductById = async (ndk: NDK, id: string) => {
     const storedProduct = getCookie(id)
 
     if (storedProduct) return addContentToProductEvent(deserialize(storedProduct) as unknown as NDKEvent)
@@ -78,7 +71,7 @@ export const getProductById = async (id: string) => {
     return addContentToProductEvent(event)
 }
 
-export const getStallById = async (id: string) => {
+export const getStallById = async (ndk: NDK, id: string) => {
     const storedStall = getCookie(id)
 
     if (storedStall) return addContentToStallEvent(deserialize(storedStall) as unknown as NDKEvent)
@@ -189,9 +182,21 @@ export function addContentToStallEvent(event: NDKEvent) {
 const NDKContext = createContext<NDKContextType | null>(null)
 
 export function NDKContextProvider({ children }: { children: any }) {
-    ndk.connect()
-        .then(() => console.log("ndk connected"))
-        .catch(error => console.error("ndk error connecting", error))
+    const [ndk, setNdk] = useState<NDK>()
+
+    useEffect(() => {
+        const ndkTemp = new NDK({
+            explicitRelayUrls: defaultRelays,
+            signer: new NDKNip07Signer(),
+        })
+
+        setNdk(ndkTemp)
+
+        ndkTemp
+            .connect()
+            .then(() => console.log("ndk connected"))
+            .catch(error => console.error("ndk error connecting", error))
+    }, [])
 
     const [auctions, setAuctions] = useState<NDKParsedAuctionEvent[]>([])
     const fetchedAuctions = useRef<NDKParsedAuctionEvent[]>([])
@@ -219,7 +224,7 @@ export function NDKContextProvider({ children }: { children: any }) {
     const [user, setUser] = useState<NDKUser>()
 
     const loginWithNIP07 = () => {
-        if (!ndk.signer) throw new Error("No NDK NIP-07 Signer")
+        if (!ndk?.signer) throw new Error("No NDK NIP-07 Signer")
 
         ndk.signer.user().then(user => {
             if (!user.npub) throw new Error("Failed to fetch for your user")
