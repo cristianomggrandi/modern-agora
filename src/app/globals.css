@@ -27,6 +27,95 @@ body {
     }
 }
 
+header>nav>ul {
+    grid-template-areas: none;
+}
+
+header {
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    grid-template-columns: min-content 1fr min-content;
+    grid-template-areas:
+        "logo nav profile";
+}
+
+@media (max-width: 640px) {
+    header {
+        display: grid;
+        align-items: center;
+        justify-items: center;
+        grid-template-areas:
+            "profile logo checkbox"
+            "nav nav nav";
+    }
+
+    header>nav {
+        padding-top: min(24em, 5vh);
+        height: calc(100vh - 4rem);
+        top: 4rem;
+        position: fixed;
+        justify-self: right;
+        transform: translateX(100%);
+        transition: all 150ms linear;
+        backdrop-filter: blur(1em)
+    }
+
+    @supports not (backdrop-filter: blur(1em)) {
+        header>nav {
+            --tw-bg-opacity: 0.8;
+        }
+    }
+
+    header>input:checked+nav {
+        transform: translateX(0);
+    }
+
+    header>nav>ul {
+        align-items: center;
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "products"
+            "auctions"
+            "stalls"
+            "about";
+    }
+}
+
+header>nav {
+    grid-area: nav;
+}
+
+header .logo {
+    grid-area: logo;
+}
+
+header .checkbox {
+    grid-area: checkbox;
+}
+
+header .products {
+    grid-area: products;
+}
+
+header .auctions {
+    grid-area: auctions;
+}
+
+header .stalls {
+    grid-area: stalls;
+}
+
+header .about {
+    grid-area: about;
+}
+
+header .profile {
+    display: flex;
+    grid-area: profile;
+    /* justify-self: end; */
+}
+
 .neon-text-xs {
     text-shadow: 0 0 0.5em #9543dc77;
 }

@@ -45,6 +45,7 @@ const ProductCard = ({
                         className="absolute w-full h-full blur-sm bg-center bg-cover bg-no-repeat"
                         style={{ backgroundImage: event.content.images ? `url(${event.content.images[0]})` : undefined }}
                     />
+                    {/* TODO: Expand image on mobile  */}
                     {event.content.images?.length ? (
                         <img
                             className="z-10 max-h-full max-w-full"
