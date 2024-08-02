@@ -34,14 +34,14 @@ function ProductImages({ product }: { product: NDKParsedProductEvent }) {
                 {product.content.images ? (
                     <>
                         {product.content.images.map((image, index) => (
-                            <div className="bg-center">
+                            <div className="bg-center" key={index}>
                                 <img
                                     src={image}
                                     className={`absolute left-0 w-full h-full blur-sm object-center object-cover ${
                                         imageIndex === index ? "block" : "hidden"
                                     }`}
                                     loading="lazy"
-                                    role="presentation"
+                                    alt=""
                                 />
                                 <img
                                     src={image}
@@ -217,7 +217,7 @@ export default function Product(props: { params: { productId: string } }) {
                                 {stall.content.shipping
                                     .filter(s => product.content.shipping.find(ps => ps.id === s.id))
                                     .map(shipping => (
-                                        <option value={shipping.id}>
+                                        <option key={shipping.id} value={shipping.id}>
                                             {shipping.regions.join(", ") ?? shipping.id} - {shipping.cost} {stall.content.currency}{" "}
                                             {"(" + (shipping.name ?? shipping.id) + ")"}
                                         </option>
