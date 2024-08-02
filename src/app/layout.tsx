@@ -21,7 +21,7 @@ function NavBar() {
                 <ul className="grid justify-stretch sm:justify-evenly sm:flex w-full">
                     <li className="products flex-1 sm:max-w-36 transition-colors duration-300 hover:bg-dark hover:text-nostr">
                         <Link
-                            className="focus-visible:bg-dark focus-visible:text-nostr uppercase underline sm:no-underline underline-offset-4 w-full py-2 px-6 flex items-center justify-center h-16"
+                            className="focus-visible:bg-dark focus-visible:text-nostr uppercase underline sm:no-underline font-semibold underline-offset-4 w-full py-2 px-6 flex items-center justify-center h-16"
                             href="/products"
                         >
                             Products
@@ -29,7 +29,7 @@ function NavBar() {
                     </li>
                     <li className="auctions flex-1 sm:max-w-36 transition-colors duration-300   hover:bg-dark hover:text-nostr">
                         <Link
-                            className="focus-visible:bg-dark focus-visible:text-nostr uppercase underline sm:no-underline underline-offset-4 w-full py-2 px-6 flex items-center justify-center h-16"
+                            className="focus-visible:bg-dark focus-visible:text-nostr uppercase underline sm:no-underline font-semibold underline-offset-4 w-full py-2 px-6 flex items-center justify-center h-16"
                             href="/auctions"
                         >
                             Auctions
@@ -37,7 +37,7 @@ function NavBar() {
                     </li>
                     <li className="stalls flex-1 sm:max-w-36 transition-colors duration-300   hover:bg-dark hover:text-nostr">
                         <Link
-                            className="focus-visible:bg-dark focus-visible:text-nostr uppercase underline sm:no-underline underline-offset-4 w-full py-2 px-6 flex items-center justify-center h-16"
+                            className="focus-visible:bg-dark focus-visible:text-nostr uppercase underline sm:no-underline font-semibold underline-offset-4 w-full py-2 px-6 flex items-center justify-center h-16"
                             href="/stalls"
                         >
                             Stalls
@@ -45,7 +45,7 @@ function NavBar() {
                     </li>
                     <li className="about flex-1 sm:max-w-36 transition-colors duration-300   hover:bg-dark hover:text-nostr">
                         <Link
-                            className="focus-visible:bg-dark focus-visible:text-nostr uppercase underline sm:no-underline underline-offset-4 w-full py-2 px-6 flex items-center justify-center h-16"
+                            className="focus-visible:bg-dark focus-visible:text-nostr uppercase underline sm:no-underline font-semibold underline-offset-4 w-full py-2 px-6 flex items-center justify-center h-16"
                             href="/aboutus"
                         >
                             About Us
