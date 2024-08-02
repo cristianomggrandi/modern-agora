@@ -22,9 +22,11 @@ function ParsedDescription({ description }: { description: string | undefined })
     )
 }
 
-function sendBid(e: React.FormEvent<HTMLFormElement>, auctionId: string, ndk: NDK) {
+function sendBid(e: React.FormEvent<HTMLFormElement>, auctionId: string, ndk?: NDK) {
     // TODO: Move to NDKContext
     e.preventDefault()
+
+    if (!ndk) return
 
     const target = e.currentTarget
 
