@@ -124,6 +124,7 @@ export default function Products() {
     }
 
     return (
+        // TODO: Create a way to search/filter by tag
         <main className="flex gap-4 flex-col items-center justify-stretch p-4 pb-0">
             <div className="w-full flex justify-end">
                 <SearchField handleSearch={handleSearch} clearSearch={clearSearch} />

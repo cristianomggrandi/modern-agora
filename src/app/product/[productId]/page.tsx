@@ -37,19 +37,17 @@ function ProductImages({ product }: { product: NDKParsedProductEvent }) {
                 {product.content.images ? (
                     <>
                         {product.content.images.map((image, index) => (
-                            <div className="bg-center" key={index}>
+                            <div className={`bg-center ${imageIndex === index ? "block" : "hidden"}`} key={index}>
                                 <img
                                     src={image}
-                                    className={`absolute left-0 w-full h-full blur-sm object-center object-cover ${
-                                        imageIndex === index ? "block" : "hidden"
-                                    }`}
+                                    className={`absolute top-0 left-0 w-full h-full blur-sm object-center object-cover `}
                                     loading="lazy"
                                     alt=""
                                 />
                                 <img
                                     src={image}
                                     alt={product.content.name}
-                                    className={`relative max-w-full max-h-96 z-10 ${imageIndex === index ? "block" : "hidden"}`}
+                                    className={`relative max-w-full max-h-96 z-10 p-1`}
                                     loading="lazy"
                                 />
                             </div>
@@ -166,7 +164,7 @@ export default function Product(props: { params: { productId: string } }) {
                     </div>
                 ) : null}
                 <div className="product-price-buy flex gap-4">
-                    <span className="text-center flex-1 bg-white text-nostr uppercase font-semibold rounded p-1 sm:p-2">
+                    <span className="text-center px-4 bg-white text-nostr uppercase font-semibold rounded py-1 sm:py-2">
                         {product.content.price} {product.content.currency}
                     </span>
                     <button
