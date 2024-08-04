@@ -129,7 +129,7 @@ export default function Products() {
                 <SearchField handleSearch={handleSearch} clearSearch={clearSearch} />
             </div>
             <div className="w-full grid grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] justify-items-center auto-rows-min gap-6 rounded-lg">
-                {/* TODO: Limit amount of products and show button for "Show More" on the bottom with grandient (transparent on top and filled on the bottom) */}
+                {/* TODO: Create a onView to revert the maximum number of products shown */}
                 {(search ? filterProductsWithSearch(products, search) : products)
                     .slice(0, numberOfProductsToShow)
                     .map((event, i, array) => {

@@ -9,7 +9,7 @@ export default function HeaderUser() {
 
     if (!user || !user.profile)
         return (
-            <div className="sm:w-32 flex justify-center items-center">
+            <div className="sm:w-32 px-1 flex justify-center items-center">
                 <button onClick={loginWithNIP07} className="bg-dark px-4 py-2 rounded-lg uppercase">
                     Login
                 </button>
