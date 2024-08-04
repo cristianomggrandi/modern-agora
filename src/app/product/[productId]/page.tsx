@@ -1,5 +1,6 @@
 "use client"
 
+import EventTag from "@/app/components/EventTag"
 import useNDK, { NDKParsedProductEvent } from "@/hooks/useNDK"
 import useProduct from "@/hooks/useProduct"
 import useStall from "@/hooks/useStall"
@@ -17,7 +18,7 @@ function ProductImages({ product }: { product: NDKParsedProductEvent }) {
     const prevImage = () => (product.content.images ? setImageIndex(prev => (prev > 0 ? prev - 1 : product.content.images!.length - 1)) : 0)
 
     return (
-        <div className="flex-1 flex flex-col-reverse md:flex-row items-center justify-center gap-4">
+        <div className="product-images flex-1 flex flex-col-reverse md:flex-row items-center justify-center gap-4">
             <div className="flex md:flex-col gap-2 justify-center">
                 {product.content.images?.length! > 1
                     ? product.content.images!.map((img, index) => (
@@ -85,7 +86,7 @@ function ParsedDescription({ description }: { description: string | undefined })
 
     return (
         // TODO: Create scroller for description (http://localhost:3000/product/90cb2433-6d75-468b-b0b6-7d40ac209bc7)
-        <div className="flex-1 justify-center text-justify flex flex-col gap-1">
+        <div className="product-description flex-1 justify-center text-justify flex flex-col gap-1">
             {parsedDescription.map((desc, i) => (
                 <p key={i} className="neon-text-sm">
                     {desc}
@@ -151,20 +152,31 @@ export default function Product(props: { params: { productId: string } }) {
 
     return (
         <main className="flex flex-col justify-center p-6 sm:p-[4%] gap-8 min-h-full">
-            <h1 className="text-lg sm:text-2xl neon-text-2lg font-semibold text-center">{product.content.name}</h1>
-            <div className="flex flex-col-reverse md:flex-row items-center sm:items-stretch justify-center gap-8">
+            <h1 className="text-xl sm:text-2xl neon-text-2lg font-semibold text-center">{product.content.name}</h1>
+            <div className="product-details grid gap-8">
                 <ProductImages product={product} />
-                <div className="flex-1 flex flex-col justify-between gap-6">
-                    <ParsedDescription description={product.content.description} />
-                    <div>
-                        {product.content.price} {product.content.currency}
+                <ParsedDescription description={product.content.description} />
+                {product.tags.length ? (
+                    <div className="product-tags flex gap-2 flex-nowrap no-scrollbar no-wrap overflow-x-scroll">
+                        {product.tags
+                            .filter(tag => tag[0] === "t")
+                            .map(tag => (
+                                <EventTag tag={tag} />
+                            ))}
                     </div>
+                ) : null}
+                <div className="product-price-buy flex gap-4">
+                    <span className="text-center flex-1 bg-white text-nostr uppercase font-semibold rounded p-1 sm:p-2">
+                        {product.content.price} {product.content.currency}
+                    </span>
                     <button
                         onClick={openModal}
                         disabled={!stall}
-                        className={`p-2 rounded bg-nostr shadow-nostr text-white uppercase font-semibold ${stall ? "" : "opacity-50"}`}
+                        className={`flex-1 p-1 sm:p-2 rounded bg-nostr shadow-nostr text-white uppercase font-semibold ${
+                            stall ? "" : "opacity-50"
+                        }`}
                     >
-                        Buy Product
+                        Buy
                     </button>
                 </div>
             </div>

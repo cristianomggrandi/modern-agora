@@ -28,7 +28,7 @@ export default function HeaderUser() {
             </Link */}
             <Link
                 href="/profile"
-                className="block h-8 w-8 text-lg leading-[32px] sm:h-12 sm:w-12 bg-dark sm:text-xl text-secondary rounded-full sm:leading-[48px] text-center overflow-hidden"
+                className="block h-10 w-10 text-lg leading-[40px] sm:h-12 sm:w-12 bg-dark sm:text-xl text-secondary rounded-full sm:leading-[48px] text-center overflow-hidden"
             >
                 {user.profile.image ? <img width={48} height={48} src={user.profile.image} /> : profileName}
             </Link>

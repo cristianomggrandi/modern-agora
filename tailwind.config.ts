@@ -14,6 +14,7 @@ const config: Config = {
                 light: "#4E0366",
                 dark: "#250031",
                 nostr: "#9543dc",
+                bitcoin: "#f7931a",
             },
         },
     },
