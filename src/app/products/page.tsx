@@ -1,6 +1,6 @@
 "use client"
 
-import { NDKParsedProductEvent, addContentToProductEvent, orderProducts, useSubscribe } from "@/hooks/useNDK"
+import useNDK, { NDKParsedProductEvent, addContentToProductEvent, orderProducts, useSubscribe } from "@/hooks/useNDK"
 import { nFormatter, setCookie } from "@/utils/functions"
 import { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
 import Link from "next/link"
@@ -77,6 +77,8 @@ const filterProductsWithSearch = (products: NDKParsedProductEvent[], search: str
 }
 
 export default function Products() {
+    const ndk = useNDK()
+
     const [products, setProducts] = useState<NDKParsedProductEvent[]>([])
     const fetchedProducts = useRef<NDKParsedProductEvent[]>([])
     const [numberOfProductsToShow, setNumberOfProductsToShow] = useState(24)
@@ -100,8 +102,9 @@ export default function Products() {
             : fetchedProducts.current
     }
 
+    // TODO: Maybe change this to a hook with products on a state and an useEffect
     useEffect(() => {
-        subscribeAndHandle({ kinds: [NDKKind.MarketProduct] }, updateFetchedProducts)
+        if (ndk) subscribeAndHandle({ kinds: [NDKKind.MarketProduct] }, updateFetchedProducts)
 
         const productsInterval = setInterval(() => {
             setProducts(prev => {
@@ -114,7 +117,7 @@ export default function Products() {
         return () => {
             clearInterval(productsInterval)
         }
-    }, [])
+    }, [ndk])
 
     const onView = (inView: boolean, entry: IntersectionObserverEntry) => {
         if (inView) setNumberOfProductsToShow(p => p + 24)
