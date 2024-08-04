@@ -45,8 +45,9 @@ header {
         display: grid;
         align-items: center;
         justify-items: center;
+        grid-template-columns: 1fr 3fr 1fr;
         grid-template-areas:
-            "profile logo checkbox"
+            "checkbox logo profile"
             "nav nav nav";
     }
 
@@ -56,7 +57,7 @@ header {
         top: 4rem;
         position: fixed;
         justify-self: right;
-        transform: translateX(100%);
+        transform: translateX(-100%);
         transition: all 150ms linear;
         backdrop-filter: blur(1em)
     }
