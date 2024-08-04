@@ -19,7 +19,7 @@ const SearchField = (props: Props) => {
     }
 
     return (
-        <div className="flex flex-1 max-w-[min(24rem,100%)] gap-2 px-1 bg-nostr rounded">
+        <div className="flex flex-1 sm:max-w-[min(24rem,100%)] gap-2 px-1 bg-nostr rounded">
             <input
                 className="w-full flex-1 px-1 h-8 bg-nostr text-black rounded placeholder:text-black placeholder:text-opacity-70"
                 placeholder="Search..."
