@@ -1,5 +1,5 @@
 import { NDKContextProvider } from "@/hooks/useNDK"
-import { faBars } from "@fortawesome/free-solid-svg-icons"
+import { faBars, faXmark } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { GeistSans } from "geist/font/sans"
 import type { Metadata } from "next"
@@ -18,10 +18,11 @@ function NavBar() {
             <Link className="logo py-2 px-6 flex items-center justify-center h-16" href="/">
                 Logo
             </Link>
+            <input id="nav-menu-button" type="checkbox" tabIndex={-1} aria-hidden="true" className="hidden h-8 w-8" />
             <label htmlFor="nav-menu-button" className="checkbox sm:hidden">
                 <FontAwesomeIcon icon={faBars} size="xl" />
+                <FontAwesomeIcon icon={faXmark} size="2xl" />
             </label>
-            <input id="nav-menu-button" type="checkbox" tabIndex={-1} aria-hidden="true" className="hidden h-8 w-8" />
             <nav className="w-full z-40 transition-transform delay-200 bg-light bg-opacity-20 flex sm:h-full">
                 <ul className="grid justify-stretch sm:justify-evenly sm:flex w-full">
                     <li className="products flex-1 sm:max-w-36 transition-colors duration-300 hover:bg-dark hover:text-nostr">

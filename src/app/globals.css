@@ -68,8 +68,20 @@ header {
         }
     }
 
-    header>input:checked+nav {
+    header>input:checked~nav {
         transform: translateX(0);
+    }
+
+    header>input:checked+label>svg:nth-child(1) {
+        display: none;
+    }
+
+    header>input+label>svg:nth-child(2) {
+        display: none;
+    }
+
+    header>input:checked+label>svg:nth-child(2) {
+        display: inline-block;
     }
 
     header>nav>ul {
