@@ -1,6 +1,5 @@
 "use client"
 
-import { getCookie, setCookie } from "@/utils/functions"
 import {
     getAuctionEndDate,
     getBidStatus,
@@ -9,7 +8,7 @@ import {
     getParsedProductContent,
     getParsedStallContent,
 } from "@/utils/ndk"
-import NDK, { deserialize, NDKEvent, NDKFilter, NDKKind, NDKNip07Signer, NDKSubscriptionOptions, NDKUser } from "@nostr-dev-kit/ndk"
+import NDK, { NDKEvent, NDKFilter, NDKNip07Signer, NDKSubscriptionOptions, NDKUser } from "@nostr-dev-kit/ndk"
 import { createContext, useContext, useEffect, useRef, useState } from "react"
 
 export type NDKParsedProductEvent = ReturnType<typeof addContentToProductEvent>
@@ -21,8 +20,6 @@ export type NDKParsedStallEvent = ReturnType<typeof addContentToStallEvent>
 type NDKContextType = {
     ndk?: NDK
     subscribeAndHandle: (filter: NDKFilter, handler: (event: NDKEvent) => void, opts?: NDKSubscriptionOptions) => void
-    getProductById: (id: string) => Promise<NDKParsedProductEvent | undefined>
-    getStallById: (id: string) => Promise<NDKParsedStallEvent | undefined>
     products: NDKParsedProductEvent[]
     auctions: NDKParsedAuctionEvent[]
     stalls: Map<string, NDKParsedStallEvent>
@@ -237,45 +234,11 @@ export function NDKContextProvider({ children }: { children: any }) {
         return sub
     }
 
-    const getProductById = async (id: string) => {
-        if (!ndk) return undefined
-
-        const storedProduct = getCookie(id)
-
-        if (storedProduct) return addContentToProductEvent(deserialize(storedProduct) as unknown as NDKEvent)
-
-        const event = await ndk.fetchEvent({ "#d": [id], kinds: [NDKKind.MarketProduct] })
-
-        if (!event) return undefined
-
-        setCookie(id, event.serialize(), 0.05)
-
-        return addContentToProductEvent(event)
-    }
-
-    const getStallById = async (id: string) => {
-        if (!ndk) return undefined
-
-        const storedStall = getCookie(id)
-
-        if (storedStall) return addContentToStallEvent(deserialize(storedStall) as unknown as NDKEvent)
-
-        const event = await ndk.fetchEvent({ "#d": [id], kinds: [NDKKind.MarketStall] })
-
-        if (!event) return undefined
-
-        setCookie(id, event.serialize(), 0.05)
-
-        return addContentToStallEvent(event)
-    }
-
     return (
         <NDKContext.Provider
             value={{
                 ndk,
                 subscribeAndHandle,
-                getProductById,
-                getStallById,
                 products,
                 auctions,
                 stalls,

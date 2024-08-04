@@ -1,11 +1,13 @@
 "use client"
 
-import useNDK, { NDKParsedProductEvent, NDKParsedStallEvent, useNDKContext } from "@/hooks/useNDK"
+import useNDK, { NDKParsedProductEvent } from "@/hooks/useNDK"
+import useProduct from "@/hooks/useProduct"
+import useStall from "@/hooks/useStall"
 import { NDKCheckoutContent, parseDescription } from "@/utils/ndk"
 import { faAngleLeft, faAngleRight } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import NDK, { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { v4 as uuidv4 } from "uuid"
 
 function ProductImages({ product }: { product: NDKParsedProductEvent }) {
@@ -137,18 +139,8 @@ const handleBuy = async (e: React.FormEvent<HTMLFormElement>, ndk?: NDK) => {
 
 export default function Product(props: { params: { productId: string } }) {
     const ndk = useNDK()
-    const { getProductById, getStallById } = useNDKContext()
-    const [stall, setStall] = useState<NDKParsedStallEvent>()
-    const [product, setProduct] = useState<NDKParsedProductEvent>()
-
-    useEffect(() => {
-        getProductById(props.params.productId).then(product => {
-            if (product) {
-                setProduct(product)
-                getStallById(product.content.stall_id).then(setStall)
-            }
-        })
-    }, [])
+    const product = useProduct(props.params.productId)
+    const stall = useStall(product?.content.stall_id)
 
     const modalRef = useRef<HTMLDialogElement>(null)
 
