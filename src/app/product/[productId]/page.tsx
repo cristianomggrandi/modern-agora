@@ -160,8 +160,8 @@ export default function Product(props: { params: { productId: string } }) {
                     <div className="product-tags flex gap-2 flex-nowrap no-scrollbar no-wrap overflow-x-scroll">
                         {product.tags
                             .filter(tag => tag[0] === "t")
-                            .map(tag => (
-                                <EventTag tag={tag} />
+                            .map((tag, i) => (
+                                <EventTag key={i} tag={tag} />
                             ))}
                     </div>
                 ) : null}
