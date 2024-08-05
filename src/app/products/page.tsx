@@ -1,13 +1,13 @@
 "use client"
 
-import useNDK, { NDKParsedProductEvent, addContentToProductEvent, orderProducts, useSubscribe } from "@/hooks/useNDK"
+import useNDK, { NDKParsedProductEvent } from "@/hooks/useNDK"
+import useProducts from "@/hooks/useProducts"
 import { nFormatter, setCookie } from "@/utils/functions"
-import { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
+import { NDKEvent } from "@nostr-dev-kit/ndk"
 import Link from "next/link"
-import { ReactNode, SyntheticEvent, useEffect, useRef, useState } from "react"
+import { ReactNode, SyntheticEvent, useState } from "react"
 import { InView } from "react-intersection-observer"
 import SearchField from "../components/SearchField"
-import useProducts from "@/hooks/useProducts"
 
 const LastProductWrapper = ({
     children,
@@ -20,46 +20,46 @@ const LastProductWrapper = ({
 }) => (isLastProduct ? <InView onChange={onView}>{children}</InView> : <>{children}</>)
 
 const ProductCard = ({
-    event,
+    product,
     isLastProduct,
     onView,
 }: {
-    event: NDKParsedProductEvent
+    product: NDKParsedProductEvent
     isLastProduct: boolean
     onView: (inView: boolean, entry: IntersectionObserverEntry) => void
 }) => {
-    if (!event.content) return null
+    if (!product.content) return null
 
     return (
         <LastProductWrapper isLastProduct={isLastProduct} onView={onView}>
             <Link
                 className="w-full max-w-52 h-full relative flex flex-col gap-2 p-1 justify-center hover:outline outline-nostr rounded-lg"
-                href={"/product/" + event.content.id}
+                href={"/product/" + product.content.id}
                 onClick={() => {
-                    const originalEvent = { ...event, content: JSON.stringify(event.content) }
-                    setCookie(event.content.id, (originalEvent as NDKEvent).serialize(), 0.05)
+                    const originalEvent = { ...product, content: JSON.stringify(product.content) }
+                    setCookie(product.content.id, (originalEvent as NDKEvent).serialize(), 0.05)
                 }}
             >
                 <div className="relative aspect-square w-full flex-shrink-0 flex items-center justify-center rounded overflow-hidden">
                     <div
                         className="absolute w-full h-full blur-sm bg-center bg-cover bg-no-repeat"
-                        style={{ backgroundImage: event.content.images ? `url(${event.content.images[0]})` : undefined }}
+                        style={{ backgroundImage: product.content.images ? `url(${product.content.images[0]})` : undefined }}
                     />
                     {/* TODO: Expand image on mobile  */}
-                    {event.content.images?.length ? (
+                    {product.content.images?.length ? (
                         <img
                             className="z-10 max-h-full max-w-full"
-                            src={event.content.images[0]}
-                            alt={event.content.name}
+                            src={product.content.images[0]}
+                            alt={product.content.name}
                             height={96}
                             // width={96}
                         />
                     ) : null}
                 </div>
                 <div className="flex-1 flex flex-col justify-between">
-                    <span className="line-clamp-2 text-sm font-semibold">{event.content.name}</span>
+                    <span className="line-clamp-2 text-sm font-semibold">{product.content.name}</span>
                     <span className="text-sm font-bold uppercase neon-text-sm text-right">
-                        {nFormatter(event.content.price, 2)} {event.content.currency}
+                        {nFormatter(product.content.price, 2)} {product.content.currency}
                     </span>
                 </div>
             </Link>
@@ -102,12 +102,12 @@ export default function Products() {
             <div className="w-full flex justify-end">
                 <SearchField handleSearch={handleSearch} clearSearch={clearSearch} />
             </div>
-            <div className="w-full grid grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] justify-items-center auto-rows-min gap-6 rounded-lg">
+            <div className="w-full grid auto-rows-fr grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] justify-items-center gap-6 rounded-lg">
                 {/* TODO: Create a onView to revert the maximum number of products shown */}
                 {(search ? filterProductsWithSearch(products, search) : products)
                     .slice(0, numberOfProductsToShow)
-                    .map((event, i, array) => {
-                        return <ProductCard key={event.id} event={event} isLastProduct={i === array.length - 1} onView={onView} />
+                    .map((product, i, array) => {
+                        return <ProductCard key={product.id} product={product} isLastProduct={i === array.length - 1} onView={onView} />
                     })}
             </div>
         </main>

@@ -20,30 +20,42 @@ const LastStallWrapper = ({
 }) => (isLastStall ? <InView onChange={onView}>{children}</InView> : <>{children}</>)
 
 const StallCard = ({
-    event,
+    stall,
     isLastStall,
     onView,
 }: {
-    event: NDKParsedStallEvent
+    stall: NDKParsedStallEvent
     isLastStall: boolean
     onView: (inView: boolean, entry: IntersectionObserverEntry) => void
 }) => {
-    if (!event.content) return null
+    if (!stall.content) return null
 
     return (
         <LastStallWrapper isLastStall={isLastStall} onView={onView}>
             <Link
-                className="w-full h-full relative flex flex-col gap-2 p-1 justify-center hover:outline outline-nostr rounded-lg"
-                href={"/stall/" + event.content.id}
+                className="w-full h-full relative flex flex-col gap-2 p-2 justify-between hover:outline bg-light outline-nostr rounded-lg"
+                href={"/stall/" + stall.content.id}
                 onClick={() => {
-                    const originalEvent = { ...event, content: JSON.stringify(event.content) }
-                    setCookie(event.content.id, (originalEvent as NDKEvent).serialize(), 0.05)
+                    const originalEvent = { ...stall, content: JSON.stringify(stall.content) }
+                    setCookie(stall.content.id, (originalEvent as NDKEvent).serialize(), 0.05)
                 }}
-                onMouseOver={() => console.log(event)}
             >
-                <span>{event.content.name}</span>
-                <span>{event.content.currency}</span>
-                <span>{JSON.stringify(event.content.shipping)}</span>
+                <div className="flex justify-between text-xl font-semibold">
+                    <span>{stall.content.name}</span>
+                    <span className="uppercase">{stall.content.currency}</span>
+                </div>
+                {/* <span>{stall.content.currency}</span> */}
+                <div className="flex flex-col gap-1">
+                    {stall.content.shipping
+                        .map(s => [s.regions, s.cost] as [string[], number])
+                        .map(([regions, cost]: [string[], number]) =>
+                            regions.map(region => (
+                                <span className="text-sm">
+                                    {region} - {cost} {stall.content.currency}
+                                </span>
+                            ))
+                        )}
+                </div>
             </Link>
         </LastStallWrapper>
     )
@@ -82,10 +94,10 @@ export default function Stalls() {
             <div className="w-full flex justify-end">
                 <SearchField handleSearch={handleSearch} clearSearch={clearSearch} />
             </div>
-            <div className="w-full grid grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] justify-items-center auto-rows-min gap-6 rounded-lg">
+            <div className="w-full grid auto-rows-fr grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] justify-items-center gap-6 rounded-lg">
                 {/* TODO: Create a onView to revert the maximum number of stalls shown */}
-                {(search ? filterStallsWithSearch(stalls, search) : stalls).slice(0, numberOfStallsToShow).map((event, i, array) => {
-                    return <StallCard key={event.id} event={event} isLastStall={i === array.length - 1} onView={onView} />
+                {(search ? filterStallsWithSearch(stalls, search) : stalls).slice(0, numberOfStallsToShow).map((stall, i, array) => {
+                    return <StallCard key={stall.id} stall={stall} isLastStall={i === array.length - 1} onView={onView} />
                 })}
             </div>
         </main>
