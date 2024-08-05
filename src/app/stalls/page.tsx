@@ -50,7 +50,7 @@ const StallCard = ({
                         .map(s => [s.regions, s.cost] as [string[], number])
                         .map(([regions, cost]: [string[], number]) =>
                             regions.map(region => (
-                                <span className="text-sm">
+                                <span key={region} className="text-sm">
                                     {region} - {cost} {stall.content.currency}
                                 </span>
                             ))

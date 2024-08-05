@@ -1,6 +1,7 @@
 "use client"
 
-import useNDK, { useAuctions, useBidStatus, useBids, useStalls } from "@/hooks/useNDK"
+import useNDK, { useAuctions, useBidStatus, useBids } from "@/hooks/useNDK"
+import useStalls from "@/hooks/useStalls"
 import { parseDescription } from "@/utils/ndk"
 import NDK, { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
 import { useState } from "react"

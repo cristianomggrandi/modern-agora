@@ -1,11 +1,12 @@
 "use client"
 
-import { NDKParsedAuctionEvent, useAuctions, useBids, useBidStatus, useStalls } from "@/hooks/useNDK"
+import { NDKParsedAuctionEvent, useAuctions, useBids, useBidStatus } from "@/hooks/useNDK"
 import { nFormatter } from "@/utils/functions"
 import { NDKAuctionContent } from "@/utils/ndk"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import PagesOptions from "../components/PagesOptions"
+import useStalls from "@/hooks/useStalls"
 
 const AuctionCountdown = ({ auction }: { auction: NDKAuctionContent }) => {
     const until = new Date((auction.start_date + auction.duration) * 1000)
