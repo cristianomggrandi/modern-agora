@@ -161,33 +161,23 @@ function isAuctionContentValid(auctionContent: NDKAuctionContent) {
 }
 
 export function getParsedProductContent(event: NDKEvent): NDKProductContent {
-    try {
-        if (!event.content) return {} as NDKProductContent
+    if (!event.content) throw new Error("Invalid event content")
 
-        const content = JSON.parse(event.content)
+    const content = JSON.parse(event.content)
 
-        const isValid = isProductContentValid(content)
+    if (!isProductContentValid(content)) throw new Error("Invalid event content")
 
-        return isValid ? content : ({} as NDKAuctionContent)
-    } catch (error) {
-        // TODO: Check Typescript
-        // if (error.message && !error.message.includes("is not valid JSON")) console.error(error)
-        return {} as NDKProductContent
-    }
+    return content
 }
 
 export function getParsedAuctionContent(event: NDKEvent): NDKAuctionContent {
-    try {
-        const content = JSON.parse(event.content)
+    if (!event.content) throw new Error("Invalid event content")
 
-        const isValid = isAuctionContentValid(content)
+    const content = JSON.parse(event.content)
 
-        return isValid ? content : ({} as NDKAuctionContent)
-    } catch (error) {
-        // TODO: Check Typescript
-        // if (error.message && !error.message.includes("is not valid JSON")) console.error(error)
-        return {} as NDKAuctionContent
-    }
+    if (!isAuctionContentValid(content)) throw new Error("Invalid event content")
+
+    return content
 }
 
 export function getAuctionEndDate(auction: NDKParsedAuctionEvent) {
@@ -217,17 +207,13 @@ function isStallContentValid(stallContent: NDKStallContent) {
 }
 
 export function getParsedStallContent(event: NDKEvent): NDKStallContent {
-    try {
-        const content = JSON.parse(event.content)
+    if (!event.content) throw new Error("Invalid event content")
 
-        const isValid = isStallContentValid(content)
+    const content = JSON.parse(event.content)
 
-        return isValid ? content : ({} as NDKStallContent)
-    } catch (error) {
-        // TODO: Check Typescript
-        // if (error.message && !error.message.includes("is not valid JSON")) console.error(error)
-        return {} as NDKStallContent
-    }
+    if (!isStallContentValid(content)) throw new Error("Invalid event content")
+
+    return content
 }
 
 function isConfirmationBidContentValid(confirmationBidContent: NDKConfirmationBidContent) {

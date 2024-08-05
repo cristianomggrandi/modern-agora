@@ -7,6 +7,7 @@ import Link from "next/link"
 import { ReactNode, SyntheticEvent, useEffect, useRef, useState } from "react"
 import { InView } from "react-intersection-observer"
 import SearchField from "../components/SearchField"
+import useProducts from "@/hooks/useProducts"
 
 const LastProductWrapper = ({
     children,
@@ -32,7 +33,7 @@ const ProductCard = ({
     return (
         <LastProductWrapper isLastProduct={isLastProduct} onView={onView}>
             <Link
-                className="max-w-52 h-full relative flex flex-col gap-2 p-1 justify-center hover:outline outline-nostr rounded-lg"
+                className="w-full max-w-52 h-full relative flex flex-col gap-2 p-1 justify-center hover:outline outline-nostr rounded-lg"
                 href={"/product/" + event.content.id}
                 onClick={() => {
                     const originalEvent = { ...event, content: JSON.stringify(event.content) }
@@ -79,13 +80,10 @@ const filterProductsWithSearch = (products: NDKParsedProductEvent[], search: str
 export default function Products() {
     const ndk = useNDK()
 
-    const [products, setProducts] = useState<NDKParsedProductEvent[]>([])
-    const fetchedProducts = useRef<NDKParsedProductEvent[]>([])
+    const products = useProducts()
     const [numberOfProductsToShow, setNumberOfProductsToShow] = useState(24)
 
     const [search, setSearch] = useState("")
-
-    const subscribeAndHandle = useSubscribe()
 
     const handleSearch = (e: SyntheticEvent) => {
         e.preventDefault()
@@ -93,31 +91,6 @@ export default function Products() {
     }
 
     const clearSearch = () => setSearch("")
-
-    const updateFetchedProducts = (event: NDKEvent) => {
-        // TODO: Create map with original events to pass to Product
-
-        fetchedProducts.current = !fetchedProducts.current.find(e => e.id === event.id)
-            ? orderProducts(addContentToProductEvent(event), fetchedProducts.current)
-            : fetchedProducts.current
-    }
-
-    // TODO: Maybe change this to a hook with products on a state and an useEffect
-    useEffect(() => {
-        if (ndk) subscribeAndHandle({ kinds: [NDKKind.MarketProduct] }, updateFetchedProducts)
-
-        const productsInterval = setInterval(() => {
-            setProducts(prev => {
-                if (fetchedProducts.current === prev) clearInterval(productsInterval)
-
-                return fetchedProducts.current
-            })
-        }, 1000)
-
-        return () => {
-            clearInterval(productsInterval)
-        }
-    }, [ndk])
 
     const onView = (inView: boolean, entry: IntersectionObserverEntry) => {
         if (inView) setNumberOfProductsToShow(p => p + 24)

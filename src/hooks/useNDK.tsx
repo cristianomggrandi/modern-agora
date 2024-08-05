@@ -8,7 +8,7 @@ import {
     getParsedProductContent,
     getParsedStallContent,
 } from "@/utils/ndk"
-import NDK, { NDKEvent, NDKFilter, NDKNip07Signer, NDKSubscriptionOptions, NDKUser } from "@nostr-dev-kit/ndk"
+import NDK, { NDKEvent, NDKFilter, NDKNip07Signer, NDKSubscription, NDKSubscriptionOptions, NDKUser } from "@nostr-dev-kit/ndk"
 import { createContext, useContext, useEffect, useRef, useState } from "react"
 
 export type NDKParsedProductEvent = ReturnType<typeof addContentToProductEvent>
@@ -19,10 +19,12 @@ export type NDKParsedStallEvent = ReturnType<typeof addContentToStallEvent>
 
 type NDKContextType = {
     ndk?: NDK
-    subscribeAndHandle: (filter: NDKFilter, handler: (event: NDKEvent) => void, opts?: NDKSubscriptionOptions) => void
-    products: NDKParsedProductEvent[]
+    subscribeAndHandle: (
+        filter: NDKFilter,
+        handler: (event: NDKEvent) => void,
+        opts?: NDKSubscriptionOptions
+    ) => NDKSubscription | undefined
     auctions: NDKParsedAuctionEvent[]
-    stalls: Map<string, NDKParsedStallEvent>
     bids: AuctionBids
     bidStatus: Map<string, "accepted" | "rejected" | "pending" | "winner">
     loginWithNIP07: () => void
@@ -151,19 +153,8 @@ export function NDKContextProvider({ children }: { children: any }) {
     const [auctions, setAuctions] = useState<NDKParsedAuctionEvent[]>([])
     const fetchedAuctions = useRef<NDKParsedAuctionEvent[]>([])
 
-    const [products, setProducts] = useState<NDKParsedProductEvent[]>([])
-    const fetchedProducts = useRef<NDKParsedProductEvent[]>([])
-
     const [bids] = useState<AuctionBids>(new Map())
     const [bidStatus] = useState(new Map<string, "accepted" | "rejected" | "pending" | "winner">())
-
-    const [stalls] = useState(new Map<string, NDKParsedStallEvent>())
-
-    const updateFetchedProducts = (event: NDKEvent) => {
-        fetchedProducts.current = !fetchedProducts.current.find(e => e.id === event.id)
-            ? orderProducts(addContentToProductEvent(event), fetchedProducts.current)
-            : fetchedProducts.current
-    }
 
     const updateFetchedAuctions = (event: NDKEvent) => {
         fetchedAuctions.current = !fetchedAuctions.current.find(e => e.id === event.id)
@@ -210,17 +201,8 @@ export function NDKContextProvider({ children }: { children: any }) {
             })
         }, 1000)
 
-        const productsInterval = setInterval(() => {
-            setProducts(prev => {
-                if (fetchedProducts.current === prev) clearInterval(productsInterval)
-
-                return fetchedProducts.current
-            })
-        }, 1000)
-
         return () => {
             clearInterval(auctionsInterval)
-            clearInterval(productsInterval)
         }
     }, [])
 
@@ -239,9 +221,7 @@ export function NDKContextProvider({ children }: { children: any }) {
             value={{
                 ndk,
                 subscribeAndHandle,
-                products,
                 auctions,
-                stalls,
                 bids,
                 bidStatus,
                 loginWithNIP07,
@@ -277,28 +257,12 @@ export function useSubscribe() {
     return context.subscribeAndHandle
 }
 
-export function useProducts() {
-    const context = useContext(NDKContext)
-
-    if (!context) throw new Error("useProducts must be within a Context Provider")
-
-    return context.products
-}
-
 export function useAuctions() {
     const context = useContext(NDKContext)
 
     if (!context) throw new Error("useAuctions must be within a Context Provider")
 
     return context.auctions
-}
-
-export function useStalls() {
-    const context = useContext(NDKContext)
-
-    if (!context) throw new Error("useStalls must be within a Context Provider")
-
-    return context.stalls
 }
 
 export function useBids() {
