@@ -43,7 +43,7 @@ const AuctionCountdown = ({ auction }: { auction: NDKAuctionContent }) => {
 }
 
 const AuctionCard = ({ event }: { event: NDKParsedAuctionEvent }) => {
-    const stalls = useStalls()
+    const { stalls } = useStalls()
     const bids = useBids()
     const bidStatus = useBidStatus()
 

@@ -1,9 +1,8 @@
 "use client"
 
-import useNDK, { NDKParsedProductEvent } from "@/hooks/useNDK"
+import { NDKParsedProductEvent } from "@/hooks/useNDK"
 import useProducts from "@/hooks/useProducts"
-import { nFormatter, setCookie } from "@/utils/functions"
-import { NDKEvent } from "@nostr-dev-kit/ndk"
+import { nFormatter } from "@/utils/functions"
 import Link from "next/link"
 import { ReactNode, SyntheticEvent, useState } from "react"
 import { InView } from "react-intersection-observer"
@@ -35,10 +34,6 @@ const ProductCard = ({
             <Link
                 className="w-full max-w-52 h-full relative flex flex-col gap-2 p-1 justify-center hover:outline outline-nostr rounded-lg"
                 href={"/product/" + product.content.id}
-                onClick={() => {
-                    const originalEvent = { ...product, content: JSON.stringify(product.content) }
-                    setCookie(product.content.id, (originalEvent as NDKEvent).serialize(), 0.05)
-                }}
             >
                 <div className="relative aspect-square w-full flex-shrink-0 flex items-center justify-center rounded overflow-hidden">
                     <div
@@ -78,9 +73,7 @@ const filterProductsWithSearch = (products: NDKParsedProductEvent[], search: str
 }
 
 export default function Products() {
-    const ndk = useNDK()
-
-    const products = useProducts()
+    const { products } = useProducts()
     const [numberOfProductsToShow, setNumberOfProductsToShow] = useState(24)
 
     const [search, setSearch] = useState("")

@@ -5,8 +5,8 @@ import { addContentToStallEvent, NDKParsedStallEvent, useNDKContext } from "./us
 export default function useStalls() {
     const { ndk, subscribeAndHandle } = useNDKContext()
 
-    // TODO: Create map to access with id of stall
     const [stalls, setStalls] = useState<NDKParsedStallEvent[]>([])
+    const stallsMap = useRef<Map<string, NDKParsedStallEvent>>(new Map())
     const fetchedStalls = useRef<NDKParsedStallEvent[]>([])
 
     const handleNewStall = (stallEvent: NDKEvent) => {
@@ -16,6 +16,7 @@ export default function useStalls() {
             if (!parsedStall) return
 
             fetchedStalls.current.push(parsedStall)
+            stallsMap.current.set(parsedStall.id, parsedStall)
         } catch (error) {}
     }
 
@@ -38,5 +39,5 @@ export default function useStalls() {
         }
     }, [ndk])
 
-    return stalls
+    return { stalls, stallsMap: stallsMap.current }
 }

@@ -7,6 +7,7 @@ export default function useProducts() {
 
     // TODO: Create map to access with id of product
     const [products, setProducts] = useState<NDKParsedProductEvent[]>([])
+    const productsMap = useRef<Map<string, NDKParsedProductEvent>>(new Map())
     const fetchedProducts = useRef<NDKParsedProductEvent[]>([])
 
     const handleNewProduct = (productEvent: NDKEvent) => {
@@ -16,6 +17,7 @@ export default function useProducts() {
             if (!parsedProduct) return
 
             fetchedProducts.current.push(parsedProduct)
+            productsMap.current.set(parsedProduct.id, parsedProduct)
         } catch (error) {}
     }
 
@@ -38,5 +40,5 @@ export default function useProducts() {
         }
     }, [ndk])
 
-    return products
+    return { products, productsMap: productsMap.current }
 }

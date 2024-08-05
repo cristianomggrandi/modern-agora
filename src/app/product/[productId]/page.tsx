@@ -163,6 +163,7 @@ export default function Product(props: { params: { productId: string } }) {
                             ))}
                     </div>
                 ) : null}
+                {/* TODO: Include link to stall */}
                 <div className="product-price-buy flex gap-4">
                     <span className="text-center px-4 bg-white text-nostr uppercase font-semibold rounded py-1 sm:py-2">
                         {product.content.price} {product.content.currency}

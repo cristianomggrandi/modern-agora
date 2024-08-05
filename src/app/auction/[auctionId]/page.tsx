@@ -47,7 +47,7 @@ export default function Auction(props: { params: { auctionId: string } }) {
     const auctions = useAuctions()
     const bids = useBids()
     const bidStatus = useBidStatus()
-    const stalls = useStalls()
+    const { stalls } = useStalls()
 
     const [imageIndex, setImageIndex] = useState(0)
 

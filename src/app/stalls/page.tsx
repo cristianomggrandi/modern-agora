@@ -72,7 +72,7 @@ const filterStallsWithSearch = (stalls: NDKParsedStallEvent[], search: string) =
 }
 
 export default function Stalls() {
-    const stalls = useStalls()
+    const { stalls } = useStalls()
     const [numberOfStallsToShow, setNumberOfStallsToShow] = useState(24)
 
     const [search, setSearch] = useState("")
