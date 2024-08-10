@@ -6,6 +6,7 @@
     --foreground-rgb: 0, 0, 0;
     --background-start-rgb: 214, 219, 220;
     --background-end-rgb: 255, 255, 255;
+    --nostr: #9543dc;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -215,6 +216,7 @@ header .profile {
 }
 
 @layer utilities {
+
     /* Hide scrollbar for Chrome, Safari and Opera */
     .no-scrollbar::-webkit-scrollbar {
         display: none;
@@ -226,5 +228,59 @@ header .profile {
         /* IE and Edge */
         scrollbar-width: none;
         /* Firefox */
+    }
+
+    /* Font: https://moderncss.dev/pure-css-custom-checkbox-style/ */
+    .square-checkbox {
+        line-height: 1.1;
+        display: grid;
+        grid-template-columns: 1em auto;
+        gap: 0.5em;
+    }
+
+    .square-checkbox.rounded {
+        border-radius: 100%;
+    }
+
+    .square-checkbox input[type="checkbox"] {
+        -webkit-appearance: none;
+        appearance: none;
+        background-color: #fff;
+        margin: 0;
+
+        font: inherit;
+        color: currentColor;
+        width: 1.15em;
+        height: 1.15em;
+        border: 0.15em solid currentColor;
+        border-radius: 0.15em;
+        transform: translateY(-0.075em);
+
+        display: grid;
+        place-content: center;
+
+    }
+
+    .square-checkbox.rounded input[type="checkbox"] {
+        border-radius: 100%;
+    }
+
+    .square-checkbox input[type="checkbox"]::before {
+        content: "";
+        width: 0.65em;
+        height: 0.65em;
+        transform: scale(0);
+        transition: 120ms transform ease-in-out;
+        box-shadow: inset 1em 1em var(--nostr);
+        background-color: var(--nostr);
+    }
+
+    .square-checkbox.rounded input[type="checkbox"]::before {
+        border-radius: 100%;
+    }
+
+
+    .square-checkbox input[type="checkbox"]:checked::before {
+        transform: scale(1);
     }
 }
