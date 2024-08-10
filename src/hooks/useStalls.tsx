@@ -39,5 +39,5 @@ export default function useStalls() {
         }
     }, [ndk])
 
-    return { stalls, stallsMap: stallsMap.current }
+    return { stalls, setStalls, stallsMap: stallsMap.current }
 }

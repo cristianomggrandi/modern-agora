@@ -5,7 +5,7 @@ import useStalls from "@/hooks/useStalls"
 import { setCookie } from "@/utils/functions"
 import { NDKEvent } from "@nostr-dev-kit/ndk"
 import Link from "next/link"
-import { ReactNode, SyntheticEvent, useState } from "react"
+import { ReactNode, SyntheticEvent, useEffect, useState } from "react"
 import { InView } from "react-intersection-observer"
 import SearchField from "../components/SearchField"
 
@@ -61,19 +61,25 @@ const StallCard = ({
     )
 }
 
-const filterStallsWithSearch = (stalls: NDKParsedStallEvent[], search: string) => {
+const filterStalls = (stalls: NDKParsedStallEvent[], search: string, numberOfStallsToShow: number, currencyFilter?: string) => {
     const formattedSearch = search.toLocaleLowerCase()
 
-    return stalls.filter(p => {
-        const compareString = (p.content.name + (p.content.description ?? "")).toLocaleLowerCase()
+    return stalls
+        .filter(s => {
+            const searchCheck = (s.content.name + (s.content.description ?? "")).toLocaleLowerCase().includes(formattedSearch)
+            const currencyCheck = currencyFilter ? s.content.currency === currencyFilter : true
 
-        return compareString.includes(formattedSearch)
-    })
+            return currencyCheck && searchCheck
+        })
+        .slice(0, numberOfStallsToShow)
 }
 
 export default function Stalls() {
-    const { stalls } = useStalls()
+    const { stalls, setStalls } = useStalls()
     const [numberOfStallsToShow, setNumberOfStallsToShow] = useState(24)
+
+    const [currencyOptions, setCurrencyOptions] = useState<string[]>([])
+    const [currencyFilter, setCurrencyFilter] = useState<string>()
 
     const [search, setSearch] = useState("")
 
@@ -85,18 +91,50 @@ export default function Stalls() {
     const clearSearch = () => setSearch("")
 
     const onView = (inView: boolean, entry: IntersectionObserverEntry) => {
-        if (inView) setNumberOfStallsToShow(p => p + 24)
+        if (inView) setNumberOfStallsToShow(s => s + 24)
     }
+
+    useEffect(() => {
+        let repeat = 2
+
+        const currencyOptionsInterval = setInterval(() => {
+            if (repeat-- <= 0) clearInterval(currencyOptionsInterval)
+
+            setStalls(stalls => {
+                setCurrencyOptions(
+                    stalls.reduce((currencys, stall) => {
+                        if (!currencys.find(c => c === stall.content.currency)) currencys.push(stall.content.currency)
+
+                        return currencys
+                    }, [] as string[])
+                )
+
+                return stalls
+            })
+        }, 10000)
+
+        return () => clearInterval(currencyOptionsInterval)
+    }, [])
 
     return (
         // TODO: Create a way to search/filter by tag
         <main className="flex gap-4 flex-col items-center justify-stretch p-4 pb-0">
             <div className="w-full flex justify-end">
+                <select onChange={e => setCurrencyFilter(e.target.value)} className="bg-nostr">
+                    <option value={undefined} className="bg-nostr">
+                        Teste
+                    </option>
+                    {currencyOptions.map(op => (
+                        <option value={op} className="bg-nostr">
+                            {op}
+                        </option>
+                    ))}
+                </select>
                 <SearchField handleSearch={handleSearch} clearSearch={clearSearch} />
             </div>
             <div className="w-full grid auto-rows-fr grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] justify-items-center gap-6 rounded-lg">
                 {/* TODO: Create a onView to revert the maximum number of stalls shown */}
-                {(search ? filterStallsWithSearch(stalls, search) : stalls).slice(0, numberOfStallsToShow).map((stall, i, array) => {
+                {filterStalls(stalls, search, numberOfStallsToShow, currencyFilter).map((stall, i, array) => {
                     return <StallCard key={stall.id} stall={stall} isLastStall={i === array.length - 1} onView={onView} />
                 })}
             </div>

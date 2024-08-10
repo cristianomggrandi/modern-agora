@@ -152,6 +152,7 @@ export default function Product(props: { params: { productId: string } }) {
         <main className="flex flex-col justify-center p-6 sm:p-[4%] gap-8 min-h-full">
             <h1 className="text-xl sm:text-2xl neon-text-2lg font-semibold text-center">{product.content.name}</h1>
             <div className="product-details grid gap-8">
+                {/* TODO: Handle product with no images */}
                 <ProductImages product={product} />
                 <ParsedDescription description={product.content.description} />
                 {product.tags.length ? (
