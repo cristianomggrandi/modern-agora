@@ -152,7 +152,7 @@ export default function Stalls() {
                         All currencies
                     </option>
                     {currencyOptions.map(op => (
-                        <option value={op} className="bg-nostr">
+                        <option key={op} value={op} className="bg-nostr">
                             {op}
                         </option>
                     ))}
