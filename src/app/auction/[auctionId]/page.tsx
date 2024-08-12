@@ -1,7 +1,7 @@
 "use client"
 
 import useNDK, { useAuctions, useBidStatus, useBids } from "@/hooks/useNDK"
-import useStalls from "@/hooks/useStalls"
+import useStall from "@/hooks/useStall"
 import { parseDescription } from "@/utils/ndk"
 import NDK, { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
 import { useState } from "react"
@@ -48,15 +48,13 @@ export default function Auction(props: { params: { auctionId: string } }) {
     const auctions = useAuctions()
     const bids = useBids()
     const bidStatus = useBidStatus()
-    const { stalls } = useStalls()
 
     const [imageIndex, setImageIndex] = useState(0)
 
     const auction = auctions.find(a => a.content.id === props.params.auctionId)
+    const stall = useStall(auction?.content.stall_id)
 
     if (!auction) return <div>Loading...</div>
-
-    const stall = stalls.get(auction.content.stall_id)
 
     const auctionBids = bids.get(String(auction.id))
     const highestBid = auctionBids?.reduce(
