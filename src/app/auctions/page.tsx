@@ -1,12 +1,12 @@
 "use client"
 
 import { NDKParsedAuctionEvent, useAuctions, useBids, useBidStatus } from "@/hooks/useNDK"
+import useStalls from "@/hooks/useStalls"
 import { nFormatter } from "@/utils/functions"
 import { NDKAuctionContent } from "@/utils/ndk"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import PagesOptions from "../components/PagesOptions"
-import useStalls from "@/hooks/useStalls"
 
 const AuctionCountdown = ({ auction }: { auction: NDKAuctionContent }) => {
     const until = new Date((auction.start_date + auction.duration) * 1000)
@@ -44,13 +44,13 @@ const AuctionCountdown = ({ auction }: { auction: NDKAuctionContent }) => {
 }
 
 const AuctionCard = ({ event }: { event: NDKParsedAuctionEvent }) => {
-    const { stalls } = useStalls()
+    const { stallsMap } = useStalls()
     const bids = useBids()
     const bidStatus = useBidStatus()
 
     if (!event.content) return null
 
-    const stall = stalls.get(event.content.stall_id)
+    const stall = stallsMap.get(event.content.stall_id)
 
     if (!stall) return null
 
