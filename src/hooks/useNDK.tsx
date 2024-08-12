@@ -8,7 +8,7 @@ import {
     getParsedProductContent,
     getParsedStallContent,
 } from "@/utils/ndk"
-import NDK, { NDKEvent, NDKFilter, NDKNip07Signer, NDKSubscription, NDKSubscriptionOptions, NDKUser } from "@nostr-dev-kit/ndk"
+import NDK, { NDKEvent, NDKFilter, NDKSubscription, NDKSubscriptionOptions, NDKUser } from "@nostr-dev-kit/ndk"
 import { createContext, useContext, useEffect, useRef, useState } from "react"
 
 export type NDKParsedProductEvent = ReturnType<typeof addContentToProductEvent>
@@ -181,9 +181,12 @@ export function NDKContextProvider({ children }: { children: any }) {
     }
 
     useEffect(() => {
+        // TODO: Create signer that doesn't crask the app when there isn't any extension
+        // const signer = new NDKNip07Signer()
+
         const ndkTemp = new NDK({
             explicitRelayUrls: defaultRelays,
-            signer: new NDKNip07Signer(),
+            // signer,
         })
 
         setNdk(ndkTemp)
