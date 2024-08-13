@@ -3,6 +3,8 @@
 import { NDKParsedProductEvent, NDKParsedStallEvent } from "@/hooks/useNDK"
 import useProducts from "@/hooks/useProducts"
 import useStalls from "@/hooks/useStalls"
+import { faAngleRight } from "@fortawesome/free-solid-svg-icons"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import Link from "next/link"
 import { ReactNode, SyntheticEvent, useEffect, useState } from "react"
 import { InView } from "react-intersection-observer"
@@ -135,29 +137,37 @@ export default function Stalls() {
     return (
         // TODO: Create a way to search/filter by tag
         <main className="flex gap-4 flex-col items-center justify-stretch p-4 pb-0">
-            <div className="w-full flex justify-end gap-4">
-                <div className="flex items-center gap-2 px-2 bg-nostr">
-                    <label className="square-checkbox rounded">
-                        <input
-                            type="checkbox"
-                            id="show-only-stalls-with-products"
-                            checked={onlyShowStallsWithProducts}
-                            onChange={e => setOnlyShowStallsWithProducts(e.target.checked)}
-                        />
-                        Show only stalls with products
-                    </label>
-                </div>
-                <select onChange={e => setCurrencyFilter(e.target.value)} className="rounded w-36 bg-nostr">
-                    <option value={undefined} className="bg-nostr">
-                        All currencies
-                    </option>
-                    {currencyOptions.map(op => (
-                        <option key={op} value={op} className="bg-nostr">
-                            {op}
+            <div className="w-full flex flex-col-reverse sm:flex-row justify-end items-stretch gap-4">
+                <input id="stall-menu-options" type="checkbox" tabIndex={-1} aria-hidden="true" className="hidden stall-menu-options" />
+                <div className="flex flex-col sm:flex-row text-nowrap gap-2 options-menu transition-all duration-300">
+                    <div className="flex items-center gap-2 p-2 bg-nostr rounded">
+                        <label className="square-checkbox rounded">
+                            <input
+                                type="checkbox"
+                                id="show-only-stalls-with-products"
+                                checked={onlyShowStallsWithProducts}
+                                onChange={e => setOnlyShowStallsWithProducts(e.target.checked)}
+                            />
+                            Show only stalls with products
+                        </label>
+                    </div>
+                    <select onChange={e => setCurrencyFilter(e.target.value)} className="rounded p-2 bg-nostr">
+                        <option value={undefined} className="bg-nostr">
+                            All currencies
                         </option>
-                    ))}
-                </select>
-                <SearchField handleSearch={handleSearch} clearSearch={clearSearch} />
+                        {currencyOptions.map(op => (
+                            <option key={op} value={op} className="bg-nostr">
+                                {op}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div className="flex gap-2">
+                    <label htmlFor="stall-menu-options" className="w-8 h-8 flex justify-center checkbox sm:hidden">
+                        <FontAwesomeIcon icon={faAngleRight} size="2xl" className="transition-transform duration-300" />
+                    </label>
+                    <SearchField handleSearch={handleSearch} clearSearch={clearSearch} />
+                </div>
             </div>
             <div className="w-full grid auto-rows-fr grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] justify-items-center gap-6 rounded-lg">
                 {/* TODO: Create a onView to revert the maximum number of stalls shown */}

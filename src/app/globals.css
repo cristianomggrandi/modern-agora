@@ -178,6 +178,21 @@ header .profile {
             "description"
             "price-buy";
     }
+
+    .stall-menu-options~.options-menu {
+        overflow: hidden;
+        max-height: 0;
+    }
+
+    .stall-menu-options:checked~.options-menu {
+        max-height: 10rem;
+    }
+
+    .stall-menu-options:checked~div label svg {
+        transform: rotate(90deg);
+    }
+
+
 }
 
 @keyframes agora-animation {

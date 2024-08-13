@@ -14,11 +14,11 @@ export const metadata: Metadata = {
 
 function NavBar() {
     return (
-        <header className="sticky z-50 top-0 bg-light">
+        <header className="menu-checkbox-container sticky z-50 top-0 bg-light">
             <Link className="logo py-2 px-6 flex items-center justify-center h-16" href="/">
                 Logo
             </Link>
-            <input id="nav-menu-button" type="checkbox" tabIndex={-1} aria-hidden="true" className="hidden h-8 w-8" />
+            <input id="nav-menu-button" type="checkbox" tabIndex={-1} aria-hidden="true" className="hidden" />
             <label htmlFor="nav-menu-button" className="checkbox sm:hidden">
                 <FontAwesomeIcon icon={faBars} size="xl" />
                 <FontAwesomeIcon icon={faXmark} size="2xl" />
