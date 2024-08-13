@@ -8,6 +8,7 @@ import useProduct from "@/hooks/useProduct"
 import useStall from "@/hooks/useStall"
 import { NDKCheckoutContent } from "@/utils/ndk"
 import NDK, { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
+import Link from "next/link"
 import { useRef } from "react"
 import { v4 as uuidv4 } from "uuid"
 
@@ -72,15 +73,20 @@ export default function Product(props: { params: { productId: string } }) {
                 <ProductImages images={product.content.images} name={product.content.name} />
                 <ParsedDescription description={product.content.description} />
                 <ProductTags tags={product.tags} />
-                {/* TODO: Include link to stall */}
-                <div className="product-price-buy flex gap-4">
-                    <span className="text-center px-4 bg-white text-nostr uppercase font-semibold rounded py-1 sm:py-2">
+                <div className="product-price-buy text-nowrap flex flex-wrap gap-4">
+                    <Link
+                        href={stall ? `/stall/${stall?.content.id}` : ""}
+                        className="flex-1 text-center px-4 bg-white text-nostr uppercase font-semibold rounded py-1 sm:py-2"
+                    >
+                        Checkout stall
+                    </Link>
+                    <span className="flex-1 text-center px-4 bg-white text-nostr uppercase font-semibold rounded py-1 sm:py-2">
                         {product.content.price} {product.content.currency}
                     </span>
                     <button
                         onClick={openModal}
                         disabled={!stall}
-                        className={`flex-1 p-1 sm:p-2 rounded bg-nostr shadow-nostr text-white uppercase font-semibold ${
+                        className={`flex-1 basis-48 p-1 sm:p-2 rounded bg-nostr shadow-nostr text-white uppercase font-semibold ${
                             stall ? "" : "opacity-50"
                         }`}
                     >

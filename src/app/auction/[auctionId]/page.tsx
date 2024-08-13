@@ -8,6 +8,7 @@ import { useBidStatus, useBids } from "@/hooks/useNDK"
 import useStall from "@/hooks/useStall"
 import { NDKAuctionContent } from "@/utils/ndk"
 import NDK, { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
+import Link from "next/link"
 import { useEffect, useState } from "react"
 
 function sendBid(e: React.FormEvent<HTMLFormElement>, auctionId: string, ndk?: NDK) {
@@ -93,8 +94,13 @@ export default function Auction(props: { params: { auctionId: string } }) {
                 <ProductImages images={auction.content.images} name={auction.content.name} />
                 <ParsedDescription description={auction.content.description} />
                 <ProductTags tags={auction.tags} />
-                {/* TODO: Include link to stall */}
-                <div className="product-price-buy flex justify-center sm:justify-between gap-4">
+                <div className="product-price-buy text-nowrap flex items-center justify-center sm:justify-between gap-4">
+                    <Link
+                        href={stall ? `/stall/${stall?.content.id}` : ""}
+                        className="text-center h-min px-4 bg-white text-nostr uppercase font-semibold rounded py-1 sm:py-2"
+                    >
+                        Checkout stall
+                    </Link>
                     <AuctionCountdown auction={auction.content} />
                 </div>
                 {/* TODO: Show highest bid and create button to bid */}
