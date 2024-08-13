@@ -1,98 +1,15 @@
 "use client"
 
-import EventTag from "@/app/components/EventTag"
-import useNDK, { NDKParsedProductEvent } from "@/hooks/useNDK"
+import ParsedDescription from "@/app/components/ParsedDescription"
+import ProductImages from "@/app/components/ProductImages"
+import ProductTags from "@/app/components/ProductTags"
+import useNDK from "@/hooks/useNDK"
 import useProduct from "@/hooks/useProduct"
 import useStall from "@/hooks/useStall"
-import { NDKCheckoutContent, parseDescription } from "@/utils/ndk"
-import { faAngleLeft, faAngleRight } from "@fortawesome/free-solid-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { NDKCheckoutContent } from "@/utils/ndk"
 import NDK, { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
-import { useRef, useState } from "react"
+import { useRef } from "react"
 import { v4 as uuidv4 } from "uuid"
-
-function ProductImages({ product }: { product: NDKParsedProductEvent }) {
-    const [imageIndex, setImageIndex] = useState(0)
-
-    const nextImage = () => (product.content.images ? setImageIndex(prev => (prev + 1) % product.content.images!.length) : 0)
-    const prevImage = () => (product.content.images ? setImageIndex(prev => (prev > 0 ? prev - 1 : product.content.images!.length - 1)) : 0)
-
-    return (
-        <div className="product-images flex-1 flex flex-col-reverse md:flex-row items-center justify-center gap-4">
-            <div className="flex md:flex-col gap-2 justify-center">
-                {product.content.images?.length! > 1
-                    ? product.content.images!.map((img, index) => (
-                          <div
-                              className="h-12 w-12 overflow-hidden flex items-center cursor-pointer"
-                              onClick={() => setImageIndex(index)}
-                              onMouseOver={() => setImageIndex(index)}
-                              key={index}
-                          >
-                              <img src={img} alt={"Image " + index} height={48} width={48} />
-                          </div>
-                      ))
-                    : null}
-            </div>
-            <div className="flex border border-nostr shadow-nostr shadow rounded w-[90%] md:h-96 items-center justify-center relative">
-                {product.content.images ? (
-                    <>
-                        {product.content.images.map((image, index) => (
-                            <div className={`bg-center ${imageIndex === index ? "block" : "hidden"}`} key={index}>
-                                <img
-                                    src={image}
-                                    className={`absolute top-0 left-0 w-full h-full blur-sm object-center object-cover `}
-                                    loading="lazy"
-                                    alt=""
-                                />
-                                <img
-                                    src={image}
-                                    alt={product.content.name}
-                                    className={`relative max-w-full max-h-96 z-10 p-1`}
-                                    loading="lazy"
-                                />
-                            </div>
-                        ))}
-                        {product.content.images?.length > 1 ? (
-                            <>
-                                <button
-                                    className="absolute z-10 top-1/2 left-0 transform translate-x-1/2 -translate-y-1/2 flex items-center justify-center rounded-full h-8 opacity-85 aspect-square bg-nostr font-bold"
-                                    onClick={prevImage}
-                                >
-                                    <FontAwesomeIcon icon={faAngleLeft} />
-                                </button>
-                                <button
-                                    className="absolute z-10 top-1/2 right-0 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center rounded-full h-8 opacity-85 aspect-square bg-nostr font-bold"
-                                    onClick={nextImage}
-                                >
-                                    <FontAwesomeIcon icon={faAngleRight} />
-                                </button>
-                            </>
-                        ) : null}
-                    </>
-                ) : (
-                    "No images"
-                )}
-            </div>
-        </div>
-    )
-}
-
-function ParsedDescription({ description }: { description: string | undefined }) {
-    if (!description) return null
-
-    const parsedDescription = parseDescription(description).split("\n")
-
-    return (
-        // TODO: Create scroller for description (http://localhost:3000/product/90cb2433-6d75-468b-b0b6-7d40ac209bc7)
-        <div className="product-description flex-1 justify-center text-justify flex flex-col gap-1">
-            {parsedDescription.map((desc, i) => (
-                <p key={i} className="neon-text-sm">
-                    {desc}
-                </p>
-            ))}
-        </div>
-    )
-}
 
 const handleBuy = async (e: React.FormEvent<HTMLFormElement>, ndk?: NDK) => {
     // TODO: Move to NDKContext
@@ -152,18 +69,9 @@ export default function Product(props: { params: { productId: string } }) {
         <main className="flex flex-col justify-center p-6 sm:p-[4%] gap-8 min-h-full">
             <h1 className="text-xl sm:text-2xl neon-text-2lg font-semibold text-center">{product.content.name}</h1>
             <div className="product-details grid gap-8">
-                {/* TODO: Handle product with no images */}
-                <ProductImages product={product} />
+                <ProductImages images={product.content.images} name={product.content.name} />
                 <ParsedDescription description={product.content.description} />
-                {product.tags.length ? (
-                    <div className="product-tags flex gap-2 flex-nowrap no-scrollbar no-wrap overflow-x-scroll">
-                        {product.tags
-                            .filter(tag => tag[0] === "t")
-                            .map((tag, i) => (
-                                <EventTag key={i} tag={tag} />
-                            ))}
-                    </div>
-                ) : null}
+                <ProductTags tags={product.tags} />
                 {/* TODO: Include link to stall */}
                 <div className="product-price-buy flex gap-4">
                     <span className="text-center px-4 bg-white text-nostr uppercase font-semibold rounded py-1 sm:py-2">
