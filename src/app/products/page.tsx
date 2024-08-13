@@ -4,19 +4,9 @@ import { NDKParsedProductEvent } from "@/hooks/useNDK"
 import useProducts from "@/hooks/useProducts"
 import { nFormatter } from "@/utils/functions"
 import Link from "next/link"
-import { ReactNode, SyntheticEvent, useState } from "react"
-import { InView } from "react-intersection-observer"
+import { SyntheticEvent, useState } from "react"
+import LastItemWrapper from "../components/LastItemWrapper"
 import SearchField from "../components/SearchField"
-
-const LastProductWrapper = ({
-    children,
-    isLastProduct,
-    onView,
-}: {
-    children: ReactNode
-    isLastProduct: boolean
-    onView: (inView: boolean, entry: IntersectionObserverEntry) => void
-}) => (isLastProduct ? <InView onChange={onView}>{children}</InView> : <>{children}</>)
 
 const ProductCard = ({
     product,
@@ -30,7 +20,7 @@ const ProductCard = ({
     if (!product.content) return null
 
     return (
-        <LastProductWrapper isLastProduct={isLastProduct} onView={onView}>
+        <LastItemWrapper isLastItem={isLastProduct} onView={onView}>
             <Link
                 className="w-full max-w-52 h-full relative flex flex-col gap-2 p-1 justify-center hover:outline outline-nostr rounded-lg"
                 href={"/product/" + product.content.id}
@@ -58,7 +48,7 @@ const ProductCard = ({
                     </span>
                 </div>
             </Link>
-        </LastProductWrapper>
+        </LastItemWrapper>
     )
 }
 

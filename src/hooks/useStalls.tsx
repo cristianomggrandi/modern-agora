@@ -34,7 +34,7 @@ export default function useStalls() {
         }, 1000)
 
         return () => {
-            if (sub) sub?.stop()
+            if (sub) sub.stop()
             clearInterval(productsInterval)
         }
     }, [ndk])

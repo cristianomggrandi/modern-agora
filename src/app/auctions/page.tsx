@@ -1,12 +1,11 @@
 "use client"
 
-import { NDKParsedAuctionEvent, useAuctions, useBids, useBidStatus } from "@/hooks/useNDK"
-import useStalls from "@/hooks/useStalls"
-import { nFormatter } from "@/utils/functions"
+import useAuctions from "@/hooks/useAuctions"
+import { NDKParsedAuctionEvent, useBids, useBidStatus } from "@/hooks/useNDK"
 import { NDKAuctionContent } from "@/utils/ndk"
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import PagesOptions from "../components/PagesOptions"
+import LastItemWrapper from "../components/LastItemWrapper"
 
 const AuctionCountdown = ({ auction }: { auction: NDKAuctionContent }) => {
     const until = new Date((auction.start_date + auction.duration) * 1000)
@@ -14,7 +13,7 @@ const AuctionCountdown = ({ auction }: { auction: NDKAuctionContent }) => {
     const [secondsLeft, setTimeLeft] = useState(new Date(until.getTime() - Date.now()).getTime() / 1000)
 
     useEffect(() => {
-        const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000)
+        const timer = secondsLeft > 3600 ? setInterval(() => setTimeLeft(prev => prev - 1), 1000) : undefined
 
         return () => clearInterval(timer)
     }, [])
@@ -28,88 +27,120 @@ const AuctionCountdown = ({ auction }: { auction: NDKAuctionContent }) => {
     const significantTimer = days !== 0 ? days : hours !== 0 ? hours : minutes !== 0 ? minutes : seconds
 
     return (
-        <div className="hidden md:grid lg:grid-cols-4 gap-x-4 text-lg font-bold *:w-12 text-center *:m-auto">
-            <span className="hidden lg:block neon-text-sm">D</span>
+        <div className="flex justify-end text-lg font-bold text-center">
+            <span className="neon-text-sm">
+                {Math.floor(significantTimer)} {significantTimerName}
+            </span>
+
+            {/* <span className="hidden lg:block neon-text-sm">D</span>
             <span className="hidden lg:block neon-text-sm">H</span>
             <span className="hidden lg:block neon-text-sm">M</span>
-            <span className="hidden lg:block neon-text-sm">S</span>
-            <span className="lg:hidden neon-text-sm">{significantTimerName}</span>
-            <span className="hidden lg:block neon-text-sm">{Math.floor(days)}</span>
+            <span className="hidden lg:block neon-text-sm">S</span> */}
+            {/* <span className="hidden lg:block neon-text-sm">{Math.floor(days)}</span>
             <span className="hidden lg:block neon-text-sm">{Math.floor(hours)}</span>
             <span className="hidden lg:block neon-text-sm">{Math.floor(minutes)} </span>
-            <span className="hidden lg:block neon-text-sm">{Math.floor(seconds)}</span>
-            <span className="lg:hidden neon-text-sm">{Math.floor(significantTimer)}</span>
+            <span className="hidden lg:block neon-text-sm">{Math.floor(seconds)}</span> */}
         </div>
     )
 }
 
-const AuctionCard = ({ event }: { event: NDKParsedAuctionEvent }) => {
-    const { stallsMap } = useStalls()
+const AuctionCard = ({
+    auction,
+    isLastAuction,
+    onView,
+}: {
+    auction: NDKParsedAuctionEvent
+    isLastAuction: boolean
+    onView: (inView: boolean, entry: IntersectionObserverEntry) => void
+}) => {
     const bids = useBids()
     const bidStatus = useBidStatus()
 
-    if (!event.content) return null
-
-    const stall = stallsMap.get(event.content.stall_id)
-
-    if (!stall) return null
+    if (!auction.content) return null
 
     const highestBid = bids
-        ?.get(event.id)
-        ?.find(bid => event.pubkey === bid.pubkey && (bidStatus.get(bid.id) === "accepted" || bidStatus.get(bid.id) === "winner"))
+        ?.get(auction.id)
+        ?.find(bid => auction.pubkey === bid.pubkey && (bidStatus.get(bid.id) === "accepted" || bidStatus.get(bid.id) === "winner"))
 
     // TODO: Avaliate: When on mobile, make img the background so the text is over it
 
     return (
-        <Link
-            className="flex flex-col gap-2 md:gap-0 p-1 md:p-0 md:flex-row md:w-auto justify-center md:divide-x divide-nostr border md:border-x-0 md:first:border-none border-nostr rounded-lg md:rounded-none *:px-1 md:*:px-3"
-            href={"/auction/" + event.content.id}
-        >
-            <div className="h-24 w-full md:w-24 flex-shrink-0 flex items-center justify-center md:p-2">
-                {event.content.images ? (
-                    <img
-                        className="max-h-24 max-w-full md:max-w-20 md:max-h-20 rounded"
-                        src={event.content.images[0]}
-                        alt={event.content.name}
-                        height={96}
-                        // width={96}
+        <LastItemWrapper isLastItem={isLastAuction} onView={onView}>
+            <Link
+                className="w-full max-w-52 h-full relative flex flex-col gap-2 p-1 justify-center hover:outline outline-nostr rounded-lg"
+                href={"/auction/" + auction.content.id}
+            >
+                <div className="relative aspect-square w-full flex-shrink-0 flex items-center justify-center rounded overflow-hidden">
+                    <div
+                        className="absolute w-full h-full blur-sm bg-center bg-cover bg-no-repeat"
+                        style={{ backgroundImage: auction.content.images ? `url(${auction.content.images[0]})` : undefined }}
                     />
-                ) : null}
-            </div>
-            <div className="flex-1 flex flex-col justify-between md:justify-around">
-                <span className="line-clamp-2 font-semibold">{event.content.name}</span>
-                <span className="line-clamp-3 md:line-clamp-2 text-sm">{event.content.description}</span>
-            </div>
-            <div className="flex md:flex-col items-center md:justify-around md:w-28">
-                <span className="font-bold uppercase neon-text-sm">Bid</span>
-                <span className="font-bold uppercase neon-text-sm md:hidden mr-1">:</span>
-                <span className="font-bold uppercase neon-text-sm">
-                    {nFormatter(highestBid?.amount ?? event.content.starting_bid, 2)} {stall.content.currency}
-                </span>
-            </div>
-            <AuctionCountdown auction={event.content} />
-        </Link>
+                    {/* TODO: Expand image on mobile  */}
+                    {auction.content.images?.length ? (
+                        <img
+                            className="z-10 max-h-full max-w-full"
+                            src={auction.content.images[0]}
+                            alt={auction.content.name}
+                            height={96}
+                            // width={96}
+                        />
+                    ) : null}
+                </div>
+                <div className="flex-1 flex flex-col justify-between">
+                    <span className="line-clamp-2 text-sm font-semibold">{auction.content.name}</span>
+                </div>
+                <AuctionCountdown auction={auction.content} />
+            </Link>
+            {/* <Link
+                className="flex flex-col gap-2 md:gap-0 p-1 md:p-0 md:flex-row md:w-auto justify-center md:divide-x divide-nostr border md:border-x-0 md:first:border-none border-nostr rounded-lg md:rounded-none *:px-1 md:*:px-3"
+                href={"/auction/" + auction.content.id}
+            >
+                <div className="relative aspect-square w-full flex-shrink-0 flex items-center justify-center rounded overflow-hidden">
+                    <div
+                        className="absolute w-full h-full blur-sm bg-center bg-cover bg-no-repeat"
+                        style={{ backgroundImage: auction.content.images ? `url(${auction.content.images[0]})` : undefined }}
+                    />
+                    {auction.content.images?.length ? (
+                        <img
+                            className="z-10 max-h-full max-w-full"
+                            src={auction.content.images[0]}
+                            alt={auction.content.name}
+                            height={96}
+                            // width={96}
+                        />
+                    ) : null}
+                </div>
+                <div className="flex-1 flex flex-col justify-between md:justify-around">
+                    <span className="line-clamp-2 font-semibold">{auction.content.name}</span>
+                    <span className="line-clamp-3 md:line-clamp-2 text-sm">{auction.content.description}</span>
+                </div>
+                {/* <div className="flex md:flex-col items-center md:justify-around md:w-28">
+                    <span className="font-bold uppercase neon-text-sm">Bid</span>
+                    <span className="font-bold uppercase neon-text-sm md:hidden mr-1">:</span>
+                    <span className="font-bold uppercase neon-text-sm">
+                        {nFormatter(highestBid?.amount ?? auction.content.starting_bid, 2)} {stall.content.currency}
+                    </span>
+                </div> 
+             </Link> */}
+        </LastItemWrapper>
     )
 }
 
-const ITEMS_PER_PAGE = 5
-
 export default function Auctions() {
-    const auctions = useAuctions()
+    const { auctions } = useAuctions()
+    const [numberOfProductsToShow, setNumberOfProductsToShow] = useState(24)
 
-    const [page, setPage] = useState(1)
-    const pages = Array.from({ length: Math.floor(auctions.length / ITEMS_PER_PAGE) }, (v, i) => i + 1)
-    const prevPage = () => setPage(prev => prev - 1)
-    const nextPage = () => setPage(prev => prev + 1)
+    const onView = (inView: boolean, entry: IntersectionObserverEntry) => {
+        if (inView) setNumberOfProductsToShow(p => p + 24)
+    }
 
     return (
         <main className="flex flex-col items-center justify-center p-8 md:p-12">
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4 md:gap-0 md:block md:divide-y divide-nostr md:border border-nostr shadow-nostr md:shadow-sm rounded-lg">
-                {auctions.slice(ITEMS_PER_PAGE * (page - 1), ITEMS_PER_PAGE * page).map((event, index) => (
-                    <AuctionCard key={event.id + index} event={event} />
+            <div className="w-full grid auto-rows-fr grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] justify-items-center gap-6 rounded-lg">
+                {auctions.slice(0, numberOfProductsToShow).map((auction, i, array) => (
+                    <AuctionCard key={auction.id} auction={auction} isLastAuction={i === array.length - 1} onView={onView} />
                 ))}
             </div>
-            {auctions.length ? <PagesOptions page={page} setPage={setPage} prevPage={prevPage} nextPage={nextPage} pages={pages} /> : null}
         </main>
     )
 }
