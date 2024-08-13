@@ -7,7 +7,7 @@ export default function ParsedDescription({ description }: { description: string
     const parsedDescription = parseDescription(description).split("\n")
 
     return (
-        <div className="product-description max-h-96 flex-1 text-justify flex flex-col gap-1 overflow-y-scroll">
+        <div className="product-description max-h-96 flex-1 text-justify flex flex-col gap-1 overflow-y-auto">
             {parsedDescription.map((desc, i) => (
                 <p key={i} className="neon-text-sm break-words break-all">
                     {desc}
