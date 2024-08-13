@@ -47,15 +47,15 @@ const AuctionCountdown = ({ auction }: { auction: NDKAuctionContent }) => {
     const seconds = (minutes % 1) * 60
 
     return (
-        <div className="hidden md:grid lg:grid-cols-4 gap-x-4 text-lg font-bold *:w-12 text-center *:m-auto">
-            <span className="hidden lg:block neon-text-sm">D</span>
-            <span className="hidden lg:block neon-text-sm">H</span>
-            <span className="hidden lg:block neon-text-sm">M</span>
-            <span className="hidden lg:block neon-text-sm">S</span>
-            <span className="hidden lg:block neon-text-sm">{Math.floor(days)}</span>
-            <span className="hidden lg:block neon-text-sm">{Math.floor(hours)}</span>
-            <span className="hidden lg:block neon-text-sm">{Math.floor(minutes)} </span>
-            <span className="hidden lg:block neon-text-sm">{Math.floor(seconds)}</span>
+        <div className="grid grid-cols-4 gap-x-4 text-lg font-bold *:w-12 text-center *:m-auto">
+            <span className="neon-text-sm">D</span>
+            <span className="neon-text-sm">H</span>
+            <span className="neon-text-sm">M</span>
+            <span className="neon-text-sm">S</span>
+            <span className="neon-text-sm">{Math.floor(days)}</span>
+            <span className="neon-text-sm">{Math.floor(hours)}</span>
+            <span className="neon-text-sm">{Math.floor(minutes)} </span>
+            <span className="neon-text-sm">{Math.floor(seconds)}</span>
         </div>
     )
 }
@@ -94,7 +94,7 @@ export default function Auction(props: { params: { auctionId: string } }) {
                 <ParsedDescription description={auction.content.description} />
                 <ProductTags tags={auction.tags} />
                 {/* TODO: Include link to stall */}
-                <div className="product-price-buy flex gap-4">
+                <div className="product-price-buy flex justify-center sm:justify-between gap-4">
                     <AuctionCountdown auction={auction.content} />
                 </div>
                 {/* TODO: Show highest bid and create button to bid */}
