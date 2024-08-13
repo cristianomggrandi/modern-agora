@@ -80,8 +80,7 @@ header .profile {
     grid-template-rows: 1fr min-content min-content;
     grid-template-areas:
         "images description"
-        "images tags"
-        "images price-buy";
+        "tags price-buy";
 }
 
 .product-details .product-images {
@@ -175,8 +174,8 @@ header .profile {
         grid-template-rows: auto;
         grid-template-areas:
             "images"
-            "description"
             "tags"
+            "description"
             "price-buy";
     }
 }
