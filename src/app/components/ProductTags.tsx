@@ -4,7 +4,7 @@ function EventTag(props: { tag: NDKTag }) {
     return <span className="h-min text-nowrap bg-nostr text-white rounded-xl px-2 py-1 sm:p-2">#{props.tag[1]}</span>
 }
 
-export default function ({ tags }: { tags: NDKTag[] }) {
+export default function ProductTags({ tags }: { tags: NDKTag[] }) {
     if (!tags.length) return null
 
     return (
