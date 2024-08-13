@@ -1,7 +1,8 @@
 import { parseDescription } from "@/utils/ndk"
 
 export default function ParsedDescription({ description }: { description: string | undefined }) {
-    if (!description) return null
+    // TODO: Make a better design if there is no description
+    if (!description) return <div></div>
 
     const parsedDescription = parseDescription(description).split("\n")
 
