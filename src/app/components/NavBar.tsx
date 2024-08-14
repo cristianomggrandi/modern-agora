@@ -18,42 +18,42 @@ export default function NavBar() {
                 Logo
             </Link>
             <input id="nav-menu-button" type="checkbox" tabIndex={-1} aria-hidden="true" className="hidden" />
-            <label htmlFor="nav-menu-button" className="checkbox sm:hidden">
+            <label htmlFor="nav-menu-button" className="checkbox lg:hidden">
                 <FontAwesomeIcon icon={faBars} size="xl" />
                 <FontAwesomeIcon icon={faXmark} size="2xl" />
             </label>
-            <nav className="w-full z-40 transition-transform delay-200 bg-light bg-opacity-20 flex sm:h-full">
-                <ul className="grid justify-stretch sm:justify-evenly sm:flex w-full">
-                    <li className="products flex-1 sm:max-w-36 transition-colors duration-300 hover:bg-dark hover:text-nostr">
+            <nav className="w-full z-40 transition-transform delay-200 bg-light bg-opacity-20 flex lg:h-full">
+                <ul className="grid justify-stretch lg:justify-evenly lg:flex w-full">
+                    <li className="products flex-1 lg:max-w-36 transition-colors duration-300 hover:bg-dark hover:text-nostr">
                         <Link
-                            className="focus-visible:bg-dark focus-visible:text-nostr uppercase underline sm:no-underline font-semibold underline-offset-4 w-full py-2 px-6 flex items-center justify-center h-16"
+                            className="focus-visible:bg-dark focus-visible:text-nostr uppercase underline lg:no-underline font-semibold underline-offset-4 w-full py-2 px-6 flex items-center justify-center h-16"
                             href="/products"
                             onClick={handleClose}
                         >
                             Products
                         </Link>
                     </li>
-                    <li className="auctions flex-1 sm:max-w-36 transition-colors duration-300   hover:bg-dark hover:text-nostr">
+                    <li className="auctions flex-1 lg:max-w-36 transition-colors duration-300 hover:bg-dark hover:text-nostr">
                         <Link
-                            className="focus-visible:bg-dark focus-visible:text-nostr uppercase underline sm:no-underline font-semibold underline-offset-4 w-full py-2 px-6 flex items-center justify-center h-16"
+                            className="focus-visible:bg-dark focus-visible:text-nostr uppercase underline lg:no-underline font-semibold underline-offset-4 w-full py-2 px-6 flex items-center justify-center h-16"
                             href="/auctions"
                             onClick={handleClose}
                         >
                             Auctions
                         </Link>
                     </li>
-                    <li className="stalls flex-1 sm:max-w-36 transition-colors duration-300   hover:bg-dark hover:text-nostr">
+                    <li className="stalls flex-1 lg:max-w-36 transition-colors duration-300 hover:bg-dark hover:text-nostr">
                         <Link
-                            className="focus-visible:bg-dark focus-visible:text-nostr uppercase underline sm:no-underline font-semibold underline-offset-4 w-full py-2 px-6 flex items-center justify-center h-16"
+                            className="focus-visible:bg-dark focus-visible:text-nostr uppercase underline lg:no-underline font-semibold underline-offset-4 w-full py-2 px-6 flex items-center justify-center h-16"
                             href="/stalls"
                             onClick={handleClose}
                         >
                             Stalls
                         </Link>
                     </li>
-                    <li className="about flex-1 sm:max-w-36 transition-colors duration-300   hover:bg-dark hover:text-nostr">
+                    <li className="about flex-1 lg:max-w-36 transition-colors duration-300 hover:bg-dark hover:text-nostr">
                         <Link
-                            className="focus-visible:bg-dark focus-visible:text-nostr uppercase underline sm:no-underline font-semibold underline-offset-4 w-full py-2 px-6 flex items-center justify-center h-16"
+                            className="focus-visible:bg-dark focus-visible:text-nostr uppercase underline lg:no-underline font-semibold underline-offset-4 w-full py-2 px-6 flex items-center justify-center h-16"
                             href="/aboutus"
                             onClick={handleClose}
                         >

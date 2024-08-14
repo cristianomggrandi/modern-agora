@@ -115,7 +115,7 @@ header .profile {
     text-shadow: 0.1em 0.1em 0.25em #9543dc;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 1024px) {
     header {
         display: grid;
         align-items: center;
