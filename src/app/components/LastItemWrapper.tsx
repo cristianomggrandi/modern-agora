@@ -9,6 +9,13 @@ const LastItemWrapper = ({
     children: ReactNode
     isLastItem: boolean
     onView: (inView: boolean, entry: IntersectionObserverEntry) => void
-}) => (isLastItem ? <InView onChange={onView}>{children}</InView> : <>{children}</>)
+}) =>
+    isLastItem ? (
+        <InView className="w-full flex justify-center" onChange={onView}>
+            {children}
+        </InView>
+    ) : (
+        <>{children}</>
+    )
 
 export default LastItemWrapper

@@ -6,19 +6,9 @@ import useStalls from "@/hooks/useStalls"
 import { faAngleRight } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import Link from "next/link"
-import { ReactNode, SyntheticEvent, useEffect, useState } from "react"
-import { InView } from "react-intersection-observer"
+import { SyntheticEvent, useEffect, useState } from "react"
+import LastItemWrapper from "../components/LastItemWrapper"
 import SearchField from "../components/SearchField"
-
-const LastStallWrapper = ({
-    children,
-    isLastStall,
-    onView,
-}: {
-    children: ReactNode
-    isLastStall: boolean
-    onView: (inView: boolean, entry: IntersectionObserverEntry) => void
-}) => (isLastStall ? <InView onChange={onView}>{children}</InView> : <>{children}</>)
 
 const StallCard = ({
     stall,
@@ -34,7 +24,7 @@ const StallCard = ({
     if (!stall.content) return null
 
     return (
-        <LastStallWrapper isLastStall={isLastStall} onView={onView}>
+        <LastItemWrapper isLastItem={isLastStall} onView={onView}>
             <Link
                 className="w-full h-full relative flex flex-col gap-2 p-2 justify-between hover:outline bg-light outline-nostr rounded-lg"
                 href={"/stall/" + stall.content.id}
@@ -44,9 +34,7 @@ const StallCard = ({
                     <span className="uppercase">{stall.content.currency}</span>
                 </div>
                 <div className="flex justify-between">
-                    <div className="flex items-end">
-                        {productQuantity ? <span className="text-sm">{productQuantity} Products</span> : null}
-                    </div>
+                    <div className="flex items-end">{productQuantity ? <span>{productQuantity} Products</span> : null}</div>
                     <div className="flex flex-col items-end gap-1">
                         {stall.content.shipping
                             .map(s => [s.regions, s.cost] as [string[], number])
@@ -60,7 +48,7 @@ const StallCard = ({
                     </div>
                 </div>
             </Link>
-        </LastStallWrapper>
+        </LastItemWrapper>
     )
 }
 
@@ -169,7 +157,7 @@ export default function Stalls() {
                     <SearchField handleSearch={handleSearch} clearSearch={clearSearch} />
                 </div>
             </div>
-            <div className="w-full grid auto-rows-fr grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] justify-items-center gap-6 rounded-lg">
+            <div className="w-full grid auto-rows-fr grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] justify-items-center gap-6 rounded-lg">
                 {/* TODO: Create a onView to revert the maximum number of stalls shown */}
                 {filterStalls(stalls, search, numberOfStallsToShow, currencyFilter, onlyShowStallsWithProducts, productsByStall).map(
                     (stall, i, array) => {
