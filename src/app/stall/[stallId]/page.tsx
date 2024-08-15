@@ -2,10 +2,12 @@
 
 import AuctionCard from "@/app/components/AuctionCard"
 import ProductCard from "@/app/components/ProductCard"
+import SearchField from "@/app/components/SearchField"
 import useAuctions from "@/hooks/useAuctions"
 import useProducts from "@/hooks/useProducts"
 import useStall from "@/hooks/useStall"
-import { useState } from "react"
+import { filterAuctionsWithSearch, filterProductsWithSearch } from "@/utils/functions"
+import { SyntheticEvent, useState } from "react"
 
 export default function Stall(props: { params: { stallId: string } }) {
     const stall = useStall(props.params.stallId)
@@ -14,6 +16,15 @@ export default function Stall(props: { params: { stallId: string } }) {
     const { auctionsByStall } = useAuctions()
     const [numberOfProductsToShow, setNumberOfProductsToShow] = useState(24)
     const [numberOfAuctionsToShow, setNumberOfAuctionsToShow] = useState(24)
+
+    const [search, setSearch] = useState("")
+
+    const handleSearch = (e: SyntheticEvent) => {
+        e.preventDefault()
+        setSearch((e.target as HTMLInputElement).value)
+    }
+
+    const clearSearch = () => setSearch("")
 
     // const [productOrAuction, setProductOrAuction] = useState(true)
     // const toggleProductOrAuction = () => setProductOrAuction(p => !p)
@@ -42,10 +53,20 @@ export default function Stall(props: { params: { stallId: string } }) {
             {products?.length ? (
                 <div>
                     {auctions?.length ? <h3 className="text-2xl sm:text-2xl neon-text-sm mb-2 text-center">Products</h3> : null}
+                    <div className="w-full flex justify-end mb-2">
+                        <SearchField handleSearch={handleSearch} clearSearch={clearSearch} />
+                    </div>
                     <div className="w-full grid auto-rows-fr grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] justify-items-center gap-6 rounded-lg">
-                        {products.slice(0, numberOfProductsToShow).map((product, i, array) => (
-                            <ProductCard key={product.id} product={product} isLastProduct={i === array.length - 1} onView={onProductView} />
-                        ))}
+                        {(search ? filterProductsWithSearch(products, search) : products)
+                            .slice(0, numberOfProductsToShow)
+                            .map((product, i, array) => (
+                                <ProductCard
+                                    key={product.id}
+                                    product={product}
+                                    isLastProduct={i === array.length - 1}
+                                    onView={onProductView}
+                                />
+                            ))}
                     </div>
                 </div>
             ) : null}
@@ -53,9 +74,16 @@ export default function Stall(props: { params: { stallId: string } }) {
                 <div>
                     {products?.length ? <h3 className="text-2xl sm:text-2xl neon-text-sm mb-2 text-center">Auctions</h3> : null}
                     <div className="w-full grid auto-rows-fr grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] justify-items-center gap-6 rounded-lg">
-                        {auctions.slice(0, numberOfAuctionsToShow).map((auction, i, array) => (
-                            <AuctionCard key={auction.id} auction={auction} isLastAuction={i === array.length - 1} onView={onAuctionView} />
-                        ))}
+                        {(search ? filterAuctionsWithSearch(auctions, search) : auctions)
+                            .slice(0, numberOfAuctionsToShow)
+                            .map((auction, i, array) => (
+                                <AuctionCard
+                                    key={auction.id}
+                                    auction={auction}
+                                    isLastAuction={i === array.length - 1}
+                                    onView={onAuctionView}
+                                />
+                            ))}
                     </div>
                 </div>
             ) : null}

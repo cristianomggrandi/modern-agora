@@ -1,20 +1,10 @@
 "use client"
 
-import { NDKParsedProductEvent } from "@/hooks/useNDK"
 import useProducts from "@/hooks/useProducts"
+import { filterProductsWithSearch } from "@/utils/functions"
 import { SyntheticEvent, useState } from "react"
 import ProductCard from "../components/ProductCard"
 import SearchField from "../components/SearchField"
-
-const filterProductsWithSearch = (products: NDKParsedProductEvent[], search: string) => {
-    const formattedSearch = search.toLocaleLowerCase()
-
-    return products.filter(p => {
-        const compareString = (p.content.name + (p.content.description ?? "")).toLocaleLowerCase()
-
-        return compareString.includes(formattedSearch)
-    })
-}
 
 export default function Products() {
     const { products } = useProducts()

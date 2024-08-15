@@ -1,3 +1,5 @@
+import { NDKParsedAuctionEvent, NDKParsedProductEvent } from "@/hooks/useNDK"
+
 export function nFormatter(num: number, digits: number) {
     const lookup = [
         { value: 1, symbol: "" },
@@ -23,4 +25,24 @@ export function getCookie(name: string) {
         const parts = v.split("=")
         return parts[0] === name ? decodeURIComponent(parts[1]) : r
     }, "")
+}
+
+export function filterProductsWithSearch(products: NDKParsedProductEvent[], search: string) {
+    const formattedSearch = search.toLocaleLowerCase()
+
+    return products.filter(p => {
+        const compareString = (p.content.name + (p.content.description ?? "")).toLocaleLowerCase()
+
+        return compareString.includes(formattedSearch)
+    })
+}
+
+export function filterAuctionsWithSearch(products: NDKParsedAuctionEvent[], search: string) {
+    const formattedSearch = search.toLocaleLowerCase()
+
+    return products.filter(p => {
+        const compareString = (p.content.name + (p.content.description ?? "")).toLocaleLowerCase()
+
+        return compareString.includes(formattedSearch)
+    })
 }

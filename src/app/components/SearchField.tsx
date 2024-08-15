@@ -2,7 +2,7 @@
 
 import { faCircleXmark } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { SyntheticEvent, useState } from "react"
+import { ChangeEvent, SyntheticEvent, useState } from "react"
 
 type Props = {
     // search: string
@@ -12,6 +12,12 @@ type Props = {
 
 const SearchField = (props: Props) => {
     const [search, setSearch] = useState("")
+
+    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.value.length) props.clearSearch()
+
+        setSearch(e.target.value)
+    }
 
     const handleClear = () => {
         setSearch("")
@@ -24,7 +30,7 @@ const SearchField = (props: Props) => {
                 className="w-full flex-1 px-1 h-8 bg-nostr text-black rounded placeholder:text-black placeholder:text-opacity-70"
                 placeholder="Search..."
                 value={search}
-                onChange={e => setSearch(e.target.value)}
+                onChange={handleChange}
                 onBlur={props.handleSearch}
                 onKeyUp={e => (e.key === "Enter" ? props.handleSearch(e) : null)}
             />
