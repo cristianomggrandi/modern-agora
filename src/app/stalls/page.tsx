@@ -57,25 +57,23 @@ const filterStalls = (
     search: string,
     numberOfStallsToShow: number,
     currencyFilter: string | undefined,
-    sortFunction: {
-        label: string
-        function: ((a: NDKParsedStallEvent, b: NDKParsedStallEvent) => number) | null
-    },
+    sortFunction: ((a: NDKParsedStallEvent, b: NDKParsedStallEvent) => number) | null,
     onlyShowStallsWithProducts: boolean,
     productsByStall: Map<string, NDKParsedProductEvent[]>
 ) => {
     const formattedSearch = search.toLocaleLowerCase()
 
-    return stalls
-        .filter(s => {
-            const searchCheck = (s.content.name + (s.content.description ?? "")).toLocaleLowerCase().includes(formattedSearch)
-            const currencyCheck = currencyFilter ? s.content.currency === currencyFilter : true
-            const hasProductsCheck = onlyShowStallsWithProducts ? Boolean(productsByStall.get(s.content.id)?.length) : true
+    const filteredStalls = stalls.filter(s => {
+        const searchCheck = (s.content.name + (s.content.description ?? "")).toLocaleLowerCase().includes(formattedSearch)
+        const currencyCheck = currencyFilter ? s.content.currency === currencyFilter : true
+        const hasProductsCheck = onlyShowStallsWithProducts ? Boolean(productsByStall.get(s.content.id)?.length) : true
 
-            return currencyCheck && searchCheck && hasProductsCheck
-        })
-        .sort(sortFunction.function ?? (() => 0))
-        .slice(0, numberOfStallsToShow)
+        return currencyCheck && searchCheck && hasProductsCheck
+    })
+
+    const sortedStalls = sortFunction ? filteredStalls.sort(sortFunction) : filteredStalls
+
+    return sortedStalls.slice(0, numberOfStallsToShow)
 }
 
 export default function Stalls() {
@@ -181,7 +179,7 @@ export default function Stalls() {
                     </div>
                     {/* TODO: Add label */}
                     <select onChange={e => setCurrencyFilter(e.target.value)} className="rounded p-2 bg-nostr">
-                        <option value={undefined} className="bg-nostr">
+                        <option value="" className="bg-nostr">
                             All currencies
                         </option>
                         {currencyOptions.map(op => (
@@ -213,7 +211,7 @@ export default function Stalls() {
                     search,
                     numberOfStallsToShow,
                     currencyFilter,
-                    sortingFunctions[sortFunction],
+                    sortingFunctions[sortFunction].function,
                     onlyShowStallsWithProducts,
                     productsByStall
                 ).map((stall, i, array) => {
