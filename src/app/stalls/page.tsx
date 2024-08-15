@@ -1,6 +1,7 @@
 "use client"
 
-import { NDKParsedProductEvent, NDKParsedStallEvent } from "@/hooks/useNDK"
+import useAuctions from "@/hooks/useAuctions"
+import { NDKParsedAuctionEvent, NDKParsedProductEvent, NDKParsedStallEvent } from "@/hooks/useNDK"
 import useProducts from "@/hooks/useProducts"
 import useStalls from "@/hooks/useStalls"
 import { faAngleRight } from "@fortawesome/free-solid-svg-icons"
@@ -14,11 +15,13 @@ const StallCard = ({
     stall,
     isLastStall,
     productQuantity,
+    auctionQuantity,
     onView,
 }: {
     stall: NDKParsedStallEvent
     isLastStall: boolean
     productQuantity?: number
+    auctionQuantity?: number
     onView: (inView: boolean, entry: IntersectionObserverEntry) => void
 }) => {
     if (!stall.content) return null
@@ -34,8 +37,11 @@ const StallCard = ({
                     <span className="uppercase">{stall.content.currency}</span>
                 </div>
                 <div className="flex justify-between">
-                    <div className="flex items-end">{productQuantity ? <span>{productQuantity} Products</span> : null}</div>
-                    <div className="flex flex-col items-end gap-1">
+                    <div className="flex flex-col items-end justify-end">
+                        {auctionQuantity ? <span>{auctionQuantity} Auctions</span> : null}
+                        {productQuantity ? <span>{productQuantity} Products</span> : null}
+                    </div>
+                    <div className="flex flex-col items-end justify-end gap-1">
                         {stall.content.shipping
                             .map(s => [s.regions, s.cost] as [string[], number])
                             .map(([regions, cost]: [string[], number]) =>
@@ -59,14 +65,17 @@ const filterStalls = (
     currencyFilter: string | undefined,
     sortFunction: ((a: NDKParsedStallEvent, b: NDKParsedStallEvent) => number) | null,
     onlyShowStallsWithProducts: boolean,
-    productsByStall: Map<string, NDKParsedProductEvent[]>
+    productsByStall: Map<string, NDKParsedProductEvent[]>,
+    auctionsByStall: Map<string, NDKParsedAuctionEvent[]>
 ) => {
     const formattedSearch = search.toLocaleLowerCase()
 
     const filteredStalls = stalls.filter(s => {
         const searchCheck = (s.content.name + (s.content.description ?? "")).toLocaleLowerCase().includes(formattedSearch)
         const currencyCheck = currencyFilter ? s.content.currency === currencyFilter : true
-        const hasProductsCheck = onlyShowStallsWithProducts ? Boolean(productsByStall.get(s.content.id)?.length) : true
+        const hasProductsCheck = onlyShowStallsWithProducts
+            ? Boolean(productsByStall.get(s.content.id)?.length) || Boolean(auctionsByStall.get(s.content.id)?.length)
+            : true
 
         return currencyCheck && searchCheck && hasProductsCheck
     })
@@ -79,6 +88,7 @@ const filterStalls = (
 export default function Stalls() {
     const { stalls, setStalls } = useStalls()
     const { productsByStall } = useProducts()
+    const { auctionsByStall } = useAuctions()
     const [numberOfStallsToShow, setNumberOfStallsToShow] = useState(24)
 
     const [currencyOptions, setCurrencyOptions] = useState<string[]>([])
@@ -91,6 +101,30 @@ export default function Stalls() {
         {
             label: "No ordering",
             function: null,
+        },
+        {
+            label: "Item quantity (+)",
+            function: (a: NDKParsedStallEvent, b: NDKParsedStallEvent) => {
+                const quantityA = (productsByStall.get(a.content.id)?.length ?? 0) + (auctionsByStall.get(a.content.id)?.length ?? 0)
+                const quantityB = (productsByStall.get(b.content.id)?.length ?? 0) + (auctionsByStall.get(b.content.id)?.length ?? 0)
+
+                if (!quantityB) return -1
+                if (!quantityA) return 1
+
+                return quantityB - quantityA
+            },
+        },
+        {
+            label: "Item quantity (-)",
+            function: (a: NDKParsedStallEvent, b: NDKParsedStallEvent) => {
+                const quantityA = (productsByStall.get(a.content.id)?.length ?? 0) + (auctionsByStall.get(a.content.id)?.length ?? 0)
+                const quantityB = (productsByStall.get(b.content.id)?.length ?? 0) + (auctionsByStall.get(b.content.id)?.length ?? 0)
+
+                if (!quantityA) return -1
+                if (!quantityB) return 1
+
+                return quantityA - quantityB
+            },
         },
         {
             label: "Product quantity (+)",
@@ -107,8 +141,32 @@ export default function Stalls() {
         {
             label: "Product quantity (-)",
             function: (a: NDKParsedStallEvent, b: NDKParsedStallEvent) => {
-                const quantityA = productsByStall.get(a.content.id)?.length
-                const quantityB = productsByStall.get(b.content.id)?.length
+                const quantityA = (productsByStall.get(a.content.id)?.length ?? 0) + (auctionsByStall.get(a.content.id)?.length ?? 0)
+                const quantityB = (productsByStall.get(b.content.id)?.length ?? 0) + (auctionsByStall.get(b.content.id)?.length ?? 0)
+
+                if (!quantityA) return -1
+                if (!quantityB) return 1
+
+                return quantityA - quantityB
+            },
+        },
+        {
+            label: "Auction quantity (+)",
+            function: (a: NDKParsedStallEvent, b: NDKParsedStallEvent) => {
+                const quantityA = auctionsByStall.get(a.content.id)?.length
+                const quantityB = auctionsByStall.get(b.content.id)?.length
+
+                if (!quantityB) return -1
+                if (!quantityA) return 1
+
+                return quantityB - quantityA
+            },
+        },
+        {
+            label: "Auction quantity (-)",
+            function: (a: NDKParsedStallEvent, b: NDKParsedStallEvent) => {
+                const quantityA = auctionsByStall.get(a.content.id)?.length
+                const quantityB = auctionsByStall.get(b.content.id)?.length
 
                 if (!quantityA) return -1
                 if (!quantityB) return 1
@@ -161,13 +219,13 @@ export default function Stalls() {
     }, [search, currencyFilter, onlyShowStallsWithProducts, sortFunction])
 
     return (
-        // TODO: Create a way to search/filter by tag
+        // TODO: Create a way to search/filter by shipping region/cost
         <main className="flex gap-4 flex-col items-center justify-stretch p-4 pb-0">
             <div className="w-full flex flex-col-reverse sm:flex-row justify-end items-stretch gap-4">
                 <input id="stall-menu-options" type="checkbox" tabIndex={-1} aria-hidden="true" className="hidden stall-menu-options" />
                 <div className="flex flex-col sm:flex-row text-nowrap gap-2 options-menu transition-all duration-300">
-                    <div className="flex items-center gap-2 p-2 bg-nostr rounded">
-                        <label className="square-checkbox rounded">
+                    <div className="flex items-center gap-2 bg-nostr rounded">
+                        <label className="square-checkbox rounded p-2">
                             <input
                                 type="checkbox"
                                 id="show-only-stalls-with-products"
@@ -213,7 +271,8 @@ export default function Stalls() {
                     currencyFilter,
                     sortingFunctions[sortFunction].function,
                     onlyShowStallsWithProducts,
-                    productsByStall
+                    productsByStall,
+                    auctionsByStall
                 ).map((stall, i, array) => {
                     return (
                         <StallCard
@@ -221,6 +280,7 @@ export default function Stalls() {
                             stall={stall}
                             isLastStall={i === array.length - 1}
                             productQuantity={productsByStall.get(stall.content.id)?.length}
+                            auctionQuantity={auctionsByStall.get(stall.content.id)?.length}
                             onView={onView}
                         />
                     )

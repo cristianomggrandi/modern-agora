@@ -32,6 +32,7 @@ const orderAuctions = (event: NDKParsedAuctionEvent, prev: NDKParsedAuctionEvent
 }
 
 export default function useAuctions() {
+    // TODO: Create function to get only active auctions
     const { ndk, subscribeAndHandle } = useNDKContext()
 
     const [auctions, setAuctions] = useState<NDKParsedAuctionEvent[]>([])
