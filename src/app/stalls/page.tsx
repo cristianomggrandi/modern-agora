@@ -57,6 +57,10 @@ const filterStalls = (
     search: string,
     numberOfStallsToShow: number,
     currencyFilter: string | undefined,
+    sortFunction: {
+        label: string
+        function: ((a: NDKParsedStallEvent, b: NDKParsedStallEvent) => number) | null
+    },
     onlyShowStallsWithProducts: boolean,
     productsByStall: Map<string, NDKParsedProductEvent[]>
 ) => {
@@ -70,6 +74,7 @@ const filterStalls = (
 
             return currencyCheck && searchCheck && hasProductsCheck
         })
+        .sort(sortFunction.function ?? (() => 0))
         .slice(0, numberOfStallsToShow)
 }
 
@@ -80,6 +85,41 @@ export default function Stalls() {
 
     const [currencyOptions, setCurrencyOptions] = useState<string[]>([])
     const [currencyFilter, setCurrencyFilter] = useState<string>()
+
+    const sortingFunctions: {
+        label: string
+        function: ((a: NDKParsedStallEvent, b: NDKParsedStallEvent) => number) | null
+    }[] = [
+        {
+            label: "No ordering",
+            function: null,
+        },
+        {
+            label: "Product quantity (+)",
+            function: (a: NDKParsedStallEvent, b: NDKParsedStallEvent) => {
+                const quantityA = productsByStall.get(a.content.id)?.length
+                const quantityB = productsByStall.get(b.content.id)?.length
+
+                if (!quantityB) return -1
+                if (!quantityA) return 1
+
+                return quantityB - quantityA
+            },
+        },
+        {
+            label: "Product quantity (-)",
+            function: (a: NDKParsedStallEvent, b: NDKParsedStallEvent) => {
+                const quantityA = productsByStall.get(a.content.id)?.length
+                const quantityB = productsByStall.get(b.content.id)?.length
+
+                if (!quantityA) return -1
+                if (!quantityB) return 1
+
+                return quantityA - quantityB
+            },
+        },
+    ]
+    const [sortFunction, setSortFunction] = useState(0)
 
     const [onlyShowStallsWithProducts, setOnlyShowStallsWithProducts] = useState(true)
 
@@ -120,7 +160,7 @@ export default function Stalls() {
 
     useEffect(() => {
         setNumberOfStallsToShow(24)
-    }, [search, currencyFilter, onlyShowStallsWithProducts])
+    }, [search, currencyFilter, onlyShowStallsWithProducts, sortFunction])
 
     return (
         // TODO: Create a way to search/filter by tag
@@ -139,6 +179,7 @@ export default function Stalls() {
                             Show only stalls with products
                         </label>
                     </div>
+                    {/* TODO: Add label */}
                     <select onChange={e => setCurrencyFilter(e.target.value)} className="rounded p-2 bg-nostr">
                         <option value={undefined} className="bg-nostr">
                             All currencies
@@ -146,6 +187,14 @@ export default function Stalls() {
                         {currencyOptions.map(op => (
                             <option key={op} value={op} className="bg-nostr">
                                 {op}
+                            </option>
+                        ))}
+                    </select>
+                    {/* TODO: Add label */}
+                    <select onChange={e => setSortFunction(Number(e.target.value))} className="rounded p-2 bg-nostr">
+                        {sortingFunctions.map((op, i) => (
+                            <option key={op.label} value={i} className="bg-nostr">
+                                {op.label}
                             </option>
                         ))}
                     </select>
@@ -159,19 +208,25 @@ export default function Stalls() {
             </div>
             <div className="w-full grid auto-rows-fr grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] justify-items-center gap-6 rounded-lg">
                 {/* TODO: Create a onView to revert the maximum number of stalls shown */}
-                {filterStalls(stalls, search, numberOfStallsToShow, currencyFilter, onlyShowStallsWithProducts, productsByStall).map(
-                    (stall, i, array) => {
-                        return (
-                            <StallCard
-                                key={stall.id}
-                                stall={stall}
-                                isLastStall={i === array.length - 1}
-                                productQuantity={productsByStall.get(stall.content.id)?.length}
-                                onView={onView}
-                            />
-                        )
-                    }
-                )}
+                {filterStalls(
+                    stalls,
+                    search,
+                    numberOfStallsToShow,
+                    currencyFilter,
+                    sortingFunctions[sortFunction],
+                    onlyShowStallsWithProducts,
+                    productsByStall
+                ).map((stall, i, array) => {
+                    return (
+                        <StallCard
+                            key={stall.id}
+                            stall={stall}
+                            isLastStall={i === array.length - 1}
+                            productQuantity={productsByStall.get(stall.content.id)?.length}
+                            onView={onView}
+                        />
+                    )
+                })}
             </div>
         </main>
     )
