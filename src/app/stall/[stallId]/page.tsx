@@ -47,15 +47,15 @@ export default function Stall(props: { params: { stallId: string } }) {
             {/* TODO: Check if spacing is fine */}
             <div className="flex flex-col gap-2">
                 <h1 className="text-xl sm:text-2xl neon-text-2lg font-semibold text-center">{stall.content.name}</h1>
-                <h2 className="sm:text-lg neon-text-sm text-center">{stall.content.description}</h2>
+                <h2 className="sm:text-lg neon-text-sm text-center break-words break-all">{stall.content.description}</h2>
             </div>
             {/* {auctions?.length && products?.length ? <button onClick={toggleProductOrAuction}>Change</button> : null} */}
+            <div className="w-full flex justify-end mb-2">
+                <SearchField handleSearch={handleSearch} clearSearch={clearSearch} />
+            </div>
             {products?.length ? (
                 <div>
                     {auctions?.length ? <h3 className="text-2xl sm:text-2xl neon-text-sm mb-2 text-center">Products</h3> : null}
-                    <div className="w-full flex justify-end mb-2">
-                        <SearchField handleSearch={handleSearch} clearSearch={clearSearch} />
-                    </div>
                     <div className="w-full grid auto-rows-fr grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] justify-items-center gap-6 rounded-lg">
                         {(search ? filterProductsWithSearch(products, search) : products)
                             .slice(0, numberOfProductsToShow)
