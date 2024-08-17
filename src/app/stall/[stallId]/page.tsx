@@ -7,7 +7,7 @@ import useAuctions from "@/hooks/useAuctions"
 import useProducts from "@/hooks/useProducts"
 import useStall from "@/hooks/useStall"
 import { filterAuctionsWithSearch, filterProductsWithSearch } from "@/utils/functions"
-import { SyntheticEvent, useState } from "react"
+import { SyntheticEvent, useEffect, useState } from "react"
 
 export default function Stall(props: { params: { stallId: string } }) {
     const stall = useStall(props.params.stallId)
@@ -17,6 +17,11 @@ export default function Stall(props: { params: { stallId: string } }) {
     const [numberOfProductsToShow, setNumberOfProductsToShow] = useState(24)
     const [numberOfAuctionsToShow, setNumberOfAuctionsToShow] = useState(24)
 
+    const [completedSearch, setCompletedSearch] = useState(false)
+    useEffect(() => {
+        setTimeout(() => setCompletedSearch(true), 10000)
+    }, [])
+
     const [search, setSearch] = useState("")
 
     const handleSearch = (e: SyntheticEvent) => {
@@ -25,9 +30,6 @@ export default function Stall(props: { params: { stallId: string } }) {
     }
 
     const clearSearch = () => setSearch("")
-
-    // const [productOrAuction, setProductOrAuction] = useState(true)
-    // const toggleProductOrAuction = () => setProductOrAuction(p => !p)
 
     if (!stall) return <div>Loading...</div>
 
@@ -41,17 +43,25 @@ export default function Stall(props: { params: { stallId: string } }) {
         if (inView) setNumberOfAuctionsToShow(p => Math.min(p + 24, auctions?.length ?? 0))
     }
 
+    const hasProductsOrAuctions = products?.length || auctions?.length
+
     return (
-        <main className="flex flex-col justify-center p-6 sm:p-[4%] gap-8 min-h-full">
+        <main className="flex flex-col p-6 sm:p-[4%] gap-8 min-h-full">
             {/* TODO: Check if spacing is fine */}
             <div className="flex flex-col gap-2">
                 <h1 className="text-xl sm:text-2xl neon-text-2lg font-semibold text-center">{stall.content.name}</h1>
                 <h2 className="sm:text-lg neon-text-sm text-center break-words break-all">{stall.content.description}</h2>
             </div>
-            {/* {auctions?.length && products?.length ? <button onClick={toggleProductOrAuction}>Change</button> : null} */}
-            <div className="w-full flex justify-end mb-2">
-                <SearchField handleSearch={handleSearch} clearSearch={clearSearch} />
-            </div>
+            {hasProductsOrAuctions ? (
+                <div className="w-full flex justify-end mb-2">
+                    <SearchField handleSearch={handleSearch} clearSearch={clearSearch} />
+                </div>
+            ) : null}
+            {!hasProductsOrAuctions ? (
+                <span className="text-2xl neon-text-sm flex-1 flex justify-center items-center">
+                    {completedSearch ? "No products found" : "Loading products..."}
+                </span>
+            ) : null}
             {products?.length ? (
                 <div>
                     {auctions?.length ? <h3 className="text-2xl sm:text-2xl neon-text-sm mb-2 text-center">Products</h3> : null}
