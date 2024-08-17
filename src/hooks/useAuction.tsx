@@ -5,12 +5,12 @@ import useNDK, { addContentToAuctionEvent, NDKParsedAuctionEvent } from "./useND
 
 export default function useAuction(auctionId: string) {
     const ndk = useNDK()
-    const { auctionsMap } = useAuctions()
+    const { auctions } = useAuctions()
 
     const getAuctionById = async (id: string) => {
         if (!ndk) return undefined
 
-        const storedAuction = auctionsMap.get(id)
+        const storedAuction = auctions.find(a => a.content.id === id)
 
         if (storedAuction) return storedAuction
 

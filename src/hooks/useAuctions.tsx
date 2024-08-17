@@ -53,7 +53,7 @@ export default function useAuctions() {
         let auctionsInterval: NodeJS.Timeout | undefined
 
         if (!auctions.length) {
-            if (ndk) sub = subscribeAndHandle({ kinds: [NDKKind.MarketProduct] }, handleNewAuction)
+            if (ndk) sub = subscribeAndHandle({ kinds: [30020 as NDKKind] }, handleNewAuction)
 
             auctionsInterval = setInterval(() => {
                 setAuctions(prev => {
