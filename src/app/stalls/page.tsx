@@ -1,6 +1,7 @@
 "use client"
 
 import useAuctions from "@/hooks/useAuctions"
+import useCurrencyOptions from "@/hooks/useCurrencyOptions"
 import { NDKParsedAuctionEvent, NDKParsedProductEvent, NDKParsedStallEvent } from "@/hooks/useNDK"
 import useProducts from "@/hooks/useProducts"
 import useStalls from "@/hooks/useStalls"
@@ -91,7 +92,7 @@ export default function Stalls() {
     const { auctionsByStall } = useAuctions()
     const [numberOfStallsToShow, setNumberOfStallsToShow] = useState(24)
 
-    const [currencyOptions, setCurrencyOptions] = useState<string[]>([])
+    const currencyOptions = useCurrencyOptions()
     const [currencyFilter, setCurrencyFilter] = useState<string>()
 
     const sortingFunctions: {
@@ -191,26 +192,6 @@ export default function Stalls() {
     const onView = (inView: boolean, entry: IntersectionObserverEntry) => {
         if (inView) setNumberOfStallsToShow(s => Math.min(s + 24, stalls.length))
     }
-
-    useEffect(() => {
-        let repeat = 2
-
-        const currencyOptionsInterval = setInterval(() => {
-            if (repeat-- <= 0) clearInterval(currencyOptionsInterval)
-
-            setCurrencyOptions(
-                stalls.reduce((currencys, stall) => {
-                    if (!currencys.find(c => c === stall.content.currency)) currencys.push(stall.content.currency)
-
-                    return currencys
-                }, [] as string[])
-            )
-
-            return stalls
-        }, 10000)
-
-        return () => clearInterval(currencyOptionsInterval)
-    }, [])
 
     useEffect(() => {
         setNumberOfStallsToShow(24)
