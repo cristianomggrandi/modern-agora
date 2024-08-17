@@ -86,7 +86,7 @@ const filterStalls = (
 }
 
 export default function Stalls() {
-    const { stalls, setStalls } = useStalls()
+    const stalls = useStalls()
     const { productsByStall } = useProducts()
     const { auctionsByStall } = useAuctions()
     const [numberOfStallsToShow, setNumberOfStallsToShow] = useState(24)
@@ -198,17 +198,15 @@ export default function Stalls() {
         const currencyOptionsInterval = setInterval(() => {
             if (repeat-- <= 0) clearInterval(currencyOptionsInterval)
 
-            setStalls(stalls => {
-                setCurrencyOptions(
-                    stalls.reduce((currencys, stall) => {
-                        if (!currencys.find(c => c === stall.content.currency)) currencys.push(stall.content.currency)
+            setCurrencyOptions(
+                stalls.reduce((currencys, stall) => {
+                    if (!currencys.find(c => c === stall.content.currency)) currencys.push(stall.content.currency)
 
-                        return currencys
-                    }, [] as string[])
-                )
+                    return currencys
+                }, [] as string[])
+            )
 
-                return stalls
-            })
+            return stalls
         }, 10000)
 
         return () => clearInterval(currencyOptionsInterval)

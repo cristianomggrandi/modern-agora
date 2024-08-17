@@ -32,6 +32,9 @@ type NDKContextType = {
     products: NDKParsedProductEvent[]
     setProducts: Dispatch<SetStateAction<NDKParsedProductEvent[]>>
     productsByStall: Map<string, NDKParsedProductEvent[]>
+
+    stalls: NDKParsedStallEvent[]
+    setStalls: Dispatch<SetStateAction<NDKParsedStallEvent[]>>
 }
 
 // export type NDKParsedConfirmationBidEvent = ReturnType<typeof addContentToConfirmationBidEvent>
@@ -153,9 +156,10 @@ const NDKContext = createContext<NDKContextType | null>(null)
 export function NDKContextProvider({ children }: { children: any }) {
     const [ndk, setNdk] = useState<NDK>()
 
-    // TODO: Maybe remove array
     const [products, setProducts] = useState<NDKParsedProductEvent[]>([])
     const productsByStall = useRef<Map<string, NDKParsedProductEvent[]>>(new Map())
+
+    const [stalls, setStalls] = useState<NDKParsedStallEvent[]>([])
 
     const [bids] = useState<AuctionBids>(new Map())
     const [bidStatus] = useState(new Map<string, "accepted" | "rejected" | "pending" | "winner">())
@@ -219,6 +223,9 @@ export function NDKContextProvider({ children }: { children: any }) {
                 products,
                 setProducts,
                 productsByStall: productsByStall.current,
+
+                stalls,
+                setStalls,
             }}
         >
             {children}

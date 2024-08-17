@@ -1,12 +1,10 @@
 import { NDKEvent, NDKKind, NDKSubscription } from "@nostr-dev-kit/ndk"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import { addContentToStallEvent, NDKParsedStallEvent, useNDKContext } from "./useNDK"
 
 export default function useStalls() {
-    const { ndk, subscribeAndHandle } = useNDKContext()
+    const { ndk, subscribeAndHandle, stalls, setStalls } = useNDKContext()
 
-    const [stalls, setStalls] = useState<NDKParsedStallEvent[]>([])
-    const stallsMap = useRef<Map<string, NDKParsedStallEvent>>(new Map())
     const fetchedStalls = useRef<NDKParsedStallEvent[]>([])
 
     const handleNewStall = (stallEvent: NDKEvent) => {
@@ -16,7 +14,6 @@ export default function useStalls() {
             if (!parsedStall) return
 
             fetchedStalls.current.push(parsedStall)
-            stallsMap.current.set(parsedStall.id, parsedStall)
         } catch (error) {}
     }
 
@@ -39,5 +36,5 @@ export default function useStalls() {
         }
     }, [ndk])
 
-    return { stalls, setStalls, stallsMap: stallsMap.current }
+    return stalls
 }

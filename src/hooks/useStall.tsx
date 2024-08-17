@@ -5,14 +5,14 @@ import useStalls from "./useStalls"
 
 export default function useStall(stallId?: string) {
     const ndk = useNDK()
-    const { stallsMap } = useStalls()
+    const stalls = useStalls()
 
     const [stall, setStall] = useState<NDKParsedStallEvent>()
 
     const getStallById = async (id: string) => {
         if (!ndk) return undefined
 
-        const storedStall = stallsMap.get(id)
+        const storedStall = stalls.find(s => s.content.id === id)
 
         if (storedStall) return storedStall
 
