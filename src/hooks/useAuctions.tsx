@@ -1,6 +1,6 @@
 import { getAuctionEndDate } from "@/utils/ndk"
 import { NDKEvent, NDKKind, NDKSubscription } from "@nostr-dev-kit/ndk"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import { addContentToAuctionEvent, NDKParsedAuctionEvent, useNDKContext } from "./useNDK"
 
 const addAuctionToStall = (auctionEvent: NDKParsedAuctionEvent, auctionsByStall: Map<string, NDKParsedAuctionEvent[]>) => {
@@ -33,11 +33,8 @@ const orderAuctions = (event: NDKParsedAuctionEvent, prev: NDKParsedAuctionEvent
 
 export default function useAuctions() {
     // TODO: Create function to get only active auctions
-    const { ndk, subscribeAndHandle } = useNDKContext()
+    const { ndk, subscribeAndHandle, auctions, setAuctions, auctionsByStall } = useNDKContext()
 
-    const [auctions, setAuctions] = useState<NDKParsedAuctionEvent[]>([])
-    const auctionsByStall = useRef<Map<string, NDKParsedAuctionEvent[]>>(new Map())
-    const auctionsMap = useRef<Map<string, NDKParsedAuctionEvent>>(new Map())
     const fetchedAuctions = useRef<NDKParsedAuctionEvent[]>([])
 
     const handleNewAuction = (auctionEvent: NDKEvent) => {
@@ -47,23 +44,25 @@ export default function useAuctions() {
             if (!parsedAuction) return
 
             fetchedAuctions.current = orderAuctions(parsedAuction, fetchedAuctions.current)
-            addAuctionToStall(parsedAuction, auctionsByStall.current)
-            auctionsMap.current.set(parsedAuction.id, parsedAuction)
+            addAuctionToStall(parsedAuction, auctionsByStall)
         } catch (error) {}
     }
 
     useEffect(() => {
         let sub: NDKSubscription | undefined
+        let auctionsInterval: NodeJS.Timeout | undefined
 
-        if (ndk) sub = subscribeAndHandle({ kinds: [30020 as NDKKind] }, handleNewAuction)
+        if (!auctions.length) {
+            if (ndk) sub = subscribeAndHandle({ kinds: [NDKKind.MarketProduct] }, handleNewAuction)
 
-        const auctionsInterval = setInterval(() => {
-            setAuctions(prev => {
-                if (fetchedAuctions.current === prev) clearInterval(auctionsInterval)
+            auctionsInterval = setInterval(() => {
+                setAuctions(prev => {
+                    if (fetchedAuctions.current === prev) clearInterval(auctionsInterval)
 
-                return fetchedAuctions.current
-            })
-        }, 1000)
+                    return fetchedAuctions.current
+                })
+            }, 1000)
+        }
 
         return () => {
             if (sub) sub.stop()
@@ -71,5 +70,5 @@ export default function useAuctions() {
         }
     }, [ndk])
 
-    return { auctions, auctionsMap: auctionsMap.current, auctionsByStall: auctionsByStall.current }
+    return { auctions, auctionsByStall }
 }

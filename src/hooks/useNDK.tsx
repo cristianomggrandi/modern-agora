@@ -29,12 +29,16 @@ type NDKContextType = {
     loginWithNIP07: () => void
     user?: NDKUser
 
+    stalls: NDKParsedStallEvent[]
+    setStalls: Dispatch<SetStateAction<NDKParsedStallEvent[]>>
+
     products: NDKParsedProductEvent[]
     setProducts: Dispatch<SetStateAction<NDKParsedProductEvent[]>>
     productsByStall: Map<string, NDKParsedProductEvent[]>
 
-    stalls: NDKParsedStallEvent[]
-    setStalls: Dispatch<SetStateAction<NDKParsedStallEvent[]>>
+    auctions: NDKParsedAuctionEvent[]
+    setAuctions: Dispatch<SetStateAction<NDKParsedAuctionEvent[]>>
+    auctionsByStall: Map<string, NDKParsedAuctionEvent[]>
 }
 
 // export type NDKParsedConfirmationBidEvent = ReturnType<typeof addContentToConfirmationBidEvent>
@@ -161,6 +165,9 @@ export function NDKContextProvider({ children }: { children: any }) {
 
     const [stalls, setStalls] = useState<NDKParsedStallEvent[]>([])
 
+    const [auctions, setAuctions] = useState<NDKParsedAuctionEvent[]>([])
+    const auctionsByStall = useRef<Map<string, NDKParsedAuctionEvent[]>>(new Map())
+
     const [bids] = useState<AuctionBids>(new Map())
     const [bidStatus] = useState(new Map<string, "accepted" | "rejected" | "pending" | "winner">())
 
@@ -220,12 +227,16 @@ export function NDKContextProvider({ children }: { children: any }) {
                 loginWithNIP07,
                 user,
 
+                stalls,
+                setStalls,
+
                 products,
                 setProducts,
                 productsByStall: productsByStall.current,
 
-                stalls,
-                setStalls,
+                auctions,
+                setAuctions,
+                auctionsByStall: auctionsByStall.current,
             }}
         >
             {children}
