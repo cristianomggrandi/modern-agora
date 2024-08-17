@@ -1,5 +1,5 @@
 import { NDKEvent, NDKKind, NDKSubscription } from "@nostr-dev-kit/ndk"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import { addContentToProductEvent, NDKParsedProductEvent, useNDKContext } from "./useNDK"
 
 const addProductToStall = (productEvent: NDKParsedProductEvent, productsByStall: Map<string, NDKParsedProductEvent[]>) => {
@@ -11,12 +11,9 @@ const addProductToStall = (productEvent: NDKParsedProductEvent, productsByStall:
 }
 
 export default function useProducts() {
-    const { ndk, subscribeAndHandle } = useNDKContext()
+    const { ndk, subscribeAndHandle, products, setProducts, productsByStall, productsMap } = useNDKContext()
 
-    const [products, setProducts] = useState<NDKParsedProductEvent[]>([])
-    const productsByStall = useRef<Map<string, NDKParsedProductEvent[]>>(new Map())
-    const productsMap = useRef<Map<string, NDKParsedProductEvent>>(new Map())
-    const fetchedProducts = useRef<NDKParsedProductEvent[]>([])
+    const fetchedProducts = useRef<NDKParsedProductEvent[]>(products ?? [])
 
     const handleNewProduct = (productEvent: NDKEvent) => {
         try {
@@ -25,23 +22,26 @@ export default function useProducts() {
             if (!parsedProduct) return
 
             fetchedProducts.current.push(parsedProduct)
-            addProductToStall(parsedProduct, productsByStall.current)
-            productsMap.current.set(parsedProduct.id, parsedProduct)
+            addProductToStall(parsedProduct, productsByStall)
+            productsMap.set(parsedProduct.id, parsedProduct)
         } catch (error) {}
     }
 
     useEffect(() => {
         let sub: NDKSubscription | undefined
+        let productsInterval: NodeJS.Timeout | undefined
 
-        if (ndk) sub = subscribeAndHandle({ kinds: [NDKKind.MarketProduct] }, handleNewProduct)
+        if (!products.length) {
+            if (ndk) sub = subscribeAndHandle({ kinds: [NDKKind.MarketProduct] }, handleNewProduct)
 
-        const productsInterval = setInterval(() => {
-            setProducts(prev => {
-                if (fetchedProducts.current === prev) clearInterval(productsInterval)
+            productsInterval = setInterval(() => {
+                setProducts(prev => {
+                    if (fetchedProducts.current === prev) clearInterval(productsInterval)
 
-                return fetchedProducts.current
-            })
-        }, 1000)
+                    return fetchedProducts.current
+                })
+            }, 1000)
+        }
 
         return () => {
             if (sub) sub.stop()
@@ -49,5 +49,5 @@ export default function useProducts() {
         }
     }, [ndk])
 
-    return { products, productsMap: productsMap.current, productsByStall: productsByStall.current }
+    return { products, productsMap, productsByStall }
 }

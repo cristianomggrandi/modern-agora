@@ -9,7 +9,7 @@ import {
     getParsedStallContent,
 } from "@/utils/ndk"
 import NDK, { NDKEvent, NDKFilter, NDKNip07Signer, NDKSubscription, NDKSubscriptionOptions, NDKUser } from "@nostr-dev-kit/ndk"
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from "react"
 
 export type NDKParsedProductEvent = ReturnType<typeof addContentToProductEvent>
 
@@ -28,6 +28,11 @@ type NDKContextType = {
     bidStatus: Map<string, "accepted" | "rejected" | "pending" | "winner">
     loginWithNIP07: () => void
     user?: NDKUser
+
+    products: NDKParsedProductEvent[]
+    setProducts: Dispatch<SetStateAction<NDKParsedProductEvent[]>>
+    productsMap: Map<string, NDKParsedProductEvent>
+    productsByStall: Map<string, NDKParsedProductEvent[]>
 }
 
 // export type NDKParsedConfirmationBidEvent = ReturnType<typeof addContentToConfirmationBidEvent>
@@ -149,6 +154,11 @@ const NDKContext = createContext<NDKContextType | null>(null)
 export function NDKContextProvider({ children }: { children: any }) {
     const [ndk, setNdk] = useState<NDK>()
 
+    // TODO: Maybe remove array
+    const [products, setProducts] = useState<NDKParsedProductEvent[]>([])
+    const productsMap = useRef<Map<string, NDKParsedProductEvent>>(new Map())
+    const productsByStall = useRef<Map<string, NDKParsedProductEvent[]>>(new Map())
+
     const [bids] = useState<AuctionBids>(new Map())
     const [bidStatus] = useState(new Map<string, "accepted" | "rejected" | "pending" | "winner">())
 
@@ -207,6 +217,11 @@ export function NDKContextProvider({ children }: { children: any }) {
                 bidStatus,
                 loginWithNIP07,
                 user,
+
+                products,
+                setProducts,
+                productsMap: productsMap.current,
+                productsByStall: productsByStall.current,
             }}
         >
             {children}
