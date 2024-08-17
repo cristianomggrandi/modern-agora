@@ -20,7 +20,7 @@ export default function Products() {
     const clearSearch = () => setSearch("")
 
     const onView = (inView: boolean, entry: IntersectionObserverEntry) => {
-        if (inView) setNumberOfProductsToShow(p => p + 24)
+        if (inView) setNumberOfProductsToShow(p => Math.min(p + 24, products.length))
     }
 
     return (

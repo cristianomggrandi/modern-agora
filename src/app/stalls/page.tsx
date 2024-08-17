@@ -189,7 +189,7 @@ export default function Stalls() {
     const clearSearch = () => setSearch("")
 
     const onView = (inView: boolean, entry: IntersectionObserverEntry) => {
-        if (inView) setNumberOfStallsToShow(s => s + 24)
+        if (inView) setNumberOfStallsToShow(s => Math.min(s + 24, stalls.length))
     }
 
     useEffect(() => {

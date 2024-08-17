@@ -35,12 +35,11 @@ export default function Stall(props: { params: { stallId: string } }) {
     const auctions = auctionsByStall.get(stall.content.id)
 
     const onProductView = (inView: boolean, entry: IntersectionObserverEntry) => {
-        if (inView) setNumberOfProductsToShow(p => p + 24)
+        if (inView) setNumberOfProductsToShow(p => Math.min(p + 24, products?.length ?? 0))
     }
     const onAuctionView = (inView: boolean, entry: IntersectionObserverEntry) => {
-        if (inView) setNumberOfAuctionsToShow(p => p + 24)
+        if (inView) setNumberOfAuctionsToShow(p => Math.min(p + 24, auctions?.length ?? 0))
     }
-    console.log("teste", products?.length, auctions?.length)
 
     return (
         <main className="flex flex-col justify-center p-6 sm:p-[4%] gap-8 min-h-full">
