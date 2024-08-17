@@ -5,12 +5,12 @@ import useProducts from "./useProducts"
 
 export default function useProduct(productId: string) {
     const ndk = useNDK()
-    const { productsMap } = useProducts()
+    const { products } = useProducts()
 
     const getProductById = async (id: string) => {
         if (!ndk) return undefined
 
-        const storedProduct = productsMap.get(id)
+        const storedProduct = products.find(p => p.content.id === id)
 
         if (storedProduct) return storedProduct
 

@@ -11,7 +11,7 @@ const addProductToStall = (productEvent: NDKParsedProductEvent, productsByStall:
 }
 
 export default function useProducts() {
-    const { ndk, subscribeAndHandle, products, setProducts, productsByStall, productsMap } = useNDKContext()
+    const { ndk, subscribeAndHandle, products, setProducts, productsByStall } = useNDKContext()
 
     const fetchedProducts = useRef<NDKParsedProductEvent[]>(products ?? [])
 
@@ -23,7 +23,6 @@ export default function useProducts() {
 
             fetchedProducts.current.push(parsedProduct)
             addProductToStall(parsedProduct, productsByStall)
-            productsMap.set(parsedProduct.id, parsedProduct)
         } catch (error) {}
     }
 
@@ -49,5 +48,5 @@ export default function useProducts() {
         }
     }, [ndk])
 
-    return { products, productsMap, productsByStall }
+    return { products, productsByStall }
 }
