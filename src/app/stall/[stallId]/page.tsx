@@ -3,17 +3,17 @@
 import AuctionCard from "@/app/components/AuctionCard"
 import ProductCard from "@/app/components/ProductCard"
 import SearchField from "@/app/components/SearchField"
-import useAuctions from "@/hooks/useAuctions"
-import useProducts from "@/hooks/useProducts"
+import { useAuctionsByStall } from "@/hooks/useAuctions"
+import { useProductsByStall } from "@/hooks/useProducts"
 import useStall from "@/hooks/useStall"
 import { filterAuctionsWithSearch, filterProductsWithSearch } from "@/utils/functions"
 import { SyntheticEvent, useEffect, useState } from "react"
 
 export default function Stall(props: { params: { stallId: string } }) {
     const stall = useStall(props.params.stallId)
-    // TODO: Change to useProductsByStall hook
-    const { productsByStall } = useProducts()
-    const { auctionsByStall } = useAuctions()
+    const products = useProductsByStall(stall?.content.id)
+    const auctions = useAuctionsByStall(stall?.content.id)
+
     const [numberOfProductsToShow, setNumberOfProductsToShow] = useState(24)
     const [numberOfAuctionsToShow, setNumberOfAuctionsToShow] = useState(24)
 
@@ -32,9 +32,6 @@ export default function Stall(props: { params: { stallId: string } }) {
     const clearSearch = () => setSearch("")
 
     if (!stall) return <div>Loading...</div>
-
-    const products = productsByStall.get(stall.content.id)
-    const auctions = auctionsByStall.get(stall.content.id)
 
     const onProductView = (inView: boolean, entry: IntersectionObserverEntry) => {
         if (inView) setNumberOfProductsToShow(p => Math.min(p + 24, products?.length ?? 0))

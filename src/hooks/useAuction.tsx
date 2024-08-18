@@ -5,7 +5,7 @@ import useNDK, { addContentToAuctionEvent, NDKParsedAuctionEvent } from "./useND
 
 export default function useAuction(auctionId: string) {
     const ndk = useNDK()
-    const { auctions } = useAuctions()
+    const auctions = useAuctions()
 
     const getAuctionById = async (id: string) => {
         if (!ndk) return undefined

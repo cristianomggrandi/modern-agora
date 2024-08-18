@@ -70,5 +70,13 @@ export default function useAuctions() {
         }
     }, [ndk])
 
-    return { auctions, auctionsByStall }
+    return auctions
+}
+
+export function useAuctionsByStall(stallId?: string) {
+    const { auctionsByStall } = useNDKContext()
+
+    if (!stallId) return undefined
+
+    return auctionsByStall.get(stallId)
 }

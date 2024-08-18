@@ -8,7 +8,7 @@ const LastItemWrapper = ({
 }: {
     children: ReactNode
     isLastItem: boolean
-    onView: (inView: boolean, entry: IntersectionObserverEntry) => void
+    onView?: (inView: boolean, entry: IntersectionObserverEntry) => void
 }) =>
     isLastItem ? (
         <InView className="w-full flex justify-center" onChange={onView}>

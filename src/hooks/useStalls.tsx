@@ -38,3 +38,11 @@ export default function useStalls() {
 
     return stalls
 }
+
+export function useStallsByUser(pubkey?: string) {
+    const stalls = useStalls()
+
+    if (!pubkey) return []
+
+    return stalls.filter(s => s.pubkey === pubkey)
+}

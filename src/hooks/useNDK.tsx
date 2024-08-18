@@ -48,14 +48,14 @@ export type AuctionBids = Map<string, { id: string; amount: number; pubkey: stri
 const defaultRelays = [
     "wss://relay.damus.io",
     "wss://relay.nostr.bg",
-    // TODO: Return with relays
     "wss://nostr.mom",
     "wss://nos.lol",
     "wss://nostr.bitcoiner.social",
     "wss://nostr-pub.wellorder.net",
     "wss://nostr.wine",
     "wss://eden.nostr.land",
-    "wss://relay.orangepill.dev",
+    // TODO: Seems to be paid (https://orangepill.dev/)
+    // "wss://relay.orangepill.dev",
     "wss://puravida.nostr.land",
     "wss://relay.nostr.com.au",
     "wss://nostr.inosta.cc",
@@ -207,6 +207,7 @@ export function NDKContextProvider({ children }: { children: any }) {
             .catch(error => console.error("ndk error connecting", error))
     }, [])
 
+    // TODO: Add closeOnEose (on opts)
     const subscribeAndHandle = (filter: NDKFilter, handler: (event: NDKEvent) => void, opts?: NDKSubscriptionOptions) => {
         if (!ndk) return
 

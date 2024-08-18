@@ -16,7 +16,7 @@ export default function HeaderUser() {
             </div>
         )
 
-    const profileName = user.profile.name ? user.profile.name[0].toLocaleUpperCase() : "User"
+    const profileName = user.profile.name ? user.profile.name[0].toLocaleUpperCase() : "U"
 
     return (
         <div className="sm:w-32 py-1 flex justify-center gap-4">
@@ -27,7 +27,7 @@ export default function HeaderUser() {
                 {cart.reduce((prev, curr) => prev + curr.quantity, 0)}
             </Link */}
             <Link
-                href="/profile"
+                href={"/profile/" + user.pubkey}
                 className="block h-10 w-10 text-lg leading-[40px] sm:h-12 sm:w-12 bg-dark sm:text-xl text-secondary rounded-full sm:leading-[48px] text-center overflow-hidden"
             >
                 {user.profile.image ? <img width={48} height={48} src={user.profile.image} /> : profileName}

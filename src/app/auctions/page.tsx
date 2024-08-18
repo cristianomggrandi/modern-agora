@@ -5,7 +5,7 @@ import { useState } from "react"
 import AuctionCard from "../components/AuctionCard"
 
 export default function Auctions() {
-    const { auctions } = useAuctions()
+    const auctions = useAuctions()
     const [numberOfAuctionsToShow, setNumberOfAuctionsToShow] = useState(24)
 
     const onView = (inView: boolean, entry: IntersectionObserverEntry) => {

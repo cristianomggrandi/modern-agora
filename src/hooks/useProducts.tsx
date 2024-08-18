@@ -48,5 +48,13 @@ export default function useProducts() {
         }
     }, [ndk])
 
-    return { products, productsByStall }
+    return products
+}
+
+export function useProductsByStall(stallId?: string) {
+    const { productsByStall } = useNDKContext()
+
+    if (!stallId) return undefined
+
+    return productsByStall.get(stallId)
 }

@@ -12,7 +12,7 @@ export default function ProductCard({
 }: {
     product: NDKParsedProductEvent
     isLastProduct: boolean
-    onView: (inView: boolean, entry: IntersectionObserverEntry) => void
+    onView?: (inView: boolean, entry: IntersectionObserverEntry) => void
 }) {
     if (!product.content) return null
 

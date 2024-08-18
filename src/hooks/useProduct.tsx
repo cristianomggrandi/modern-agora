@@ -3,9 +3,10 @@ import { useEffect, useState } from "react"
 import useNDK, { addContentToProductEvent, NDKParsedProductEvent } from "./useNDK"
 import useProducts from "./useProducts"
 
+// TODO: Check if it's possible to use a simple find on the return, mainly for performance
 export default function useProduct(productId: string) {
     const ndk = useNDK()
-    const { products } = useProducts()
+    const products = useProducts()
 
     const getProductById = async (id: string) => {
         if (!ndk) return undefined

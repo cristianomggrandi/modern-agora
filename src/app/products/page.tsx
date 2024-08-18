@@ -7,7 +7,7 @@ import ProductCard from "../components/ProductCard"
 import SearchField from "../components/SearchField"
 
 export default function Products() {
-    const { products } = useProducts()
+    const products = useProducts()
     const [numberOfProductsToShow, setNumberOfProductsToShow] = useState(24)
 
     const [search, setSearch] = useState("")
@@ -24,12 +24,13 @@ export default function Products() {
     }
 
     return (
+        // TODO: Add filters like in stalls page
         // TODO: Create a way to search/filter by tag
         <main className="flex gap-4 flex-col items-center justify-stretch p-4 pb-0">
             <div className="w-full flex justify-end">
                 <SearchField handleSearch={handleSearch} clearSearch={clearSearch} />
             </div>
-            <div className="w-full grid auto-rows-fr grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] justify-items-center gap-6 rounded-lg">
+            <div className="w-full grid auto-rows-fr grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] justify-items-center gap-6">
                 {/* TODO: Create a onView to revert the maximum number of products shown */}
                 {(search ? filterProductsWithSearch(products, search) : products)
                     .slice(0, numberOfProductsToShow)

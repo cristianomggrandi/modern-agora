@@ -1,9 +1,7 @@
 "use client"
 
-import useAuctions from "@/hooks/useAuctions"
 import useCurrencyOptions from "@/hooks/useCurrencyOptions"
-import { NDKParsedAuctionEvent, NDKParsedProductEvent, NDKParsedStallEvent } from "@/hooks/useNDK"
-import useProducts from "@/hooks/useProducts"
+import { NDKParsedAuctionEvent, NDKParsedProductEvent, NDKParsedStallEvent, useNDKContext } from "@/hooks/useNDK"
 import useStalls from "@/hooks/useStalls"
 import { faAngleRight } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -88,8 +86,7 @@ const filterStalls = (
 
 export default function Stalls() {
     const stalls = useStalls()
-    const { productsByStall } = useProducts()
-    const { auctionsByStall } = useAuctions()
+    const { productsByStall, auctionsByStall } = useNDKContext()
     const [numberOfStallsToShow, setNumberOfStallsToShow] = useState(24)
 
     const currencyOptions = useCurrencyOptions()
