@@ -34,30 +34,26 @@ export default function Profile(props: { params: { pubkey: string } }) {
 
     if (!user || !user.profile) return <span>Loading...</span>
 
-    const displayName = user?.profile?.displayName ?? user?.profile?.name
+    const displayName = user.profile.displayName ?? user.profile.name
 
     return (
         <main className="p-8">
-            <div className="grid grid-cols-[min-content,1fr] gap-6">
-                <div className="sm:row-start-1 sm:row-end-4 h-32 max-h-[20vw] aspect-square">
-                    {user?.profile?.image ? (
-                        <img src={user?.profile?.image} alt="" />
-                    ) : (
-                        <div className="flex items-center justify-center text-[14vw] sm:text-7xl h-full w-full bg-light rounded-full">
-                            {displayName ? displayName[0].toLocaleUpperCase() : ""}
-                        </div>
-                    )}
-                </div>
-                {/* TODO: Change to container query so that the text is proportional to the container */}
-                <span className="col-start-2 col-end-3 text-[8vw] sm:text-3xl neon-text-2lg self-center justify-self-start">
+            <div className="grid grid-cols-[min-content,1fr] gap-y-6">
+                {user.profile.image ? (
+                    <div className="self-center sm:row-start-1 sm:row-end-4 h-32 max-h-[15vw] sm:max-h-[15vw] aspect-square mr-6">
+                        <img src={user.profile.image} alt="" />
+                    </div>
+                ) : null}
+                <span className="col-start-2 col-end-3 text-[5vw] sm:text-3xl neon-text-2lg">
                     {displayName}
                 </span>
-                <span className="col-start-1 col-span-2 sm:col-start-2 sm:text-lg">
-                    {user?.profile?.about} {user?.profile?.about} {user?.profile?.about} {user?.profile?.about}
-                </span>
-                <span className="col-start-1 col-span-2 sm:col-start-2 text-sm sm:text-base flex gap-2 truncate">
+                <span className="col-start-1 col-span-2 sm:col-start-2 sm:text-lg text-justify">{user?.profile?.about} </span>
+                <span
+                    className="col-start-1 col-span-2 sm:col-start-2 text-sm sm:text-base flex gap-2 truncate cursor-pointer"
+                    onClick={() => navigator.clipboard.writeText(user.npub)}
+                >
                     <FontAwesomeIcon icon={faCopy} className="bg-nostr p-1 rounded-full" />
-                    {user?.npub}
+                    {user.npub}
                 </span>
             </div>
             <div className="mt-8">
