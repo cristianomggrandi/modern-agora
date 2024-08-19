@@ -208,7 +208,11 @@ export function NDKContextProvider({ children }: { children: any }) {
     }, [])
 
     // TODO: Add closeOnEose (on opts)
-    const subscribeAndHandle = (filter: NDKFilter, handler: (event: NDKEvent) => void, opts?: NDKSubscriptionOptions) => {
+    const subscribeAndHandle = (
+        filter: NDKFilter,
+        handler: (event: NDKEvent) => void,
+        opts: NDKSubscriptionOptions = { closeOnEose: true }
+    ) => {
         if (!ndk) return
 
         const sub = ndk.subscribe(filter, opts)
