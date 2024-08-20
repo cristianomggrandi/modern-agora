@@ -31,6 +31,7 @@ type NDKContextType = {
 
     stalls: NDKParsedStallEvent[]
     setStalls: Dispatch<SetStateAction<NDKParsedStallEvent[]>>
+    subscribeToStalls: () => void
 
     products: NDKParsedProductEvent[]
     setProducts: Dispatch<SetStateAction<NDKParsedProductEvent[]>>
@@ -40,6 +41,7 @@ type NDKContextType = {
     auctions: NDKParsedAuctionEvent[]
     setAuctions: Dispatch<SetStateAction<NDKParsedAuctionEvent[]>>
     auctionsByStall: Map<string, NDKParsedAuctionEvent[]>
+    subscribeToAuctions: () => void
 }
 
 // export type NDKParsedConfirmationBidEvent = ReturnType<typeof addContentToConfirmationBidEvent>
@@ -69,27 +71,6 @@ export const orderProducts = (event: NDKParsedProductEvent, prev: NDKParsedProdu
         const e = prev[i]
 
         if (event.created_at > e.created_at!) {
-            prev.splice(i, 0, event)
-            return [...prev]
-        }
-    }
-
-    return [...prev, event]
-}
-
-export const orderAuctions = (event: NDKParsedAuctionEvent, prev: NDKParsedAuctionEvent[]) => {
-    if (!event.content) return prev
-
-    // const currentDate = Math.floor(Date.now() / 1000)
-    const newFinishDate = getAuctionEndDate(event)
-
-    // TODO: Toggle to get only active auctions
-    // if (newFinishDate < currentDate) return prev
-
-    for (let i = 0; i < prev.length; i++) {
-        const currFinishDate = getAuctionEndDate(prev[i])
-
-        if (newFinishDate < currFinishDate) {
             prev.splice(i, 0, event)
             return [...prev]
         }
@@ -164,6 +145,34 @@ const addProductToStall = (productEvent: NDKParsedProductEvent, productsByStall:
     productsByStall.set(productEvent.content.stall_id, stallProducts)
 }
 
+const addAuctionToStall = (auctionEvent: NDKParsedAuctionEvent, auctionsByStall: Map<string, NDKParsedAuctionEvent[]>) => {
+    const stallAuctions = auctionsByStall.get(auctionEvent.content.stall_id) ?? []
+
+    stallAuctions.push(auctionEvent)
+
+    auctionsByStall.set(auctionEvent.content.stall_id, stallAuctions)
+}
+
+const orderAuctions = (event: NDKParsedAuctionEvent, prev: NDKParsedAuctionEvent[]) => {
+    if (!event.content) return prev
+
+    const newFinishDate = getAuctionEndDate(event)
+
+    // TODO: Toggle to get only active auctions
+    // if (newFinishDate < currentDate) return prev
+
+    for (let i = 0; i < prev.length; i++) {
+        const currFinishDate = getAuctionEndDate(prev[i])
+
+        if (newFinishDate > currFinishDate) {
+            prev.splice(i, 0, event)
+            return [...prev]
+        }
+    }
+
+    return [...prev, event]
+}
+
 const NDKContext = createContext<NDKContextType | null>(null)
 
 export function NDKContextProvider({ children }: { children: any }) {
@@ -231,6 +240,34 @@ export function NDKContextProvider({ children }: { children: any }) {
         return sub
     }
 
+    const stallsSubscription = useRef<NDKSubscription>()
+    const stallsInterval = useRef<NodeJS.Timeout>()
+    const fetchedStalls = useRef<NDKParsedStallEvent[]>([])
+
+    const handleNewStall = (stallEvent: NDKEvent) => {
+        try {
+            const parsedStall = addContentToStallEvent(stallEvent)
+
+            if (!parsedStall) return
+
+            fetchedStalls.current.push(parsedStall)
+        } catch (error) {}
+    }
+
+    const subscribeToStalls = () => {
+        if (ndk && !stallsSubscription.current) {
+            stallsSubscription.current = subscribeAndHandle({ kinds: [NDKKind.MarketStall] }, handleNewStall)
+
+            stallsInterval.current = setInterval(() => {
+                setStalls(prev => {
+                    if (fetchedStalls.current.length && fetchedStalls.current.length === prev.length) clearInterval(stallsInterval.current)
+
+                    return fetchedStalls.current
+                })
+            }, 1000)
+        }
+    }
+
     const productsSubscription = useRef<NDKSubscription>()
     const productsInterval = useRef<NodeJS.Timeout>()
     const fetchedProducts = useRef<NDKParsedProductEvent[]>(products ?? [])
@@ -260,10 +297,45 @@ export function NDKContextProvider({ children }: { children: any }) {
         }
     }
 
+    const auctionsSubscription = useRef<NDKSubscription>()
+    const auctionsInterval = useRef<NodeJS.Timeout>()
+    const fetchedAuctions = useRef<NDKParsedAuctionEvent[]>([])
+
+    const handleNewAuction = (auctionEvent: NDKEvent) => {
+        try {
+            const parsedAuction = addContentToAuctionEvent(auctionEvent)
+
+            if (!parsedAuction) return
+
+            fetchedAuctions.current = orderAuctions(parsedAuction, fetchedAuctions.current)
+            addAuctionToStall(parsedAuction, auctionsByStall.current)
+        } catch (error) {}
+    }
+
+    const subscribeToAuctions = () => {
+        if (ndk && !auctionsSubscription.current) {
+            auctionsSubscription.current = subscribeAndHandle({ kinds: [30020 as NDKKind] }, handleNewAuction)
+
+            auctionsInterval.current = setInterval(() => {
+                setAuctions(prev => {
+                    if (fetchedAuctions.current === prev) clearInterval(auctionsInterval.current)
+
+                    return fetchedAuctions.current
+                })
+            }, 1000)
+        }
+    }
+
     useEffect(() => {
         return () => {
             if (productsSubscription.current) productsSubscription.current.stop()
             clearInterval(productsInterval.current)
+
+            if (auctionsSubscription.current) auctionsSubscription.current.stop()
+            clearInterval(auctionsInterval.current)
+
+            if (stallsSubscription.current) stallsSubscription.current.stop()
+            clearInterval(stallsInterval.current)
         }
     }, [])
 
@@ -279,6 +351,7 @@ export function NDKContextProvider({ children }: { children: any }) {
 
                 stalls,
                 setStalls,
+                subscribeToStalls,
 
                 products,
                 setProducts,
@@ -288,6 +361,7 @@ export function NDKContextProvider({ children }: { children: any }) {
                 auctions,
                 setAuctions,
                 auctionsByStall: auctionsByStall.current,
+                subscribeToAuctions,
             }}
         >
             {children}

@@ -86,6 +86,7 @@ const filterStalls = (
 
 export default function Stalls() {
     const stalls = useStalls()
+    console.log("stalls", stalls.length)
     const { productsByStall, auctionsByStall } = useNDKContext()
     const [numberOfStallsToShow, setNumberOfStallsToShow] = useState(24)
 

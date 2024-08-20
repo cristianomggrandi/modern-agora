@@ -1,46 +1,22 @@
-import { NDKEvent, NDKKind, NDKSubscription } from "@nostr-dev-kit/ndk"
-import { useEffect, useRef } from "react"
-import { addContentToStallEvent, NDKParsedStallEvent, useNDKContext } from "./useNDK"
+import { useEffect } from "react"
+import { useNDKContext } from "./useNDK"
 
 export default function useStalls() {
-    const { ndk, subscribeAndHandle, stalls, setStalls } = useNDKContext()
-
-    const fetchedStalls = useRef<NDKParsedStallEvent[]>([])
-
-    const handleNewStall = (stallEvent: NDKEvent) => {
-        try {
-            const parsedStall = addContentToStallEvent(stallEvent)
-
-            if (!parsedStall) return
-
-            fetchedStalls.current.push(parsedStall)
-        } catch (error) {}
-    }
+    const { ndk, stalls, subscribeToStalls } = useNDKContext()
 
     useEffect(() => {
-        let sub: NDKSubscription | undefined
-
-        if (ndk) sub = subscribeAndHandle({ kinds: [NDKKind.MarketStall] }, handleNewStall)
-
-        const productsInterval = setInterval(() => {
-            setStalls(prev => {
-                if (fetchedStalls.current === prev) clearInterval(productsInterval)
-
-                return fetchedStalls.current
-            })
-        }, 1000)
-
-        return () => {
-            if (sub) sub.stop()
-            clearInterval(productsInterval)
-        }
+        subscribeToStalls()
     }, [ndk])
 
     return stalls
 }
 
 export function useStallsByUser(pubkey?: string) {
-    const stalls = useStalls()
+    const { ndk, stalls, subscribeToStalls } = useNDKContext()
+
+    useEffect(() => {
+        subscribeToStalls()
+    }, [ndk])
 
     if (!pubkey) return []
 
