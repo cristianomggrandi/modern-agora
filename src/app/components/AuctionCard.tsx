@@ -10,7 +10,7 @@ export default function AuctionCard({
 }: {
     auction: NDKParsedAuctionEvent
     isLastAuction: boolean
-    onView: (inView: boolean, entry: IntersectionObserverEntry) => void
+    onView?: (inView: boolean, entry: IntersectionObserverEntry) => void
 }) {
     const bids = useBids()
     const bidStatus = useBidStatus()

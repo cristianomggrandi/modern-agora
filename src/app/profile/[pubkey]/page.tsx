@@ -1,6 +1,8 @@
 "use client"
 
+import AuctionCard from "@/app/components/AuctionCard"
 import ProductCard from "@/app/components/ProductCard"
+import { useAuctionsByStall } from "@/hooks/useAuctions"
 import { NDKParsedStallEvent } from "@/hooks/useNDK"
 import { useProductsByStall } from "@/hooks/useProducts"
 import { useStallsByUser } from "@/hooks/useStalls"
@@ -10,6 +12,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 
 function UserStall({ stall }: { stall: NDKParsedStallEvent }) {
     const products = useProductsByStall(stall.content.id)
+    const auctions = useAuctionsByStall(stall.content.id)
 
     return (
         <div>
@@ -17,6 +20,9 @@ function UserStall({ stall }: { stall: NDKParsedStallEvent }) {
             <div className="w-full grid auto-rows-fr grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] justify-items-center gap-6">
                 {products?.map(product => (
                     <ProductCard key={product.content.id} product={product} isLastProduct={false} />
+                ))}
+                {auctions?.map(auction => (
+                    <AuctionCard key={auction.content.id} auction={auction} isLastAuction={false} />
                 ))}
             </div>
         </div>
@@ -44,9 +50,7 @@ export default function Profile(props: { params: { pubkey: string } }) {
                         <img src={user.profile.image} alt="" />
                     </div>
                 ) : null}
-                <span className="col-start-2 col-end-3 text-[5vw] sm:text-3xl neon-text-2lg">
-                    {displayName}
-                </span>
+                <span className="col-start-2 col-end-3 text-[5vw] sm:text-3xl neon-text-2lg">{displayName}</span>
                 <span className="col-start-1 col-span-2 sm:col-start-2 sm:text-lg text-justify">{user?.profile?.about} </span>
                 <span
                     className="col-start-1 col-span-2 sm:col-start-2 text-sm sm:text-base flex gap-2 truncate cursor-pointer"
@@ -56,7 +60,7 @@ export default function Profile(props: { params: { pubkey: string } }) {
                     {user.npub}
                 </span>
             </div>
-            <div className="mt-8">
+            <div className="mt-8 flex flex-col gap-12">
                 {stalls.map(stall => (
                     <UserStall key={stall.content.id} stall={stall} />
                 ))}

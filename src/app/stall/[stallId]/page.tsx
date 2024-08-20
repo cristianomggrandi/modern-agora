@@ -7,6 +7,7 @@ import { useAuctionsByStall } from "@/hooks/useAuctions"
 import { useProductsByStall } from "@/hooks/useProducts"
 import useStall from "@/hooks/useStall"
 import { filterAuctionsWithSearch, filterProductsWithSearch } from "@/utils/functions"
+import Link from "next/link"
 import { SyntheticEvent, useEffect, useState } from "react"
 
 export default function Stall(props: { params: { stallId: string } }) {
@@ -49,6 +50,7 @@ export default function Stall(props: { params: { stallId: string } }) {
                 <h1 className="text-xl sm:text-2xl neon-text-2lg font-semibold text-center">{stall.content.name}</h1>
                 <h2 className="sm:text-lg neon-text-sm text-center break-words break-all">{stall.content.description}</h2>
             </div>
+            <Link href={"/profile/" + stall.pubkey}>Check out more my profile</Link>
             {hasProductsOrAuctions ? (
                 <div className="w-full flex justify-end mb-2">
                     <SearchField handleSearch={handleSearch} clearSearch={clearSearch} />

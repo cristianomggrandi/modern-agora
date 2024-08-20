@@ -10,12 +10,7 @@ export default function useUserByPubkey(pubkey: string) {
         if (!user && ndk) {
             const user = ndk?.getUser({ pubkey })
 
-            console.log("user", user, pubkey)
-
-            if (user) {
-                setUser(user)
-                user.fetchProfile()
-            }
+            if (user) user.fetchProfile().then(() => setUser(user))
         }
     }, [ndk])
 

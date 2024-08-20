@@ -23,6 +23,7 @@ export default function ProductCard({
                 href={"/product/" + product.content.id}
             >
                 <div className="relative aspect-square w-full flex-shrink-0 flex items-center justify-center rounded overflow-hidden">
+                    {/* TODO: Only show background effect if the image is no transparent */}
                     <div
                         className="absolute w-full h-full blur-sm bg-center bg-cover bg-no-repeat"
                         style={{ backgroundImage: product.content.images ? `url(${product.content.images[0]})` : undefined }}
