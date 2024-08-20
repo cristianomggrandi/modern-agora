@@ -2,7 +2,6 @@
 
 import useCurrencyOptions from "@/hooks/useCurrencyOptions"
 import { NDKParsedAuctionEvent, NDKParsedProductEvent, NDKParsedStallEvent, useNDKContext } from "@/hooks/useNDK"
-import useStalls from "@/hooks/useStalls"
 import { faAngleRight } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import Link from "next/link"
@@ -85,13 +84,17 @@ const filterStalls = (
 }
 
 export default function Stalls() {
-    const stalls = useStalls()
-    console.log("stalls", stalls.length)
-    const { productsByStall, auctionsByStall } = useNDKContext()
+    const { ndk, stalls, productsByStall, auctionsByStall, subscribeToStalls, subscribeToProducts, subscribeToAuctions } = useNDKContext()
     const [numberOfStallsToShow, setNumberOfStallsToShow] = useState(24)
 
     const currencyOptions = useCurrencyOptions()
     const [currencyFilter, setCurrencyFilter] = useState<string>()
+
+    useEffect(() => {
+        subscribeToProducts()
+        subscribeToAuctions()
+        subscribeToStalls()
+    }, [ndk])
 
     const sortingFunctions: {
         label: string
@@ -176,7 +179,7 @@ export default function Stalls() {
     ]
     const [sortFunction, setSortFunction] = useState(0)
 
-    const [onlyShowStallsWithProducts, setOnlyShowStallsWithProducts] = useState(true)
+    const [onlyShowStallsWithProducts, setOnlyShowStallsWithProducts] = useState(false)
 
     const [search, setSearch] = useState("")
 
