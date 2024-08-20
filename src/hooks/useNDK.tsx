@@ -8,7 +8,7 @@ import {
     getParsedProductContent,
     getParsedStallContent,
 } from "@/utils/ndk"
-import NDK, { NDKEvent, NDKFilter, NDKNip07Signer, NDKSubscription, NDKSubscriptionOptions, NDKUser } from "@nostr-dev-kit/ndk"
+import NDK, { NDKEvent, NDKFilter, NDKKind, NDKNip07Signer, NDKSubscription, NDKSubscriptionOptions, NDKUser } from "@nostr-dev-kit/ndk"
 import { createContext, Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from "react"
 
 export type NDKParsedProductEvent = ReturnType<typeof addContentToProductEvent>
@@ -35,6 +35,7 @@ type NDKContextType = {
     products: NDKParsedProductEvent[]
     setProducts: Dispatch<SetStateAction<NDKParsedProductEvent[]>>
     productsByStall: Map<string, NDKParsedProductEvent[]>
+    subscribeToProducts: () => void
 
     auctions: NDKParsedAuctionEvent[]
     setAuctions: Dispatch<SetStateAction<NDKParsedAuctionEvent[]>>
@@ -155,6 +156,14 @@ export function addContentToStallEvent(event: NDKEvent) {
     return { ...event, content }
 }
 
+const addProductToStall = (productEvent: NDKParsedProductEvent, productsByStall: Map<string, NDKParsedProductEvent[]>) => {
+    const stallProducts = productsByStall.get(productEvent.content.stall_id) ?? []
+
+    stallProducts.push(productEvent)
+
+    productsByStall.set(productEvent.content.stall_id, stallProducts)
+}
+
 const NDKContext = createContext<NDKContextType | null>(null)
 
 export function NDKContextProvider({ children }: { children: any }) {
@@ -222,6 +231,42 @@ export function NDKContextProvider({ children }: { children: any }) {
         return sub
     }
 
+    const productsSubscription = useRef<NDKSubscription>()
+    const productsInterval = useRef<NodeJS.Timeout>()
+    const fetchedProducts = useRef<NDKParsedProductEvent[]>(products ?? [])
+
+    const handleNewProduct = (productEvent: NDKEvent) => {
+        try {
+            const parsedProduct = addContentToProductEvent(productEvent)
+
+            if (!parsedProduct) return
+
+            fetchedProducts.current.push(parsedProduct)
+            addProductToStall(parsedProduct, productsByStall.current)
+        } catch (error) {}
+    }
+
+    const subscribeToProducts = () => {
+        if (ndk && !productsSubscription.current) {
+            productsSubscription.current = subscribeAndHandle({ kinds: [NDKKind.MarketProduct] }, handleNewProduct)
+
+            productsInterval.current = setInterval(() => {
+                setProducts(prev => {
+                    if (fetchedProducts.current === prev) clearInterval(productsInterval.current)
+
+                    return fetchedProducts.current
+                })
+            }, 1000)
+        }
+    }
+
+    useEffect(() => {
+        return () => {
+            if (productsSubscription.current) productsSubscription.current.stop()
+            clearInterval(productsInterval.current)
+        }
+    }, [])
+
     return (
         <NDKContext.Provider
             value={{
@@ -238,6 +283,7 @@ export function NDKContextProvider({ children }: { children: any }) {
                 products,
                 setProducts,
                 productsByStall: productsByStall.current,
+                subscribeToProducts,
 
                 auctions,
                 setAuctions,
