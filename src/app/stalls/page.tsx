@@ -84,7 +84,7 @@ const filterStalls = (
 }
 
 export default function Stalls() {
-    const { ndk, stalls, productsByStall, auctionsByStall, subscribeToStalls, subscribeToProducts, subscribeToAuctions } = useNDKContext()
+    const { stalls, productsByStall, auctionsByStall, subscribeToStalls, subscribeToProducts, subscribeToAuctions } = useNDKContext()
     const [numberOfStallsToShow, setNumberOfStallsToShow] = useState(24)
 
     const currencyOptions = useCurrencyOptions()
@@ -94,7 +94,7 @@ export default function Stalls() {
         subscribeToProducts()
         subscribeToAuctions()
         subscribeToStalls()
-    }, [ndk])
+    }, [])
 
     const sortingFunctions: {
         label: string
