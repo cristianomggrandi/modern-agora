@@ -240,9 +240,11 @@ export function NDKContextProvider({ children }: { children: any }) {
         return sub
     }
 
+    const [isSubscribedToStalls, setIsSubscribedToStalls] = useState(false)
     const stallsSubscription = useRef<NDKSubscription>()
-    const stallsInterval = useRef<NodeJS.Timeout>()
     const fetchedStalls = useRef<NDKParsedStallEvent[]>([])
+
+    const subscribeToStalls = () => setIsSubscribedToStalls(true)
 
     const handleNewStall = (stallEvent: NDKEvent) => {
         try {
@@ -254,23 +256,11 @@ export function NDKContextProvider({ children }: { children: any }) {
         } catch (error) {}
     }
 
-    const subscribeToStalls = () => {
-        if (ndk && !stallsSubscription.current) {
-            stallsSubscription.current = subscribeAndHandle({ kinds: [NDKKind.MarketStall] }, handleNewStall)
-
-            stallsInterval.current = setInterval(() => {
-                setStalls(prev => {
-                    if (fetchedStalls.current.length && fetchedStalls.current.length === prev.length) clearInterval(stallsInterval.current)
-
-                    return fetchedStalls.current
-                })
-            }, 1000)
-        }
-    }
-
+    const [isSubscribedToProducts, setIsSubscribedToProducts] = useState(false)
     const productsSubscription = useRef<NDKSubscription>()
-    const productsInterval = useRef<NodeJS.Timeout>()
     const fetchedProducts = useRef<NDKParsedProductEvent[]>(products ?? [])
+
+    const subscribeToProducts = () => setIsSubscribedToProducts(true)
 
     const handleNewProduct = (productEvent: NDKEvent) => {
         try {
@@ -283,23 +273,11 @@ export function NDKContextProvider({ children }: { children: any }) {
         } catch (error) {}
     }
 
-    const subscribeToProducts = () => {
-        if (ndk && !productsSubscription.current) {
-            productsSubscription.current = subscribeAndHandle({ kinds: [NDKKind.MarketProduct] }, handleNewProduct)
-
-            productsInterval.current = setInterval(() => {
-                setProducts(prev => {
-                    if (fetchedProducts.current === prev) clearInterval(productsInterval.current)
-
-                    return fetchedProducts.current
-                })
-            }, 1000)
-        }
-    }
-
+    const [isSubscribedToAuctions, setIsSubscribedToAuctions] = useState(false)
     const auctionsSubscription = useRef<NDKSubscription>()
-    const auctionsInterval = useRef<NodeJS.Timeout>()
     const fetchedAuctions = useRef<NDKParsedAuctionEvent[]>([])
+
+    const subscribeToAuctions = () => setIsSubscribedToAuctions(true)
 
     const handleNewAuction = (auctionEvent: NDKEvent) => {
         try {
@@ -312,32 +290,60 @@ export function NDKContextProvider({ children }: { children: any }) {
         } catch (error) {}
     }
 
-    const subscribeToAuctions = () => {
-        if (ndk && !auctionsSubscription.current) {
-            auctionsSubscription.current = subscribeAndHandle({ kinds: [30020 as NDKKind] }, handleNewAuction)
+    // TODO: Maybe center all intervals in only one
 
-            auctionsInterval.current = setInterval(() => {
+    useEffect(() => {
+        let stallsInterval: NodeJS.Timeout
+        let productsInterval: NodeJS.Timeout
+        let auctionsInterval: NodeJS.Timeout
+
+        if (ndk && isSubscribedToStalls && !stallsSubscription.current) {
+            stallsSubscription.current = subscribeAndHandle({ kinds: [NDKKind.MarketStall] }, handleNewStall, { closeOnEose: true })
+
+            stallsInterval = setInterval(() => {
+                setStalls(prev => {
+                    if (fetchedStalls.current.length && fetchedStalls.current.length === prev.length) clearInterval(stallsInterval)
+
+                    return fetchedStalls.current
+                })
+            }, 1000)
+        }
+
+        if (ndk && isSubscribedToProducts && !productsSubscription.current) {
+            productsSubscription.current = subscribeAndHandle({ kinds: [NDKKind.MarketProduct] }, handleNewProduct, { closeOnEose: true })
+
+            productsInterval = setInterval(() => {
+                setProducts(prev => {
+                    if (fetchedProducts.current === prev) clearInterval(productsInterval)
+
+                    return fetchedProducts.current
+                })
+            }, 1000)
+        }
+
+        if (ndk && isSubscribedToAuctions && !auctionsSubscription.current) {
+            auctionsSubscription.current = subscribeAndHandle({ kinds: [30020 as NDKKind] }, handleNewAuction, { closeOnEose: true })
+
+            auctionsInterval = setInterval(() => {
                 setAuctions(prev => {
-                    if (fetchedAuctions.current === prev) clearInterval(auctionsInterval.current)
+                    if (fetchedAuctions.current === prev) clearInterval(auctionsInterval)
 
                     return fetchedAuctions.current
                 })
             }, 1000)
         }
-    }
 
-    useEffect(() => {
         return () => {
             if (productsSubscription.current) productsSubscription.current.stop()
-            clearInterval(productsInterval.current)
+            clearInterval(productsInterval)
 
             if (auctionsSubscription.current) auctionsSubscription.current.stop()
-            clearInterval(auctionsInterval.current)
+            clearInterval(auctionsInterval)
 
             if (stallsSubscription.current) stallsSubscription.current.stop()
-            clearInterval(stallsInterval.current)
+            clearInterval(stallsInterval)
         }
-    }, [])
+    }, [isSubscribedToStalls, isSubscribedToProducts, isSubscribedToAuctions])
 
     return (
         <NDKContext.Provider
