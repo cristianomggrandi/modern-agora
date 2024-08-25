@@ -13,7 +13,7 @@ export default function useAuctions() {
 }
 
 export function useAuctionsByStall(stallId?: string) {
-    const { , auctionsByStall, subscribeToAuctions } = useNDKContext()
+    const { auctionsByStall, subscribeToAuctions } = useNDKContext()
 
     useEffect(() => {
         subscribeToAuctions()
