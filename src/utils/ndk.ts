@@ -60,7 +60,7 @@ const productContentParser = z.object({
     description: z.string().optional(),
     images: z.array(z.string()).optional(),
     currency: z.string(),
-    price: z.number(),
+    price: z.number().nonnegative(),
     quantity: z.union([z.number(), z.null()]),
     specs: z.array(z.tuple([z.string(), z.string()])).optional(),
     shipping: z.array(
@@ -131,19 +131,19 @@ const auctionContentParser = z.object({
     ),
 })
 
+const stallShippingInfoParser = z.object({
+    id: z.string(),
+    name: z.string().optional(),
+    cost: z.number().nonnegative(),
+    regions: z.array(z.string()),
+})
+
 const stallContentParser = z.object({
     id: z.string(),
     name: z.string(),
     description: z.string().optional(),
     currency: z.string(),
-    shipping: z.array(
-        z.object({
-            id: z.string(),
-            name: z.string().optional(),
-            cost: z.number(),
-            regions: z.array(z.string()),
-        })
-    ),
+    shipping: z.array(stallShippingInfoParser).nonempty(),
 })
 
 const confirmationBidContentParser = z.object({
@@ -247,3 +247,5 @@ export function getBidStatus(event: NDKEvent) {
 export function parseDescription(description: string) {
     return description.replaceAll("&amp;", "&")
 }
+
+export { auctionContentParser, confirmationBidContentParser, productContentParser, stallContentParser, stallShippingInfoParser }
