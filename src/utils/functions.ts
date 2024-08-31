@@ -46,3 +46,7 @@ export function filterAuctionsWithSearch(products: NDKParsedAuctionEvent[], sear
         return compareString.includes(formattedSearch)
     })
 }
+
+export function generateRandomId() {
+    return crypto.randomUUID().replaceAll("-", "")
+}
