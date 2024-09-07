@@ -139,7 +139,7 @@ function NewStallDialog(props: { modalRef: RefObject<HTMLDialogElement> }) {
                 method="dialog"
                 className="h-full p-[5%] flex gap-2 sm:gap-6 flex-col sm:flex-row sm:flex-wrap sm:justify-between text-black"
             >
-                <input name="shipping" value={JSON.stringify(newStallShippingInfo)} className="hidden" />
+                <input name="shipping" value={JSON.stringify(newStallShippingInfo)} className="hidden" readOnly />
                 <div className="flex flex-col flex-1">
                     <label htmlFor="name" className="text-white">
                         Name
@@ -387,7 +387,7 @@ function NewProductDialog(props: { modalRef: RefObject<HTMLDialogElement>; stall
                         defaultValue={generateRandomId()}
                     />
                 </div>
-                <input name="shipping-options" className="hidden" value={JSON.stringify(shippingOptions)} />
+                <input name="shipping-options" value={JSON.stringify(shippingOptions)} className="hidden" readOnly />
                 {selectedStall ? (
                     <div className="basis-full p-2 border-nostr border shadow shadow-nostr rounded-lg text-white">
                         <span className="block text-center mb-2">Extra shipping cost</span>
