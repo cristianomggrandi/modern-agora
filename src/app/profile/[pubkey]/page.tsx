@@ -3,7 +3,7 @@
 import AuctionCard from "@/app/components/AuctionCard"
 import ProductCard from "@/app/components/ProductCard"
 import { useAuctionsByStall } from "@/hooks/useAuctions"
-import { NDKParsedStallEvent, useUser } from "@/hooks/useNDK"
+import { NDKParsedStallEvent, usePublishEvent, useUser } from "@/hooks/useNDK"
 import { useProductsByStall } from "@/hooks/useProducts"
 import { useStallsByUser } from "@/hooks/useStalls"
 import useUserByPubkey from "@/hooks/useUserByPubkey"
@@ -11,6 +11,7 @@ import { generateRandomId } from "@/utils/functions"
 import { productContentParser, stallContentParser, stallShippingInfoParser } from "@/utils/ndk"
 import { faCopy, faPlus, faXmark } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { NDKKind } from "@nostr-dev-kit/ndk"
 import { RefObject, useEffect, useRef, useState } from "react"
 import { ZodError } from "zod"
 
@@ -42,6 +43,7 @@ function UserStall({ stall }: { stall: NDKParsedStallEvent }) {
 
 // TODO: Add tags
 function NewStallDialog(props: { modalRef: RefObject<HTMLDialogElement> }) {
+    const publishEvent = usePublishEvent()
     const closeModal = () => props.modalRef.current?.close()
 
     const [newStallShippingInfo, setNewStallShippingInfo] = useState<ShippingInfoType[]>([])
@@ -113,6 +115,12 @@ function NewStallDialog(props: { modalRef: RefObject<HTMLDialogElement> }) {
 
             e.target.reset()
             closeModal()
+
+            publishEvent({
+                content: JSON.stringify(parsedStall),
+                kind: NDKKind.MarketStall,
+                tags: [["d", parsedStall.id]],
+            })
         } catch (error) {
             if (error instanceof ZodError)
                 error.issues.forEach(issue => {
@@ -248,9 +256,12 @@ function NewStallDialog(props: { modalRef: RefObject<HTMLDialogElement> }) {
 
 // TODO: Add tags
 // TODO: Add images
+// TODO: Add specs
 function NewProductDialog(props: { modalRef: RefObject<HTMLDialogElement>; stalls: NDKParsedStallEvent[] }) {
     const [selectedStall, setSelectedStall] = useState<NDKParsedStallEvent>()
     const [shippingOptions, setShippingOptions] = useState<{ id: string; cost: number }[]>()
+
+    const publishEvent = usePublishEvent()
 
     useEffect(() => {
         setShippingOptions(
@@ -292,8 +303,14 @@ function NewProductDialog(props: { modalRef: RefObject<HTMLDialogElement>; stall
 
             console.log(parsedProduct)
 
-            // e.target.reset()
-            // closeModal()
+            e.target.reset()
+            closeModal()
+
+            publishEvent({
+                content: JSON.stringify(parsedProduct),
+                kind: NDKKind.MarketProduct,
+                tags: [["d", parsedProduct.id]],
+            })
         } catch (error) {
             if (error instanceof ZodError)
                 error.issues.forEach(issue => {

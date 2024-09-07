@@ -8,7 +8,16 @@ import {
     getParsedProductContent,
     getParsedStallContent,
 } from "@/utils/ndk"
-import NDK, { NDKEvent, NDKFilter, NDKKind, NDKNip07Signer, NDKSubscription, NDKSubscriptionOptions, NDKUser } from "@nostr-dev-kit/ndk"
+import NDK, {
+    NDKEvent,
+    NDKFilter,
+    NDKKind,
+    NDKNip07Signer,
+    NDKSubscription,
+    NDKSubscriptionOptions,
+    NDKTag,
+    NDKUser,
+} from "@nostr-dev-kit/ndk"
 import { createContext, Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from "react"
 
 export type NDKParsedProductEvent = ReturnType<typeof addContentToProductEvent>
@@ -28,6 +37,8 @@ type NDKContextType = {
     bidStatus: Map<string, "accepted" | "rejected" | "pending" | "winner">
     loginWithNIP07: () => void
     user?: NDKUser
+
+    publishEvent: ({ content, kind, tags }: { content: string; kind: NDKKind; tags: NDKTag[] }) => void
 
     stalls: NDKParsedStallEvent[]
     setStalls: Dispatch<SetStateAction<NDKParsedStallEvent[]>>
@@ -287,6 +298,15 @@ export function NDKContextProvider({ children }: { children: any }) {
         } catch (error) {}
     }
 
+    const publishEvent = ({ content, kind, tags }: { content: string; kind: NDKKind; tags: NDKTag[] }) => {
+        const ndkEvent = new NDKEvent(ndk)
+
+        ndkEvent.content = content
+        ndkEvent.kind = kind
+        ndkEvent.tags = tags
+        ndkEvent.publish()
+    }
+
     // TODO: Maybe center all intervals in only one
 
     useEffect(() => {
@@ -356,6 +376,8 @@ export function NDKContextProvider({ children }: { children: any }) {
                 bidStatus,
                 loginWithNIP07,
                 user,
+
+                publishEvent,
 
                 stalls,
                 setStalls,
@@ -435,4 +457,12 @@ export function useUser() {
     if (!context) throw new Error("useUser must be within a Context Provider")
 
     return context.user
+}
+
+export function usePublishEvent() {
+    const context = useContext(NDKContext)
+
+    if (!context) throw new Error("usePublishEvent must be within a Context Provider")
+
+    return context.publishEvent
 }
