@@ -160,7 +160,7 @@ function NewStallDialog(props: { modalRef: RefObject<HTMLDialogElement> }) {
                     <div className="flex flex-col text-white">
                         {/* TODO: Allow changing indexes */}
                         {newStallShippingInfo.map((info, index) => (
-                            <div className="relative flex flex-col flex-1 mb-2 border border-nostr rounded px-1">
+                            <div key={info.id} className="relative flex flex-col flex-1 mb-2 border border-nostr rounded px-1">
                                 <span>
                                     {info.name ? info.name : info.id} - {info.cost}
                                 </span>
@@ -333,7 +333,9 @@ function NewProductDialog(props: { modalRef: RefObject<HTMLDialogElement>; stall
                             Select the stall for your product
                         </option>
                         {props.stalls.map(stall => (
-                            <option value={stall.content.id}>{stall.content.name}</option>
+                            <option key={stall.content.id} value={stall.content.id}>
+                                {stall.content.name}
+                            </option>
                         ))}
                     </select>
                 </div>
@@ -373,7 +375,7 @@ function NewProductDialog(props: { modalRef: RefObject<HTMLDialogElement>; stall
                     <div className="basis-full p-2 border-nostr border shadow shadow-nostr rounded-lg text-white">
                         <span className="block text-center mb-2">Extra shipping cost</span>
                         {selectedStall.content.shipping.map(s => (
-                            <label className="grid grid-cols-1 sm:grid-cols-2 gap-2 relative border-nostr border p-2 rounded">
+                            <label key={s.id} className="grid grid-cols-1 sm:grid-cols-2 gap-2 relative border-nostr border p-2 rounded">
                                 {s.name ?? s.id}
                                 <input
                                     type="number"
