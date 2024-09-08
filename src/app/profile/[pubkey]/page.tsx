@@ -495,12 +495,9 @@ export default function Profile(props: { params: { pubkey: string } }) {
                 </div>
             ) : null}
             <div className="mt-8 flex flex-col gap-12">
-                {stalls
-                    // Needed to deduplicate stalls
-                    .filter((stall, index, array) => array.findIndex(s => s.id === stall.id) === index)
-                    .map(stall => (
-                        <UserStall key={stall.content.id} stall={stall} />
-                    ))}
+                {stalls.map(stall => (
+                    <UserStall key={stall.content.id} stall={stall} />
+                ))}
             </div>
             <NewStallDialog modalRef={newStallModalRef} />
             <NewProductDialog modalRef={newProductModalRef} stalls={stalls} />

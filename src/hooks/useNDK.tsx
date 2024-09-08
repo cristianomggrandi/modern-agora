@@ -253,6 +253,7 @@ export function NDKContextProvider({ children }: { children: any }) {
 
     const [isSubscribedToStalls, setIsSubscribedToStalls] = useState(false)
     const fetchedStalls = useRef<NDKParsedStallEvent[]>([])
+    const stallsSubscription = useRef<NDKSubscription | undefined>(undefined)
 
     const subscribeToStalls = () => setIsSubscribedToStalls(true)
 
@@ -268,6 +269,7 @@ export function NDKContextProvider({ children }: { children: any }) {
 
     const [isSubscribedToProducts, setIsSubscribedToProducts] = useState(false)
     const fetchedProducts = useRef<NDKParsedProductEvent[]>(products ?? [])
+    const productsSubscription = useRef<NDKSubscription | undefined>(undefined)
 
     const subscribeToProducts = () => setIsSubscribedToProducts(true)
 
@@ -284,6 +286,7 @@ export function NDKContextProvider({ children }: { children: any }) {
 
     const [isSubscribedToAuctions, setIsSubscribedToAuctions] = useState(false)
     const fetchedAuctions = useRef<NDKParsedAuctionEvent[]>([])
+    const auctionsSubscription = useRef<NDKSubscription | undefined>(undefined)
 
     const subscribeToAuctions = () => setIsSubscribedToAuctions(true)
 
@@ -308,19 +311,13 @@ export function NDKContextProvider({ children }: { children: any }) {
     }
 
     // TODO: Maybe center all intervals in only one
-
     useEffect(() => {
         let stallsInterval: NodeJS.Timeout
-        let stallsSubscription: NDKSubscription | undefined = undefined
-
         let productsInterval: NodeJS.Timeout
-        let productsSubscription: NDKSubscription | undefined = undefined
-
         let auctionsInterval: NodeJS.Timeout
-        let auctionsSubscription: NDKSubscription | undefined = undefined
 
-        if (ndk && isSubscribedToStalls && !stallsSubscription) {
-            stallsSubscription = subscribeAndHandle({ kinds: [NDKKind.MarketStall] }, handleNewStall, { closeOnEose: true })
+        if (ndk && isSubscribedToStalls && !stallsSubscription.current) {
+            stallsSubscription.current = subscribeAndHandle({ kinds: [NDKKind.MarketStall] }, handleNewStall, { closeOnEose: true })
 
             stallsInterval = setInterval(() => {
                 setStalls(prev => {
@@ -331,8 +328,8 @@ export function NDKContextProvider({ children }: { children: any }) {
             }, 1000)
         }
 
-        if (ndk && isSubscribedToProducts && !productsSubscription) {
-            productsSubscription = subscribeAndHandle({ kinds: [NDKKind.MarketProduct] }, handleNewProduct, { closeOnEose: true })
+        if (ndk && isSubscribedToProducts && !productsSubscription.current) {
+            productsSubscription.current = subscribeAndHandle({ kinds: [NDKKind.MarketProduct] }, handleNewProduct, { closeOnEose: true })
 
             productsInterval = setInterval(() => {
                 setProducts(prev => {
@@ -343,8 +340,8 @@ export function NDKContextProvider({ children }: { children: any }) {
             }, 1000)
         }
 
-        if (ndk && isSubscribedToAuctions && !auctionsSubscription) {
-            auctionsSubscription = subscribeAndHandle({ kinds: [30020 as NDKKind] }, handleNewAuction, { closeOnEose: true })
+        if (ndk && isSubscribedToAuctions && !auctionsSubscription.current) {
+            auctionsSubscription.current = subscribeAndHandle({ kinds: [30020 as NDKKind] }, handleNewAuction, { closeOnEose: true })
 
             auctionsInterval = setInterval(() => {
                 setAuctions(prev => {
@@ -356,14 +353,14 @@ export function NDKContextProvider({ children }: { children: any }) {
         }
 
         return () => {
-            if (productsSubscription) productsSubscription.stop()
+            if (stallsSubscription.current) stallsSubscription.current.stop()
+            clearInterval(stallsInterval)
+
+            if (productsSubscription.current) productsSubscription.current.stop()
             clearInterval(productsInterval)
 
-            if (auctionsSubscription) auctionsSubscription.stop()
+            if (auctionsSubscription.current) auctionsSubscription.current.stop()
             clearInterval(auctionsInterval)
-
-            if (stallsSubscription) stallsSubscription.stop()
-            clearInterval(stallsInterval)
         }
     }, [isSubscribedToStalls, isSubscribedToProducts, isSubscribedToAuctions])
 
