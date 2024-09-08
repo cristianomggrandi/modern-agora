@@ -26,6 +26,11 @@ body {
     .text-balance {
         text-wrap: balance;
     }
+
+    .flex-2 {
+        @apply flex-1;
+        flex-grow: 2;
+    }
 }
 
 @layer base {

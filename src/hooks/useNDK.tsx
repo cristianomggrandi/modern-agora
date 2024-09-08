@@ -18,13 +18,17 @@ import NDK, {
     NDKTag,
     NDKUser,
 } from "@nostr-dev-kit/ndk"
-import { createContext, Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from "react"
+import { createContext, useContext, useEffect, useRef, useState } from "react"
 
 export type NDKParsedProductEvent = ReturnType<typeof addContentToProductEvent>
 
 export type NDKParsedAuctionEvent = ReturnType<typeof addContentToAuctionEvent>
 
 export type NDKParsedStallEvent = ReturnType<typeof addContentToStallEvent>
+
+export type NDKParsedPMEvent = NDKEvent
+
+export type MessageByPubkeyMap = Map<string, { messages: NDKParsedPMEvent[] }>
 
 type NDKContextType = {
     ndk?: NDK
@@ -41,18 +45,19 @@ type NDKContextType = {
     publishEvent: ({ content, kind, tags }: { content: string; kind: NDKKind; tags: NDKTag[] }) => void
 
     stalls: NDKParsedStallEvent[]
-    setStalls: Dispatch<SetStateAction<NDKParsedStallEvent[]>>
     subscribeToStalls: () => void
 
     products: NDKParsedProductEvent[]
-    setProducts: Dispatch<SetStateAction<NDKParsedProductEvent[]>>
     productsByStall: Map<string, NDKParsedProductEvent[]>
     subscribeToProducts: () => void
 
     auctions: NDKParsedAuctionEvent[]
-    setAuctions: Dispatch<SetStateAction<NDKParsedAuctionEvent[]>>
     auctionsByStall: Map<string, NDKParsedAuctionEvent[]>
     subscribeToAuctions: () => void
+
+    privateMessages: NDKParsedPMEvent[]
+    subscribeToPrivateMessages: () => void
+    messagesByPubkey: MessageByPubkeyMap
 }
 
 // export type NDKParsedConfirmationBidEvent = ReturnType<typeof addContentToConfirmationBidEvent>
@@ -164,6 +169,14 @@ const addAuctionToStall = (auctionEvent: NDKParsedAuctionEvent, auctionsByStall:
     auctionsByStall.set(auctionEvent.content.stall_id, stallAuctions)
 }
 
+const addMessageToPubkey = (privateMessageEvent: NDKParsedPMEvent, messagesByPubkey: MessageByPubkeyMap, pubkey: string) => {
+    const chat = messagesByPubkey.get(pubkey) ?? { messages: [] }
+
+    if (chat) chat.messages.push(privateMessageEvent)
+
+    messagesByPubkey.set(pubkey, chat)
+}
+
 const orderAuctions = (event: NDKParsedAuctionEvent, prev: NDKParsedAuctionEvent[]) => {
     if (!event.content) return prev
 
@@ -196,6 +209,10 @@ export function NDKContextProvider({ children }: { children: any }) {
 
     const [auctions, setAuctions] = useState<NDKParsedAuctionEvent[]>([])
     const auctionsByStall = useRef<Map<string, NDKParsedAuctionEvent[]>>(new Map())
+
+    const [privateMessages, setPrivateMessage] = useState<NDKParsedPMEvent[]>([])
+    // TODO: Maybe change to chatByPubkey
+    const messagesByPubkey = useRef<MessageByPubkeyMap>(new Map())
 
     const [bids] = useState<AuctionBids>(new Map())
     const [bidStatus] = useState(new Map<string, "accepted" | "rejected" | "pending" | "winner">())
@@ -301,6 +318,33 @@ export function NDKContextProvider({ children }: { children: any }) {
         } catch (error) {}
     }
 
+    const [isSubscribedToPrivateMessages, setIsSubscribedToPrivateMessages] = useState(false)
+    const fetchedPrivateMessage = useRef<NDKParsedPMEvent[]>([])
+    const sentPrivateMessageSubscription = useRef<NDKSubscription | undefined>(undefined)
+    const receivedPrivateMessageSubscription = useRef<NDKSubscription | undefined>(undefined)
+
+    const subscribeToPrivateMessages = () => setIsSubscribedToPrivateMessages(true)
+
+    const handleNewPM = async (privateMessageEvent: NDKEvent) => {
+        try {
+            // TODO: Parse sales and other events
+            // const parsedPM = addContentToPMEvent(auctionEvent)
+            const isSentByUser = privateMessageEvent.pubkey === user!.pubkey
+            const messageTargetPubkey = privateMessageEvent.tags.find(([k, v]) => k === "p" && v && v !== "")![1]
+            const decryptPubkey = isSentByUser ? messageTargetPubkey : privateMessageEvent.pubkey
+
+            const decryptedContent = await window!.nostr!.nip04!.decrypt(decryptPubkey, privateMessageEvent.content)
+
+            privateMessageEvent.content = decryptedContent
+
+            // TODO: Order messages by created_at
+            // orderPrivateMessage(parsedPM, fetchedPrivateMessage.current)
+            fetchedPrivateMessage.current.push(privateMessageEvent)
+
+            addMessageToPubkey(privateMessageEvent, messagesByPubkey.current, decryptPubkey)
+        } catch (error) {}
+    }
+
     const publishEvent = ({ content, kind, tags }: { content: string; kind: NDKKind; tags: NDKTag[] }) => {
         const ndkEvent = new NDKEvent(ndk)
 
@@ -315,41 +359,65 @@ export function NDKContextProvider({ children }: { children: any }) {
         let stallsInterval: NodeJS.Timeout
         let productsInterval: NodeJS.Timeout
         let auctionsInterval: NodeJS.Timeout
+        let pmsInterval: NodeJS.Timeout
 
-        if (ndk && isSubscribedToStalls && !stallsSubscription.current) {
-            stallsSubscription.current = subscribeAndHandle({ kinds: [NDKKind.MarketStall] }, handleNewStall, { closeOnEose: true })
+        if (ndk) {
+            if (isSubscribedToStalls && !stallsSubscription.current) {
+                stallsSubscription.current = subscribeAndHandle({ kinds: [NDKKind.MarketStall] }, handleNewStall, { closeOnEose: true })
 
-            stallsInterval = setInterval(() => {
-                setStalls(prev => {
-                    if (fetchedStalls.current.length && fetchedStalls.current.length === prev.length) clearInterval(stallsInterval)
+                stallsInterval = setInterval(() => {
+                    setStalls(prev => {
+                        if (fetchedStalls.current.length && fetchedStalls.current.length === prev.length) clearInterval(stallsInterval)
 
-                    return fetchedStalls.current
+                        return fetchedStalls.current
+                    })
+                }, 1000)
+            }
+
+            if (isSubscribedToProducts && !productsSubscription.current) {
+                productsSubscription.current = subscribeAndHandle({ kinds: [NDKKind.MarketProduct] }, handleNewProduct, {
+                    closeOnEose: true,
                 })
-            }, 1000)
-        }
 
-        if (ndk && isSubscribedToProducts && !productsSubscription.current) {
-            productsSubscription.current = subscribeAndHandle({ kinds: [NDKKind.MarketProduct] }, handleNewProduct, { closeOnEose: true })
+                productsInterval = setInterval(() => {
+                    setProducts(prev => {
+                        if (fetchedProducts.current === prev) clearInterval(productsInterval)
 
-            productsInterval = setInterval(() => {
-                setProducts(prev => {
-                    if (fetchedProducts.current === prev) clearInterval(productsInterval)
+                        return fetchedProducts.current
+                    })
+                }, 1000)
+            }
 
-                    return fetchedProducts.current
-                })
-            }, 1000)
-        }
+            if (isSubscribedToAuctions && !auctionsSubscription.current) {
+                auctionsSubscription.current = subscribeAndHandle({ kinds: [30020 as NDKKind] }, handleNewAuction, { closeOnEose: true })
 
-        if (ndk && isSubscribedToAuctions && !auctionsSubscription.current) {
-            auctionsSubscription.current = subscribeAndHandle({ kinds: [30020 as NDKKind] }, handleNewAuction, { closeOnEose: true })
+                auctionsInterval = setInterval(() => {
+                    setAuctions(prev => {
+                        if (fetchedAuctions.current === prev) clearInterval(auctionsInterval)
 
-            auctionsInterval = setInterval(() => {
-                setAuctions(prev => {
-                    if (fetchedAuctions.current === prev) clearInterval(auctionsInterval)
+                        return fetchedAuctions.current
+                    })
+                }, 1000)
+            }
 
-                    return fetchedAuctions.current
-                })
-            }, 1000)
+            if (user && isSubscribedToPrivateMessages && !sentPrivateMessageSubscription.current) {
+                sentPrivateMessageSubscription.current = subscribeAndHandle(
+                    { kinds: [NDKKind.EncryptedDirectMessage], authors: [user.pubkey] },
+                    handleNewPM
+                )
+                receivedPrivateMessageSubscription.current = subscribeAndHandle(
+                    { kinds: [NDKKind.EncryptedDirectMessage], "#p": [user.pubkey] },
+                    handleNewPM
+                )
+
+                pmsInterval = setInterval(() => {
+                    setPrivateMessage(prev => {
+                        if (fetchedPrivateMessage.current === prev) clearInterval(pmsInterval)
+
+                        return fetchedPrivateMessage.current
+                    })
+                }, 1000)
+            }
         }
 
         return () => {
@@ -362,7 +430,9 @@ export function NDKContextProvider({ children }: { children: any }) {
             if (auctionsSubscription.current) auctionsSubscription.current.stop()
             clearInterval(auctionsInterval)
         }
-    }, [isSubscribedToStalls, isSubscribedToProducts, isSubscribedToAuctions])
+    }, [user, isSubscribedToStalls, isSubscribedToProducts, isSubscribedToAuctions])
+
+    console.log("privateMessages", messagesByPubkey.current)
 
     return (
         <NDKContext.Provider
@@ -377,18 +447,19 @@ export function NDKContextProvider({ children }: { children: any }) {
                 publishEvent,
 
                 stalls,
-                setStalls,
                 subscribeToStalls,
 
                 products,
-                setProducts,
                 productsByStall: productsByStall.current,
                 subscribeToProducts,
 
                 auctions,
-                setAuctions,
                 auctionsByStall: auctionsByStall.current,
                 subscribeToAuctions,
+
+                privateMessages,
+                subscribeToPrivateMessages,
+                messagesByPubkey: messagesByPubkey.current,
             }}
         >
             {children}
@@ -438,6 +509,14 @@ export function useBidStatus() {
     // TODO: Filter bids that are confirmed
 
     return context.bidStatus
+}
+
+export function useMessagesByPubkey() {
+    const context = useContext(NDKContext)
+
+    if (!context) throw new Error("useMessagesByPubkey must be within a Context Provider")
+
+    return context.messagesByPubkey
 }
 
 export function useLogin() {

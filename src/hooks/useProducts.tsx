@@ -2,7 +2,6 @@ import { useEffect } from "react"
 import { useNDKContext } from "./useNDK"
 
 export default function useProducts() {
-    // TODO: Maybe remove ndk on all dependency arrays and change to an interval on "subscribeToProducts"
     const { products, subscribeToProducts } = useNDKContext()
 
     useEffect(() => {
