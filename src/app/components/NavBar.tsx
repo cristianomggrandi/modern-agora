@@ -62,7 +62,7 @@ export default function NavBar() {
                     </li>
                 </ul>
             </nav>
-            <div className="profile">
+            <div className="profile h-full">
                 <HeaderUser />
             </div>
         </header>
