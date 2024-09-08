@@ -45,7 +45,7 @@ export default function Orders() {
         <main className="p-8 flex gap-12">
             <div className="w-1/3 rounded-lg bg-light">
                 {orderedChats.map(chat => (
-                    <div className="flex flex-col mb-4" onClick={() => setSelectedChat(chat.pubkey)}>
+                    <div key={chat.pubkey} className="flex flex-col mb-4" onClick={() => setSelectedChat(chat.pubkey)}>
                         <span className="text-ellipsis overflow-hidden">{chat.lastMessage.content}</span>
                         <span className="text-ellipsis overflow-hidden">{chat.lastMessage.created_at}</span>
                         <span className="text-ellipsis overflow-hidden">{chat.username ?? chat.pubkey}</span>
