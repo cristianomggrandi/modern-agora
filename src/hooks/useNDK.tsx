@@ -174,6 +174,7 @@ const addMessageToPubkey = (privateMessageEvent: NDKParsedPMEvent, messagesByPub
 
     if (chat) chat.messages.push(privateMessageEvent)
 
+    // TODO: Check if it is necessary to always set or only when there isn't one already
     messagesByPubkey.set(pubkey, chat)
 }
 
