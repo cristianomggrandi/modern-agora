@@ -430,9 +430,7 @@ export function NDKContextProvider({ children }: { children: any }) {
             if (auctionsSubscription.current) auctionsSubscription.current.stop()
             clearInterval(auctionsInterval)
         }
-    }, [user, isSubscribedToStalls, isSubscribedToProducts, isSubscribedToAuctions])
-
-    console.log("privateMessages", messagesByPubkey.current)
+    }, [user, isSubscribedToStalls, isSubscribedToProducts, isSubscribedToAuctions, isSubscribedToPrivateMessages])
 
     return (
         <NDKContext.Provider

@@ -53,7 +53,12 @@ export default function Orders() {
                 ))}
             </div>
             <div className="w-2/3 rounded-lg bg-light">
-                {selectedChat ? chatByPubkey.get(selectedChat)?.messages.map(e => <div key={e.id}>{e.content}</div>) : <div>Teste</div>}
+                {selectedChat ? (
+                    chatByPubkey.get(selectedChat)?.messages.map(e => <div key={e.id}>{e.content}</div>)
+                ) : (
+                    // TODO:
+                    <div className="w-full h-full flex items-center justify-center">TODO</div>
+                )}
             </div>
         </main>
     )
