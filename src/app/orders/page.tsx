@@ -1,11 +1,11 @@
 "use client"
 
-import { useMessagesByPubkey, useUser } from "@/hooks/useNDK"
+import useNDK, { useMessagesByPubkey, useUser } from "@/hooks/useNDK"
 import useUserByPubkey from "@/hooks/useUserByPubkey"
 import { faPaperPlane } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { NDKEvent } from "@nostr-dev-kit/ndk"
-import { useMemo, useState } from "react"
+import { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
+import { SyntheticEvent, useMemo, useRef, useState } from "react"
 
 type ChatType = {
     pubkey: string
@@ -43,10 +43,12 @@ const Message = ({ event }: { event: NDKEvent }) => {
     )
 }
 
-const Chat = ({ selectedChat }: { selectedChat: string }) => {
+const Chat = ({ chatPubkey }: { chatPubkey: string }) => {
+    const ndk = useNDK()
     const chatByPubkey = useMessagesByPubkey()
+    const messageTextRef = useRef<HTMLInputElement>(null)
 
-    const chat = chatByPubkey.get(selectedChat)
+    const chat = chatByPubkey.get(chatPubkey)
 
     if (!chat) return <div className="w-full h-full flex items-center justify-center">TODO</div>
 
@@ -57,6 +59,34 @@ const Chat = ({ selectedChat }: { selectedChat: string }) => {
         return b.created_at - a.created_at
     })
 
+    const sendMessage = async (e: SyntheticEvent) => {
+        // TODO: Move to NDKContext
+        e.preventDefault()
+
+        if (!ndk) return
+
+        const ndkEvent = new NDKEvent(ndk)
+
+        const pubkey = await window.nostr?.getPublicKey()
+
+        if (!pubkey) throw new Error("Pubkey not found!")
+
+        const message = messageTextRef.current?.value
+
+        if (!message) return
+
+        const encryptedMessage = await window.nostr?.nip04?.encrypt(chatPubkey, message)
+
+        if (!encryptedMessage) throw new Error("Error encrypting message")
+
+        ndkEvent.kind = NDKKind.EncryptedDirectMessage
+        ndkEvent.content = encryptedMessage
+        ndkEvent.tags = [["p", chatPubkey]]
+        ndkEvent.publish()
+
+        messageTextRef.current.value = ""
+    }
+
     return (
         <div className="bg-dark absolute inset-0 flex flex-col gap-3">
             <div className="flex flex-col-reverse gap-2 overflow-y-auto h-full no-scrollbar">
@@ -64,12 +94,12 @@ const Chat = ({ selectedChat }: { selectedChat: string }) => {
                     <Message key={e.id} event={e} />
                 ))}
             </div>
-            <div className="flex rounded-lg bg-light h-12 p-2 gap-2">
-                <input className="w-full bg-nostr p-1 px-2 rounded-md" placeholder="New message" />
-                <button className="h-full aspect-square rounded-full">
+            <form onSubmit={sendMessage} className="flex rounded-lg bg-light h-12 p-2 gap-2">
+                <input ref={messageTextRef} className="w-full bg-nostr p-1 px-2 rounded-md" placeholder="New message" />
+                <button type="submit" className="h-full aspect-square rounded-full">
                     <FontAwesomeIcon icon={faPaperPlane} size="lg" />
                 </button>
-            </div>
+            </form>
         </div>
     )
 }
@@ -125,7 +155,7 @@ export default function Orders() {
             </div>
             <div className="w-2/3 overflow-hidden relative">
                 {selectedChat ? (
-                    <Chat selectedChat={selectedChat} />
+                    <Chat chatPubkey={selectedChat} />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center">TODO</div>
                 )}
