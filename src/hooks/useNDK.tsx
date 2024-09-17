@@ -330,6 +330,9 @@ export function NDKContextProvider({ children }: { children: any }) {
             // const parsedPM = addContentToPMEvent(auctionEvent)
             const isSentByUser = privateMessageEvent.pubkey === user!.pubkey
             const messageTargetPubkey = privateMessageEvent.tags.find(([k, v]) => k === "p" && v && v !== "")![1]
+
+            if (user!.pubkey === messageTargetPubkey && fetchedPrivateMessage.current.find(m => m.id === privateMessageEvent.id)) return
+
             const decryptPubkey = isSentByUser ? messageTargetPubkey : privateMessageEvent.pubkey
 
             const decryptedContent = await window!.nostr!.nip04!.decrypt(decryptPubkey, privateMessageEvent.content)
