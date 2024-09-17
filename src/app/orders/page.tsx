@@ -2,6 +2,8 @@
 
 import { useMessagesByPubkey, useUser } from "@/hooks/useNDK"
 import useUserByPubkey from "@/hooks/useUserByPubkey"
+import { faPaperPlane } from "@fortawesome/free-solid-svg-icons"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { NDKEvent } from "@nostr-dev-kit/ndk"
 import { useMemo, useState } from "react"
 
@@ -32,15 +34,13 @@ const Message = ({ event }: { event: NDKEvent }) => {
 
     return (
         <div className={`flex p-2 px-4 rounded max-w-[80%] w-fit ${isSent ? "bg-nostr self-end" : "bg-light"}`}>
-            <span>{event.content}</span>
+            <span className="break-words break-all">{event.content}</span>
         </div>
     )
 }
 
-const Chat = ({ selectedChat }: { selectedChat?: string }) => {
+const Chat = ({ selectedChat }: { selectedChat: string }) => {
     const chatByPubkey = useMessagesByPubkey()
-
-    if (!selectedChat) return <div className="w-full h-full flex items-center justify-center">TODO</div>
 
     const chat = chatByPubkey.get(selectedChat)
 
@@ -50,14 +50,22 @@ const Chat = ({ selectedChat }: { selectedChat?: string }) => {
         if (!a.created_at) return 1
         if (!b.created_at) return -1
 
-        return a.created_at - b.created_at
+        return b.created_at - a.created_at
     })
 
     return (
-        <div className="bg-dark flex flex-col gap-2 overflow-y-auto h-full absolute inset-0 no-scrollbar">
-            {sortedMessages.map(e => (
-                <Message key={e.id} event={e} />
-            ))}
+        <div className="bg-dark absolute inset-0 flex flex-col gap-2">
+            <div className="flex flex-col-reverse gap-2 overflow-y-auto h-full no-scrollbar">
+                {sortedMessages.map(e => (
+                    <Message key={e.id} event={e} />
+                ))}
+            </div>
+            <div className="flex rounded-lg bg-light h-12 p-2 gap-2">
+                <input className="w-full bg-nostr p-1 rounded-md" placeholder="New message" />
+                <button className="h-full aspect-square">
+                    <FontAwesomeIcon icon={faPaperPlane} size="lg" />
+                </button>
+            </div>
         </div>
     )
 }
@@ -112,7 +120,11 @@ export default function Orders() {
                 </div>
             </div>
             <div className="w-2/3 overflow-hidden relative">
-                <Chat selectedChat={selectedChat} />
+                {selectedChat ? (
+                    <Chat selectedChat={selectedChat} />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center">TODO</div>
+                )}
             </div>
         </main>
     )
