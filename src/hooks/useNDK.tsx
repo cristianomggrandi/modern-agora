@@ -230,8 +230,6 @@ export function NDKContextProvider({ children }: { children: any }) {
                 if (!userProfile) throw new Error("User profile not found")
 
                 setUser(user)
-
-                localStorage.setItem("user", JSON.stringify(user))
             })
         })
     }
@@ -357,10 +355,10 @@ export function NDKContextProvider({ children }: { children: any }) {
 
     // TODO: Maybe center all intervals in only one
     useEffect(() => {
-        let stallsInterval: NodeJS.Timeout
-        let productsInterval: NodeJS.Timeout
-        let auctionsInterval: NodeJS.Timeout
-        let pmsInterval: NodeJS.Timeout
+        let stallsInterval: NodeJS.Timeout | undefined
+        let productsInterval: NodeJS.Timeout | undefined
+        let auctionsInterval: NodeJS.Timeout | undefined
+        let pmsInterval: NodeJS.Timeout | undefined
 
         if (ndk) {
             if (isSubscribedToStalls && !stallsSubscription.current) {
@@ -390,7 +388,7 @@ export function NDKContextProvider({ children }: { children: any }) {
             }
 
             if (isSubscribedToAuctions && !auctionsSubscription.current) {
-                auctionsSubscription.current = subscribeAndHandle({ kinds: [30020 as NDKKind] }, handleNewAuction, { closeOnEose: true })
+                auctionsSubscription.current = subscribeAndHandle({ kinds: [30020 as NDKKind] }, handleNewAuction)
 
                 auctionsInterval = setInterval(() => {
                     setAuctions(prev => {
@@ -404,32 +402,41 @@ export function NDKContextProvider({ children }: { children: any }) {
             if (user && isSubscribedToPrivateMessages && !sentPrivateMessageSubscription.current) {
                 sentPrivateMessageSubscription.current = subscribeAndHandle(
                     { kinds: [NDKKind.EncryptedDirectMessage], authors: [user.pubkey] },
-                    handleNewPM
+                    handleNewPM,
+                    { closeOnEose: false }
                 )
                 receivedPrivateMessageSubscription.current = subscribeAndHandle(
                     { kinds: [NDKKind.EncryptedDirectMessage], "#p": [user.pubkey] },
-                    handleNewPM
+                    handleNewPM,
+                    { closeOnEose: false }
                 )
 
+                // TODO: Still not keeping connection alive
                 pmsInterval = setInterval(() => {
                     setPrivateMessage(prev => {
-                        if (fetchedPrivateMessage.current === prev) clearInterval(pmsInterval)
+                        // if (fetchedPrivateMessage.current === prev) clearInterval(pmsInterval)
 
                         return fetchedPrivateMessage.current
                     })
                 }, 1000)
             }
+
+            if (pmsInterval && !isSubscribedToPrivateMessages) clearInterval(pmsInterval)
         }
 
         return () => {
-            if (stallsSubscription.current) stallsSubscription.current.stop()
+            stallsSubscription.current?.stop()
             clearInterval(stallsInterval)
 
-            if (productsSubscription.current) productsSubscription.current.stop()
+            productsSubscription.current?.stop()
             clearInterval(productsInterval)
 
-            if (auctionsSubscription.current) auctionsSubscription.current.stop()
+            auctionsSubscription.current?.stop()
             clearInterval(auctionsInterval)
+
+            sentPrivateMessageSubscription.current?.stop()
+            receivedPrivateMessageSubscription.current?.stop()
+            clearInterval(pmsInterval)
         }
     }, [user, isSubscribedToStalls, isSubscribedToProducts, isSubscribedToAuctions, isSubscribedToPrivateMessages])
 
@@ -514,6 +521,9 @@ export function useMessagesByPubkey() {
     const context = useContext(NDKContext)
 
     if (!context) throw new Error("useMessagesByPubkey must be within a Context Provider")
+
+    // TODO: Change all hooks to do the same
+    context.subscribeToPrivateMessages()
 
     return context.messagesByPubkey
 }

@@ -1,9 +1,29 @@
 "use client"
 
 import { useMessagesByPubkey, useUser } from "@/hooks/useNDK"
-import usePrivateMessages from "@/hooks/usePrivateMessages"
+import useUserByPubkey from "@/hooks/useUserByPubkey"
 import { NDKEvent } from "@nostr-dev-kit/ndk"
 import { useMemo, useState } from "react"
+
+type ChatType = {
+    pubkey: string
+    messages: NDKEvent[]
+    lastMessage: NDKEvent
+    username: undefined
+}
+
+const ChatSelector = ({ chat, selectChat, isSelected }: { chat: ChatType; selectChat: () => void; isSelected: boolean }) => {
+    const user = useUserByPubkey(chat.pubkey)
+
+    return (
+        <div key={chat.pubkey} onClick={selectChat} className={`flex flex-col p-2 rounded-md ${isSelected ? "bg-nostr" : "bg-light"}`}>
+            <span className="text-ellipsis overflow-hidden">
+                {user?.profile?.nip05 ?? user?.profile?.displayName ?? user?.profile?.name ?? user?.npub ?? chat.pubkey}
+            </span>
+            <span className="text-ellipsis overflow-hidden">{chat.lastMessage.content}</span>
+        </div>
+    )
+}
 
 const Message = ({ event }: { event: NDKEvent }) => {
     const user = useUser()
@@ -30,9 +50,7 @@ const Chat = ({ selectedChat }: { selectedChat?: string }) => {
         if (!a.created_at) return 1
         if (!b.created_at) return -1
 
-        console.log("teste order", a.content, a.created_at, b.content, b.created_at)
-
-        return b.created_at - a.created_at
+        return a.created_at - b.created_at
     })
 
     return (
@@ -49,7 +67,7 @@ export default function Orders() {
     const [selectedChat, setSelectedChat] = useState<string | undefined>(undefined)
 
     // TODO: Change this to use a set for each chat (how to order?)
-    const orderedChats = useMemo(
+    const orderedChats: ChatType[] = useMemo(
         () =>
             Array.from(chatByPubkey)
                 .map(([pubkey, chat]) => {
@@ -84,15 +102,12 @@ export default function Orders() {
             <div className="w-1/3 rounded-lg overflow-y-scroll relative no-scrollbar">
                 <div className="bg-dark flex flex-col gap-2 rounded-lg absolute inset-0">
                     {orderedChats.map(chat => (
-                        <div
+                        <ChatSelector
                             key={chat.pubkey}
-                            className={`flex flex-col p-2 rounded-md ${selectedChat === chat.pubkey ? "bg-nostr" : "bg-light"}`}
-                            onClick={() => setSelectedChat(chat.pubkey)}
-                        >
-                            <span className="text-ellipsis overflow-hidden">{chat.lastMessage.content}</span>
-                            <span className="text-ellipsis overflow-hidden">{chat.lastMessage.created_at}</span>
-                            <span className="text-ellipsis overflow-hidden">{chat.username ?? chat.pubkey}</span>
-                        </div>
+                            chat={chat}
+                            selectChat={() => setSelectedChat(chat.pubkey)}
+                            isSelected={selectedChat === chat.pubkey}
+                        />
                     ))}
                 </div>
             </div>
