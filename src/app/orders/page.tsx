@@ -33,7 +33,11 @@ const Message = ({ event }: { event: NDKEvent }) => {
     const isSent = event.author.pubkey === user?.pubkey
 
     return (
-        <div className={`flex p-2 px-4 rounded max-w-[80%] w-fit ${isSent ? "bg-nostr self-end" : "bg-light"}`}>
+        <div
+            className={`flex p-2 px-4 rounded-lg max-w-[80%] w-fit ${
+                isSent ? "bg-nostr self-end rounded-br-none" : "bg-light rounded-bl-none"
+            }`}
+        >
             <span className="break-words break-all">{event.content}</span>
         </div>
     )
@@ -54,15 +58,15 @@ const Chat = ({ selectedChat }: { selectedChat: string }) => {
     })
 
     return (
-        <div className="bg-dark absolute inset-0 flex flex-col gap-2">
+        <div className="bg-dark absolute inset-0 flex flex-col gap-3">
             <div className="flex flex-col-reverse gap-2 overflow-y-auto h-full no-scrollbar">
                 {sortedMessages.map(e => (
                     <Message key={e.id} event={e} />
                 ))}
             </div>
             <div className="flex rounded-lg bg-light h-12 p-2 gap-2">
-                <input className="w-full bg-nostr p-1 rounded-md" placeholder="New message" />
-                <button className="h-full aspect-square">
+                <input className="w-full bg-nostr p-1 px-2 rounded-md" placeholder="New message" />
+                <button className="h-full aspect-square rounded-full">
                     <FontAwesomeIcon icon={faPaperPlane} size="lg" />
                 </button>
             </div>
@@ -106,7 +110,7 @@ export default function Orders() {
     )
 
     return (
-        <main className="p-8 flex gap-12">
+        <main className="p-4 flex gap-6">
             <div className="w-1/3 rounded-lg overflow-y-scroll relative no-scrollbar">
                 <div className="bg-dark flex flex-col gap-2 rounded-lg absolute inset-0">
                     {orderedChats.map(chat => (
