@@ -33,7 +33,7 @@ export type MessageByPubkeyMap = Map<string, { messages: NDKParsedPMEvent[] }>
 type NDKContextType = {
     ndk?: NDK
     subscribeAndHandle: (
-        filter: NDKFilter,
+        filters: NDKFilter | NDKFilter[],
         handler: (event: NDKEvent) => void,
         opts?: NDKSubscriptionOptions
     ) => NDKSubscription | undefined
@@ -252,17 +252,21 @@ export function NDKContextProvider({ children }: { children: any }) {
             .catch(error => console.error("ndk error connecting", error))
     }, [])
 
-    // TODO: Add closeOnEose (on opts)
     const subscribeAndHandle = (
-        filter: NDKFilter,
-        handler: (event: NDKEvent) => void,
+        filters: NDKFilter | NDKFilter[],
+        handler?: (event: NDKEvent) => void,
         opts: NDKSubscriptionOptions = { closeOnEose: true }
     ) => {
         if (!ndk) return
 
-        const sub = ndk.subscribe(filter, opts)
+        const sub = ndk.subscribe(filters, opts)
 
-        sub.on("event", (e: NDKEvent) => handler(e))
+        if (handler)
+            sub.on("event", (e: NDKEvent) => {
+                handler(e)
+            })
+
+        sub.on("eose", () => {})
 
         return sub
     }
@@ -320,7 +324,6 @@ export function NDKContextProvider({ children }: { children: any }) {
     const [isSubscribedToPrivateMessages, setIsSubscribedToPrivateMessages] = useState(false)
     const fetchedPrivateMessage = useRef<NDKParsedPMEvent[]>([])
     const sentPrivateMessageSubscription = useRef<NDKSubscription | undefined>(undefined)
-    const receivedPrivateMessageSubscription = useRef<NDKSubscription | undefined>(undefined)
 
     const subscribeToPrivateMessages = () => setIsSubscribedToPrivateMessages(true)
 
@@ -404,12 +407,10 @@ export function NDKContextProvider({ children }: { children: any }) {
 
             if (user && isSubscribedToPrivateMessages && !sentPrivateMessageSubscription.current) {
                 sentPrivateMessageSubscription.current = subscribeAndHandle(
-                    { kinds: [NDKKind.EncryptedDirectMessage], authors: [user.pubkey] },
-                    handleNewPM,
-                    { closeOnEose: false }
-                )
-                receivedPrivateMessageSubscription.current = subscribeAndHandle(
-                    { kinds: [NDKKind.EncryptedDirectMessage], "#p": [user.pubkey] },
+                    [
+                        { kinds: [NDKKind.EncryptedDirectMessage], authors: [user.pubkey] },
+                        { kinds: [NDKKind.EncryptedDirectMessage], "#p": [user.pubkey] },
+                    ],
                     handleNewPM,
                     { closeOnEose: false }
                 )
@@ -437,9 +438,8 @@ export function NDKContextProvider({ children }: { children: any }) {
             auctionsSubscription.current?.stop()
             clearInterval(auctionsInterval)
 
-            sentPrivateMessageSubscription.current?.stop()
-            receivedPrivateMessageSubscription.current?.stop()
-            clearInterval(pmsInterval)
+            // sentPrivateMessageSubscription.current?.stop()
+            // clearInterval(pmsInterval)
         }
     }, [user, isSubscribedToStalls, isSubscribedToProducts, isSubscribedToAuctions, isSubscribedToPrivateMessages])
 
