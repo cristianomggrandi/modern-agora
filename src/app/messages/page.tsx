@@ -3,14 +3,15 @@
 import useNDK, { useUser } from "@/hooks/useNDK"
 import { useMessagesByPubkey } from "@/hooks/usePrivateMessages"
 import useUserByPubkey from "@/hooks/useUserByPubkey"
-import { faPaperPlane } from "@fortawesome/free-solid-svg-icons"
+import { faArrowLeft, faPaperPlane } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
+import { NDKEvent, NDKKind, NDKUser } from "@nostr-dev-kit/ndk"
 import { SyntheticEvent, useRef, useState } from "react"
 
 type ChatType = {
     pubkey: string
     messages: NDKEvent[]
+    user: NDKUser | undefined
 }
 
 const ChatSelector = ({ chat, selectChat, isSelected }: { chat: ChatType; selectChat: () => void; isSelected: boolean }) => {
@@ -23,7 +24,7 @@ const ChatSelector = ({ chat, selectChat, isSelected }: { chat: ChatType; select
             className={`flex flex-col gap-1 p-2 rounded-md ${isSelected ? "bg-nostr" : "bg-light"}`}
         >
             <span className="text-ellipsis overflow-hidden">
-                {user?.profile?.nip05 ?? user?.profile?.displayName ?? user?.profile?.name ?? user?.npub ?? chat.pubkey}
+                {user?.profile?.displayName ?? user?.profile?.name ?? user?.profile?.nip05 ?? user?.npub ?? chat.pubkey}
             </span>
             {chat.messages.length ? (
                 <span className="text-sm text-ellipsis overflow-hidden line-clamp-1">{chat.messages[0].content}</span>
@@ -48,11 +49,12 @@ const Message = ({ event }: { event: NDKEvent }) => {
     )
 }
 
-const Chat = ({ messages, chatPubkey }: { messages: NDKEvent[]; chatPubkey: string }) => {
+const Chat = ({ chat, closeChat }: { chat: ChatType; closeChat: () => void }) => {
     const ndk = useNDK()
     const messageTextRef = useRef<HTMLInputElement>(null)
+    // const user = useUserByPubkey(chatPubkey)
 
-    if (!messages) return <div className="w-full h-full flex items-center justify-center">TODO</div>
+    if (!chat.messages) return <div className="w-full h-full flex items-center justify-center">TODO</div>
 
     const sendMessage = async (e: SyntheticEvent) => {
         // TODO: Move to NDKContext
@@ -70,13 +72,13 @@ const Chat = ({ messages, chatPubkey }: { messages: NDKEvent[]; chatPubkey: stri
 
         if (!message) return
 
-        const encryptedMessage = await window.nostr?.nip04?.encrypt(chatPubkey, message)
+        const encryptedMessage = await window.nostr?.nip04?.encrypt(chat.pubkey, message)
 
         if (!encryptedMessage) throw new Error("Error encrypting message")
 
         ndkEvent.kind = NDKKind.EncryptedDirectMessage
         ndkEvent.content = encryptedMessage
-        ndkEvent.tags = [["p", chatPubkey]]
+        ndkEvent.tags = [["p", chat.pubkey]]
         ndkEvent.publish()
 
         messageTextRef.current.value = ""
@@ -84,8 +86,20 @@ const Chat = ({ messages, chatPubkey }: { messages: NDKEvent[]; chatPubkey: stri
 
     return (
         <div className="bg-dark absolute inset-0 flex flex-col gap-3">
+            <div className="sm:hidden flex gap-3 bg-light p-[clamp(0.5rem,2vh,1rem)] rounded">
+                <button onClick={closeChat} className="rounded-full">
+                    <FontAwesomeIcon icon={faArrowLeft} size="xl" />
+                </button>
+                <span className="font-semibold text-[clamp(1.2rem,2vh,1.5rem)]">
+                    {chat.user?.profile?.displayName ??
+                        chat.user?.profile?.name ??
+                        chat.user?.profile?.nip05 ??
+                        chat.user?.npub ??
+                        chat.pubkey}
+                </span>
+            </div>
             <div className="flex flex-col-reverse gap-2 overflow-y-auto h-full no-scrollbar">
-                {messages.map(e => (
+                {chat.messages.map(e => (
                     <Message key={e.id} event={e} />
                 ))}
             </div>
@@ -101,7 +115,7 @@ const Chat = ({ messages, chatPubkey }: { messages: NDKEvent[]; chatPubkey: stri
 
 export default function Orders() {
     const chatByPubkey = useMessagesByPubkey()
-    const [selectedChat, setSelectedChat] = useState<string | undefined>(undefined)
+    const [selectedChat, setSelectedChat] = useState<number | undefined>(undefined)
 
     // TODO: Check if there is a way to optimize this
     const orderedChats: ChatType[] = Array.from(chatByPubkey)
@@ -109,26 +123,31 @@ export default function Orders() {
             // TODO: Try to change to npub (is it needed?)
             pubkey,
             messages: chat,
+            user: undefined,
         }))
         .toSorted((a, b) => b.messages[0].created_at! - a.messages[0].created_at!)
 
     return (
         <main className="p-4 flex gap-6">
-            <div className="w-1/3 rounded-lg overflow-y-scroll relative no-scrollbar">
+            <div
+                className={`${
+                    selectedChat !== undefined ? "hidden" : "block"
+                } sm:block w-full sm:w-1/3 rounded-lg overflow-y-scroll relative no-scrollbar`}
+            >
                 <div className="bg-dark flex flex-col gap-2 rounded-lg absolute inset-0">
-                    {orderedChats.map(chat => (
+                    {orderedChats.map((chat, index) => (
                         <ChatSelector
                             key={chat.pubkey}
                             chat={chat}
-                            selectChat={() => setSelectedChat(chat.pubkey)}
-                            isSelected={selectedChat === chat.pubkey}
+                            selectChat={() => setSelectedChat(index)}
+                            isSelected={selectedChat === index}
                         />
                     ))}
                 </div>
             </div>
-            <div className="w-2/3 overflow-hidden relative">
-                {selectedChat ? (
-                    <Chat messages={chatByPubkey.get(selectedChat)!} chatPubkey={selectedChat} />
+            <div className={`${selectedChat !== undefined ? "block" : "hidden"} sm:block w-full sm:w-2/3 overflow-hidden relative`}>
+                {selectedChat !== undefined ? (
+                    <Chat chat={orderedChats[selectedChat]} closeChat={() => setSelectedChat(undefined)} />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center">TODO</div>
                 )}
