@@ -1,7 +1,7 @@
 "use client"
 
 import { useLogin, useUser } from "@/hooks/useNDK"
-import { faBasketShopping, faShop, faUser } from "@fortawesome/free-solid-svg-icons"
+import { faBasketShopping, faUser } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import Link from "next/link"
 
@@ -56,15 +56,9 @@ export default function HeaderUser() {
                                 </Link>
                             </li>
                             <li>
-                                <Link className="flex items-center justify-start gap-2 px-2" href="/orders" onClick={handleCloseDropdown}>
+                                <Link className="flex items-center justify-start gap-2 px-2" href="/messages" onClick={handleCloseDropdown}>
                                     <FontAwesomeIcon className="w-8" icon={faBasketShopping} />
-                                    Orders
-                                </Link>
-                            </li>
-                            <li>
-                                <Link className="flex items-center justify-start gap-2 px-2" href="/sales" onClick={handleCloseDropdown}>
-                                    <FontAwesomeIcon className="w-8" icon={faShop} />
-                                    Sales
+                                    Orders/Sales
                                 </Link>
                             </li>
                         </ul>
