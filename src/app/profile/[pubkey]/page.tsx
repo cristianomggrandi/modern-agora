@@ -111,8 +111,6 @@ function NewStallDialog(props: { modalRef: RefObject<HTMLDialogElement> }) {
 
             const parsedStall = stallContentParser.parse(newStall)
 
-            console.log(parsedStall)
-
             e.target.reset()
             closeModal()
 
@@ -300,8 +298,6 @@ function NewProductDialog(props: { modalRef: RefObject<HTMLDialogElement>; stall
             }
 
             const parsedProduct = productContentParser.parse(newProduct)
-
-            console.log(parsedProduct)
 
             e.target.reset()
             closeModal()

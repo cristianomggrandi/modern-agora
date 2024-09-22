@@ -1,28 +1,33 @@
 "use client"
 
-import useNDK, { useMessagesByPubkey, useUser } from "@/hooks/useNDK"
+import useNDK, { useUser } from "@/hooks/useNDK"
+import { useMessagesByPubkey } from "@/hooks/usePrivateMessages"
 import useUserByPubkey from "@/hooks/useUserByPubkey"
 import { faPaperPlane } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
-import { SyntheticEvent, useMemo, useRef, useState } from "react"
+import { SyntheticEvent, useRef, useState } from "react"
 
 type ChatType = {
     pubkey: string
     messages: NDKEvent[]
-    lastMessage: NDKEvent
-    username: undefined
 }
 
 const ChatSelector = ({ chat, selectChat, isSelected }: { chat: ChatType; selectChat: () => void; isSelected: boolean }) => {
     const user = useUserByPubkey(chat.pubkey)
 
     return (
-        <div key={chat.pubkey} onClick={selectChat} className={`flex flex-col p-2 rounded-md ${isSelected ? "bg-nostr" : "bg-light"}`}>
+        <div
+            key={chat.pubkey}
+            onClick={selectChat}
+            className={`flex flex-col gap-1 p-2 rounded-md ${isSelected ? "bg-nostr" : "bg-light"}`}
+        >
             <span className="text-ellipsis overflow-hidden">
                 {user?.profile?.nip05 ?? user?.profile?.displayName ?? user?.profile?.name ?? user?.npub ?? chat.pubkey}
             </span>
-            <span className="text-ellipsis overflow-hidden">{chat.lastMessage.content}</span>
+            {chat.messages.length ? (
+                <span className="text-sm text-ellipsis overflow-hidden line-clamp-1">{chat.messages[0].content}</span>
+            ) : null}
         </div>
     )
 }
@@ -43,21 +48,11 @@ const Message = ({ event }: { event: NDKEvent }) => {
     )
 }
 
-const Chat = ({ chatPubkey }: { chatPubkey: string }) => {
+const Chat = ({ messages, chatPubkey }: { messages: NDKEvent[]; chatPubkey: string }) => {
     const ndk = useNDK()
-    const chatByPubkey = useMessagesByPubkey()
     const messageTextRef = useRef<HTMLInputElement>(null)
 
-    const chat = chatByPubkey.get(chatPubkey)
-
-    if (!chat) return <div className="w-full h-full flex items-center justify-center">TODO</div>
-
-    const sortedMessages = chat.messages.toSorted((a, b) => {
-        if (!a.created_at) return 1
-        if (!b.created_at) return -1
-
-        return b.created_at - a.created_at
-    })
+    if (!messages) return <div className="w-full h-full flex items-center justify-center">TODO</div>
 
     const sendMessage = async (e: SyntheticEvent) => {
         // TODO: Move to NDKContext
@@ -90,7 +85,7 @@ const Chat = ({ chatPubkey }: { chatPubkey: string }) => {
     return (
         <div className="bg-dark absolute inset-0 flex flex-col gap-3">
             <div className="flex flex-col-reverse gap-2 overflow-y-auto h-full no-scrollbar">
-                {sortedMessages.map(e => (
+                {messages.map(e => (
                     <Message key={e.id} event={e} />
                 ))}
             </div>
@@ -108,36 +103,14 @@ export default function Orders() {
     const chatByPubkey = useMessagesByPubkey()
     const [selectedChat, setSelectedChat] = useState<string | undefined>(undefined)
 
-    // TODO: Change this to use a set for each chat (how to order?)
-    const orderedChats: ChatType[] = useMemo(
-        () =>
-            Array.from(chatByPubkey)
-                .map(([pubkey, chat]) => {
-                    const lastMessage = chat.messages.reduce((acc, curr) => {
-                        if (!acc || !acc.created_at) return curr
-                        if (!curr.created_at) return acc
-
-                        if (curr.created_at > acc.created_at) return curr
-
-                        return acc
-                    })
-
-                    return {
-                        // TODO: Try to change to npub
-                        pubkey,
-                        messages: chat.messages,
-                        lastMessage,
-                        username: undefined,
-                    }
-                })
-                .toSorted((a, b) => {
-                    if (!a.lastMessage.created_at) return 1
-                    if (!b.lastMessage.created_at) return -1
-
-                    return b.lastMessage.created_at - a.lastMessage.created_at
-                }),
-        [chatByPubkey.size]
-    )
+    // TODO: Check if there is a way to optimize this
+    const orderedChats: ChatType[] = Array.from(chatByPubkey)
+        .map(([pubkey, chat]) => ({
+            // TODO: Try to change to npub (is it needed?)
+            pubkey,
+            messages: chat,
+        }))
+        .toSorted((a, b) => b.messages[0].created_at! - a.messages[0].created_at!)
 
     return (
         <main className="p-4 flex gap-6">
@@ -155,7 +128,7 @@ export default function Orders() {
             </div>
             <div className="w-2/3 overflow-hidden relative">
                 {selectedChat ? (
-                    <Chat chatPubkey={selectedChat} />
+                    <Chat messages={chatByPubkey.get(selectedChat)!} chatPubkey={selectedChat} />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center">TODO</div>
                 )}
