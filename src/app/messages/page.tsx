@@ -1,7 +1,7 @@
 "use client"
 
+import usePMStore from "@/hooks/privateMessagesStore"
 import useNDK, { useUser } from "@/hooks/useNDK"
-import { useMessagesByPubkey } from "@/hooks/usePrivateMessages"
 import useUserByPubkey from "@/hooks/useUserByPubkey"
 import { faArrowLeft, faPaperPlane } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -114,7 +114,7 @@ const Chat = ({ chat, closeChat }: { chat: ChatType; closeChat: () => void }) =>
 }
 
 export default function Orders() {
-    const chatByPubkey = useMessagesByPubkey()
+    const chatByPubkey = usePMStore(state => state.messagesByPubkey)
     const [selectedChat, setSelectedChat] = useState<number | undefined>(undefined)
 
     // TODO: Check if there is a way to optimize this
