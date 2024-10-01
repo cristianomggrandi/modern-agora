@@ -27,7 +27,7 @@ const addMessageToPubkey = (privateMessageEvent: NDKParsedPMEvent, messagesByPub
 const PrivateMessageContext = createContext<NDKContextType | null>(null)
 
 export default function PrivateMessageContextProvider(props: { children: ReactNode }) {
-    const connectedUser = useNDKStore(state => state.user)
+    const user = useNDKStore(state => state.user)
     const subscribeAndHandle = useSubscribe()
 
     const fetchedPrivateMessage = useRef<string[]>([])
