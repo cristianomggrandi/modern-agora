@@ -3,7 +3,7 @@
 import ParsedDescription from "@/app/components/ParsedDescription"
 import ProductImages from "@/app/components/ProductImages"
 import ProductTags from "@/app/components/ProductTags"
-import useNDK from "@/hooks/useNDK"
+import useNDKStore from "@/hooks/useNDKStore"
 import useProduct from "@/hooks/useProduct"
 import useStall from "@/hooks/useStall"
 import { NDKCheckoutContent } from "@/utils/ndk"
@@ -55,7 +55,7 @@ const handleBuy = async (e: React.FormEvent<HTMLFormElement>, ndk?: NDK) => {
 }
 
 export default function Product(props: { params: { productId: string } }) {
-    const ndk = useNDK()
+    const ndk = useNDKStore(state => state.ndk)
     const product = useProduct(props.params.productId)
     const stall = useStall(product?.content.stall_id)
 

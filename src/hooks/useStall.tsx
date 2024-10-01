@@ -1,10 +1,11 @@
 import { NDKKind } from "@nostr-dev-kit/ndk"
 import { useEffect, useState } from "react"
-import useNDK, { addContentToStallEvent, NDKParsedStallEvent } from "./useNDK"
+import { addContentToStallEvent, NDKParsedStallEvent } from "./useNDK"
+import useNDKStore from "./useNDKStore"
 import useStalls from "./useStalls"
 
 export default function useStall(stallId?: string) {
-    const ndk = useNDK()
+    const ndk = useNDKStore(state => state.ndk)
     const stalls = useStalls()
 
     const [stall, setStall] = useState<NDKParsedStallEvent>()

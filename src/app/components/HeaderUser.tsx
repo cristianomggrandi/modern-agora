@@ -1,13 +1,13 @@
 "use client"
 
-import { useLogin, useUser } from "@/hooks/useNDK"
+import useNDKStore from "@/hooks/useNDKStore"
 import { faBasketShopping, faUser } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import Link from "next/link"
 
 export default function HeaderUser() {
-    const user = useUser()
-    const loginWithNIP07 = useLogin()
+    const user = useNDKStore(state => state.user)
+    const loginWithNIP07 = useNDKStore(state => state.loginWithNIP07)
 
     if (!user || !user.profile)
         return (

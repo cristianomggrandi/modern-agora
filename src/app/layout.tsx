@@ -1,5 +1,6 @@
 import { PMContextProvider } from "@/hooks/privateMessagesStore"
-import { NDKContextProvider } from "@/hooks/useNDK"
+import { OLD_NDKContextProvider } from "@/hooks/useNDK"
+import { NDKContextProvider } from "@/hooks/useNDKStore"
 import { GeistSans } from "geist/font/sans"
 import type { Metadata } from "next"
 import NavBar from "./components/NavBar"
@@ -21,12 +22,12 @@ export default function RootLayout({
             <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
             <body className={GeistSans.className + " [&>main]:bg-dark [&>main]:flex-1 min-h-screen flex flex-col"}>
                 <NDKContextProvider>
-                    <PMContextProvider>
-                        {/* <PrivateMessageContextProvider> */}
-                        <NavBar />
-                        {children}
-                        {/* </PrivateMessageContextProvider> */}
-                    </PMContextProvider>
+                    <OLD_NDKContextProvider>
+                        <PMContextProvider>
+                            <NavBar />
+                            {children}
+                        </PMContextProvider>
+                    </OLD_NDKContextProvider>
                 </NDKContextProvider>
             </body>
         </html>

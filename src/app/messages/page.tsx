@@ -1,7 +1,7 @@
 "use client"
 
 import usePMStore from "@/hooks/privateMessagesStore"
-import useNDK, { useUser } from "@/hooks/useNDK"
+import useNDKStore from "@/hooks/useNDKStore"
 import useUserByPubkey from "@/hooks/useUserByPubkey"
 import { faArrowLeft, faPaperPlane } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -34,7 +34,7 @@ const ChatSelector = ({ chat, selectChat, isSelected }: { chat: ChatType; select
 }
 
 const Message = ({ event }: { event: NDKEvent }) => {
-    const user = useUser()
+    const user = useNDKStore(state => state.user)
 
     const isSent = event.author.pubkey === user?.pubkey
 
@@ -50,7 +50,7 @@ const Message = ({ event }: { event: NDKEvent }) => {
 }
 
 const Chat = ({ chat, closeChat }: { chat: ChatType; closeChat: () => void }) => {
-    const ndk = useNDK()
+    const ndk = useNDKStore(state => state.ndk)
     const messageTextRef = useRef<HTMLInputElement>(null)
     // const user = useUserByPubkey(chatPubkey)
 

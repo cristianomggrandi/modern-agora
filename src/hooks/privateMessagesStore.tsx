@@ -4,7 +4,8 @@ import { NDKEvent, NDKKind, NDKSubscription, NDKUser } from "@nostr-dev-kit/ndk"
 import { createContext, ReactNode, useContext, useEffect, useRef } from "react"
 import { useStore } from "zustand"
 import { createStore } from "zustand/vanilla"
-import useNDK, { NDKParsedPMEvent, useSubscribe, useUser } from "./useNDK"
+import { NDKParsedPMEvent, useSubscribe } from "./useNDK"
+import useNDKStore from "./useNDKStore"
 
 type PMStoreType = {
     messagesByPubkey: Map<string, NDKParsedPMEvent[]>
@@ -53,9 +54,9 @@ type PMStoreAPI = ReturnType<typeof createPMStore>
 const PMContext = createContext<PMStoreAPI | undefined>(undefined)
 
 export function PMContextProvider(props: { children: ReactNode }) {
-    const ndk = useNDK()
+    const ndk = useNDKStore(state => state.ndk)
+    const user = useNDKStore(state => state.user)
     const subscribeAndHandle = useSubscribe()
-    const user = useUser()
     const subscriptionRef = useRef<NDKSubscription>()
 
     const storeAPI = useRef<PMStoreAPI>()
@@ -76,8 +77,6 @@ export function PMContextProvider(props: { children: ReactNode }) {
                 e => store.handleNewPM(e, user),
                 { closeOnEose: false }
             )
-
-            console.log(subscriptionRef.current?.filters)
         }
     }, [ndk, user])
 

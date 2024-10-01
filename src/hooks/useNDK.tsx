@@ -8,17 +8,9 @@ import {
     getParsedProductContent,
     getParsedStallContent,
 } from "@/utils/ndk"
-import NDK, {
-    NDKEvent,
-    NDKFilter,
-    NDKKind,
-    NDKNip07Signer,
-    NDKSubscription,
-    NDKSubscriptionOptions,
-    NDKTag,
-    NDKUser,
-} from "@nostr-dev-kit/ndk"
+import { NDKEvent, NDKFilter, NDKKind, NDKSubscription, NDKSubscriptionOptions, NDKTag } from "@nostr-dev-kit/ndk"
 import { createContext, useContext, useEffect, useRef, useState } from "react"
+import useNDKStore from "./useNDKStore"
 
 export type NDKParsedProductEvent = ReturnType<typeof addContentToProductEvent>
 
@@ -31,7 +23,6 @@ export type NDKParsedPMEvent = NDKEvent
 export type MessageByPubkeyMap = Map<string, { messages: NDKParsedPMEvent[] }>
 
 type NDKContextType = {
-    ndk?: NDK
     subscribeAndHandle: (
         filters: NDKFilter | NDKFilter[],
         handler: (event: NDKEvent) => void,
@@ -39,8 +30,6 @@ type NDKContextType = {
     ) => NDKSubscription | undefined
     bids: AuctionBids
     bidStatus: Map<string, "accepted" | "rejected" | "pending" | "winner">
-    loginWithNIP07: () => void
-    user?: NDKUser
 
     publishEvent: ({ content, kind, tags }: { content: string; kind: NDKKind; tags: NDKTag[] }) => void
 
@@ -196,8 +185,9 @@ const orderAuctions = (event: NDKParsedAuctionEvent, prev: NDKParsedAuctionEvent
 
 const NDKContext = createContext<NDKContextType | null>(null)
 
-export function NDKContextProvider({ children }: { children: any }) {
-    const [ndk, setNdk] = useState<NDK>()
+export function OLD_NDKContextProvider({ children }: { children: any }) {
+    const ndk = useNDKStore(state => state.ndk)
+    const user = useNDKStore(state => state.user)
 
     const [products, setProducts] = useState<NDKParsedProductEvent[]>([])
     const productsByStall = useRef<Map<string, NDKParsedProductEvent[]>>(new Map())
@@ -209,40 +199,6 @@ export function NDKContextProvider({ children }: { children: any }) {
 
     const [bids] = useState<AuctionBids>(new Map())
     const [bidStatus] = useState(new Map<string, "accepted" | "rejected" | "pending" | "winner">())
-
-    const [user, setUser] = useState<NDKUser>()
-
-    const loginWithNIP07 = (ndkInstance: NDK | undefined = ndk) => {
-        if (!ndkInstance?.signer) throw new Error("No NDK NIP-07 Signer")
-
-        ndkInstance.signer.user().then(user => {
-            if (!user.npub) throw new Error("Failed to fetch for your user")
-
-            user.fetchProfile().then(userProfile => {
-                if (!userProfile) throw new Error("User profile not found")
-
-                setUser(user)
-            })
-        })
-    }
-
-    useEffect(() => {
-        const ndkTemp = window.nostr
-            ? new NDK({
-                  explicitRelayUrls: defaultRelays,
-                  signer: new NDKNip07Signer(),
-              })
-            : new NDK({
-                  explicitRelayUrls: defaultRelays,
-              })
-
-        setNdk(ndkTemp)
-
-        ndkTemp
-            .connect()
-            .then(() => loginWithNIP07(ndkTemp))
-            .catch(error => console.error("ndk error connecting", error))
-    }, [])
 
     const subscribeAndHandle = (
         filters: NDKFilter | NDKFilter[],
@@ -383,12 +339,12 @@ export function NDKContextProvider({ children }: { children: any }) {
     return (
         <NDKContext.Provider
             value={{
-                ndk,
+                // ndk,
                 subscribeAndHandle,
                 bids,
                 bidStatus,
-                loginWithNIP07,
-                user,
+                // loginWithNIP07,
+                // user,
 
                 publishEvent,
 
@@ -409,13 +365,13 @@ export function NDKContextProvider({ children }: { children: any }) {
     )
 }
 
-export default function useNDK() {
-    const context = useContext(NDKContext)
+// export default function useNDK() {
+//     const context = useContext(NDKContext)
 
-    if (!context) throw new Error("useNDK must be within a Context Provider")
+//     if (!context) throw new Error("useNDK must be within a Context Provider")
 
-    return context.ndk
-}
+//     return context.ndk
+// }
 
 export function useNDKContext() {
     const context = useContext(NDKContext)
@@ -453,21 +409,21 @@ export function useBidStatus() {
     return context.bidStatus
 }
 
-export function useLogin() {
-    const context = useContext(NDKContext)
+// export function useLogin() {
+//     const context = useContext(NDKContext)
 
-    if (!context) throw new Error("useLogin must be within a Context Provider")
+//     if (!context) throw new Error("useLogin must be within a Context Provider")
 
-    return context.loginWithNIP07
-}
+//     return context.loginWithNIP07
+// }
 
-export function useUser() {
-    const context = useContext(NDKContext)
+// export function useUser() {
+//     const context = useContext(NDKContext)
 
-    if (!context) throw new Error("useUser must be within a Context Provider")
+//     if (!context) throw new Error("useUser must be within a Context Provider")
 
-    return context.user
-}
+//     return context.user
+// }
 
 export function usePublishEvent() {
     const context = useContext(NDKContext)

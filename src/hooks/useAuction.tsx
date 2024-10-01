@@ -1,10 +1,11 @@
 import { NDKKind } from "@nostr-dev-kit/ndk"
 import { useEffect, useState } from "react"
 import useAuctions from "./useAuctions"
-import useNDK, { addContentToAuctionEvent, NDKParsedAuctionEvent } from "./useNDK"
+import { addContentToAuctionEvent, NDKParsedAuctionEvent } from "./useNDK"
+import useNDKStore from "./useNDKStore"
 
 export default function useAuction(auctionId: string) {
-    const ndk = useNDK()
+    const ndk = useNDKStore(state => state.ndk)
     const auctions = useAuctions()
 
     const getAuctionById = async (id: string) => {

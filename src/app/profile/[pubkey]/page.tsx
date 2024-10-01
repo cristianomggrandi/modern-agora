@@ -3,7 +3,8 @@
 import AuctionCard from "@/app/components/AuctionCard"
 import ProductCard from "@/app/components/ProductCard"
 import { useAuctionsByStall } from "@/hooks/useAuctions"
-import { NDKParsedStallEvent, usePublishEvent, useUser } from "@/hooks/useNDK"
+import { NDKParsedStallEvent, usePublishEvent } from "@/hooks/useNDK"
+import useNDKStore from "@/hooks/useNDKStore"
 import { useProductsByStall } from "@/hooks/useProducts"
 import { useStallsByUser } from "@/hooks/useStalls"
 import useUserByPubkey from "@/hooks/useUserByPubkey"
@@ -432,7 +433,7 @@ export default function Profile(props: { params: { pubkey: string } }) {
     const user = useUserByPubkey(props.params.pubkey)
     const stalls = useStallsByUser(props.params.pubkey)
 
-    const connectedUser = useUser()
+    const connectedUser = useNDKStore(state => state.user)
 
     const newStallModalRef = useRef<HTMLDialogElement>(null)
     const openNewStall = () => newStallModalRef.current?.showModal()

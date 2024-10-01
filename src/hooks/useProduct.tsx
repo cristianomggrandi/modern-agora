@@ -1,10 +1,11 @@
 import { NDKKind } from "@nostr-dev-kit/ndk"
 import { useEffect, useState } from "react"
-import useNDK, { addContentToProductEvent, NDKParsedProductEvent } from "./useNDK"
+import { addContentToProductEvent, NDKParsedProductEvent } from "./useNDK"
+import useNDKStore from "./useNDKStore"
 import useProducts from "./useProducts"
 
 export default function useProduct(productId: string) {
-    const ndk = useNDK()
+    const ndk = useNDKStore(state => state.ndk)
     const products = useProducts()
 
     const getProductById = async (id: string) => {
