@@ -63,7 +63,7 @@ export function NDKContextProvider({ children }: { children: ReactNode }) {
         storeAPI.current = createNDKStore()
     }
 
-    const store = storeAPI.current ? useStore(storeAPI.current) : undefined
+    const store = useStore(storeAPI.current)
 
     useEffect(() => {
         if (store) {

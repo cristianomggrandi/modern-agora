@@ -65,7 +65,7 @@ export function PMContextProvider(props: { children: ReactNode }) {
         storeAPI.current = createPMStore()
     }
 
-    const store = storeAPI.current ? useStore(storeAPI.current) : undefined
+    const store = useStore(storeAPI.current)
 
     useEffect(() => {
         if (!subscriptionRef.current && ndk && user && store) {
