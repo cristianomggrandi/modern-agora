@@ -1,9 +1,26 @@
 "use client"
 
+import usePMStore from "@/hooks/privateMessagesStore"
 import useNDKStore from "@/hooks/useNDKStore"
 import { faBasketShopping, faUser } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import Link from "next/link"
+
+const NewMessagesIcon = () => {
+    const numberOfNewMessages = usePMStore(state => {
+        let number = 0
+
+        state.messagesByPubkey.forEach(array => (number += array.length))
+
+        return number
+    })
+
+    return (
+        <div className="absolute -bottom-2 -right-2 h-6 w-6 bg-red-600 rounded-full flex items-center justify-center">
+            {numberOfNewMessages}
+        </div>
+    )
+}
 
 export default function HeaderUser() {
     const user = useNDKStore(state => state.user)
@@ -38,9 +55,10 @@ export default function HeaderUser() {
                     htmlFor="profile-menu-button"
                     className="relative block h-10 w-10 text-lg leading-[40px] sm:h-12 sm:w-12 bg-dark sm:text-xl text-secondary rounded-full sm:leading-[48px] text-center"
                 >
-                    <span className="inline-block h-full w-full rounded-full cursor-pointer">
+                    <span className="relative inline-block h-full w-full rounded-full cursor-pointer">
                         {user.profile.image ? <img width={48} height={48} src={user.profile.image} /> : profileName}
                     </span>
+                    <NewMessagesIcon />
                     <input id="profile-menu-button" type="checkbox" className="hidden peer" />
                     <div className="absolute overflow-hidden z-50 max-w-screen w-52 transition-all duration-1000 max-h-0 px-2 peer-checked:max-h-96 top-[105%] rounded-xl rounded-tr-none right-0 bg-dark shadow-md shadow-nostr">
                         {/* TODO: Add bookmarking to products */}

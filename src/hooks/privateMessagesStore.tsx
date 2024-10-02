@@ -13,7 +13,7 @@ type PMStoreType = {
 }
 
 const createPMStore = () =>
-    createStore<PMStoreType>()(set => ({
+    createStore<PMStoreType>()((set, get) => ({
         messagesByPubkey: new Map(),
         handleNewPM: async (e: NDKParsedPMEvent, user: NDKUser) => {
             if (!e.created_at) return
@@ -27,25 +27,23 @@ const createPMStore = () =>
 
             const decryptedContent = await window!.nostr!.nip04!.decrypt(decryptPubkey, e.content)
 
-            set(prev => {
-                // If it's sent by me to myself and already is on the array
-                if (user!.pubkey === messageTargetPubkey && prev.messagesByPubkey.get(decryptPubkey)?.find(m => m.id === e.id)) return {}
+            const prevMessages = get().messagesByPubkey
 
-                e.content = decryptedContent
+            // If it's sent by me to myself and already is on the array
+            if (user!.pubkey === messageTargetPubkey && prevMessages.get(decryptPubkey)?.find(m => m.id === e.id)) return
 
-                const storedMessages = prev.messagesByPubkey.get(decryptPubkey)
-                const messages = storedMessages ?? []
+            e.content = decryptedContent
 
-                const insertIndex = messages.findIndex(m => m.created_at! < e.created_at!)
+            const storedMessages = prevMessages.get(decryptPubkey)
+            const messages = storedMessages ?? []
 
-                // TODO: Order messages here
-                if (insertIndex === -1) messages.push(e)
-                else messages.splice(insertIndex, 0, e)
+            const insertIndex = messages.findIndex(m => m.created_at! < e.created_at!)
 
-                if (!storedMessages) prev.messagesByPubkey.set(decryptPubkey, messages)
+            if (insertIndex === -1) messages.push(e)
+            else messages.splice(insertIndex, 0, e)
 
-                return { messagesByPubkey: new Map(prev.messagesByPubkey) }
-            })
+            if (!storedMessages) prevMessages.set(decryptPubkey, messages)
+            set(prev => ({ messagesByPubkey: new Map(prev.messagesByPubkey) }))
         },
     }))
 
