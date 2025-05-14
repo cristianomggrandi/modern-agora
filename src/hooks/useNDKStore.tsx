@@ -91,7 +91,7 @@ export default function useNDKStore<T>(selector: (store: NDKStoreType) => T): T 
     const NDKStoreContext = useContext(NDKContext)
 
     if (!NDKStoreContext) {
-        throw new Error(`usePMStore must be used within a Context Provider`)
+        throw new Error(`useNDKStore must be used within a Context Provider`)
     }
 
     return useStore(NDKStoreContext, selector)

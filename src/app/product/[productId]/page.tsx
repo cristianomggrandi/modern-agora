@@ -74,12 +74,14 @@ export default function Product(props: { params: { productId: string } }) {
                 <ParsedDescription description={product.content.description} />
                 <ProductTags tags={product.tags} />
                 <div className="product-price-buy text-nowrap flex flex-wrap gap-4">
-                    <Link
-                        href={stall ? `/stall/${stall?.content.id}` : ""}
-                        className="flex-1 text-center px-4 bg-white text-nostr uppercase font-semibold rounded py-1 sm:py-2"
-                    >
-                        Checkout stall
-                    </Link>
+                    {stall ? (
+                        <Link
+                            href={`/stall/${stall.content.id}`}
+                            className="flex-1 text-center px-4 bg-white text-nostr uppercase font-semibold rounded py-1 sm:py-2"
+                        >
+                            Checkout stall
+                        </Link>
+                    ) : null}
                     <span className="flex-1 text-center px-4 bg-white text-nostr uppercase font-semibold rounded py-1 sm:py-2">
                         {product.content.price} {product.content.currency}
                     </span>
