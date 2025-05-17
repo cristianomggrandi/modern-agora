@@ -1,13 +1,16 @@
 "use client"
 
-import useProducts from "@/hooks/useProducts"
+import useNDKStore from "@/hooks/useNDKStore"
 import { filterProductsWithSearch } from "@/utils/functions"
-import { SyntheticEvent, useState } from "react"
+import { SyntheticEvent, useEffect, useState } from "react"
 import ProductCard from "../components/ProductCard"
 import SearchField from "../components/SearchField"
 
 export default function Products() {
-    const products = useProducts()
+    const products = useNDKStore(s => s.products)
+    console.log("products", products)
+    const subscribeToProducts = useNDKStore(s => s.subscribeToProducts)
+    const unSubscribeToProducts = useNDKStore(s => s.unSubscribeToProducts)
     const [numberOfProductsToShow, setNumberOfProductsToShow] = useState(24)
 
     const [search, setSearch] = useState("")
@@ -22,6 +25,10 @@ export default function Products() {
     const onView = (inView: boolean, entry: IntersectionObserverEntry) => {
         if (inView) setNumberOfProductsToShow(p => Math.min(p + 24, products.length))
     }
+
+    useEffect(() => {
+        subscribeToProducts()
+    }, [])
 
     return (
         // TODO: Add filters like in stalls page

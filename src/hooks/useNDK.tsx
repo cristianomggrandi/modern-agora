@@ -23,11 +23,6 @@ export type NDKParsedPMEvent = NDKEvent
 export type MessageByPubkeyMap = Map<string, { messages: NDKParsedPMEvent[] }>
 
 type NDKContextType = {
-    subscribeAndHandle: (
-        filters: NDKFilter | NDKFilter[],
-        handler: (event: NDKEvent) => void,
-        opts?: NDKSubscriptionOptions
-    ) => NDKSubscription | undefined
     bids: AuctionBids
     bidStatus: Map<string, "accepted" | "rejected" | "pending" | "winner">
 
@@ -340,7 +335,6 @@ export function OLD_NDKContextProvider({ children }: { children: any }) {
         <NDKContext.Provider
             value={{
                 // ndk,
-                subscribeAndHandle,
                 bids,
                 bidStatus,
                 // loginWithNIP07,
@@ -379,14 +373,6 @@ export function useNDKContext() {
     if (!context) throw new Error("useNDKContext must be within a Context Provider")
 
     return context
-}
-
-export function useSubscribe() {
-    const context = useContext(NDKContext)
-
-    if (!context) throw new Error("useNDK must be within a Context Provider")
-
-    return context.subscribeAndHandle
 }
 
 export function useBids() {

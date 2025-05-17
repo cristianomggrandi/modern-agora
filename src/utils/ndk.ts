@@ -6,39 +6,39 @@ import { z } from "zod"
 
 export type NDKCheckoutContent =
     | {
-          type: 0
-          id: string
-          name?: string
-          address?: string
-          message?: string
-          contact: {
-              nostr: string
-              phone?: string
-              email?: string
-          }
-          items: {
-              product_id: string
-              quantity: number
-          }[]
-          shipping_id: string
-      }
+        type: 0
+        id: string
+        name?: string
+        address?: string
+        message?: string
+        contact: {
+            nostr: string
+            phone?: string
+            email?: string
+        }
+        items: {
+            product_id: string
+            quantity: number
+        }[]
+        shipping_id: string
+    }
     | {
-          type: 1
-          id: string
+        type: 1
+        id: string
 
-          message?: string
-          payment_options: {
-              type: string
-              link: string
-          }[]
-      }
+        message?: string
+        payment_options: {
+            type: string
+            link: string
+        }[]
+    }
     | {
-          type: 2
-          id: string
-          message: string
-          paid: boolean
-          shipped: boolean
-      }
+        type: 2
+        id: string
+        message: string
+        paid: boolean
+        shipped: boolean
+    }
 
 export type NDKProductContent = {
     id: string
@@ -134,8 +134,23 @@ const auctionContentParser = z.object({
 const stallShippingInfoParser = z.object({
     id: z.string(),
     name: z.string().optional(),
-    cost: z.number().nonnegative(),
-    regions: z.array(z.string()),
+    // Cost: nonnegative number or nonnegative numeric string
+    cost: z.union([
+        z.number().nonnegative(),
+        z.string().refine(val => !isNaN(+val) && +val >= 0, {
+            message: "Cost must be a nonnegative number or numeric string"
+        })
+    ]).transform(val => typeof val === "string" ? Number(val) : val),
+    regions: z.array(z.string()).optional().nullable(),
+    countries: z.array(z.string()).optional().nullable(),
+}).superRefine((data, ctx) => {
+    if (data.cost > 0 && !data.regions && !data.countries && !data.name) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "When cost is greater then 0, either 'name', 'regions' or 'countries' must be provided",
+            path: ['cost'],
+        });
+    }
 })
 
 const stallContentParser = z.object({
@@ -202,6 +217,7 @@ function isStallContentValid(stallContent: NDKStallContent) {
     try {
         return stallContentParser.parse(stallContent)
     } catch (error) {
+        // console.log("Erro stall parser:", stallContent, error)
         return false
     }
 }

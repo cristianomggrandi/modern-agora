@@ -2,7 +2,7 @@
 
 import { NDKEvent, NDKKind, NDKSubscription } from "@nostr-dev-kit/ndk"
 import { createContext, ReactNode, useContext, useEffect, useRef, useState } from "react"
-import { NDKParsedPMEvent, useSubscribe } from "./useNDK"
+import { NDKParsedPMEvent } from "./useNDK"
 import useNDKStore from "./useNDKStore"
 
 type NDKContextType = {
@@ -28,7 +28,7 @@ const PrivateMessageContext = createContext<NDKContextType | null>(null)
 
 export default function PrivateMessageContextProvider(props: { children: ReactNode }) {
     const user = useNDKStore(state => state.user)
-    const subscribeAndHandle = useSubscribe()
+    const subscribeAndHandle = useNDKStore(state => state.subscribeAndHandle)
 
     const fetchedPrivateMessage = useRef<string[]>([])
     const sentPrivateMessageSubscription = useRef<NDKSubscription | undefined>(undefined)

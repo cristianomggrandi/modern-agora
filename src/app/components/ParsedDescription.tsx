@@ -2,6 +2,7 @@ import { parseDescription } from "@/utils/ndk"
 
 export default function ParsedDescription({ description }: { description: string | undefined }) {
     // TODO: Make a better design if there is no description
+    // TODO: Breaking of large words is not working, it shouldn't break them in the middle (http://localhost:3000/product/into-the-valueverse-gcx2ewlig4)
     if (!description) return <div></div>
 
     const parsedDescription = parseDescription(description).split("\n")

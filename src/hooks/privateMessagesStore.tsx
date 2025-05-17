@@ -4,7 +4,7 @@ import { NDKEvent, NDKKind, NDKSubscription, NDKUser } from "@nostr-dev-kit/ndk"
 import { createContext, ReactNode, useContext, useEffect, useRef } from "react"
 import { useStore } from "zustand"
 import { createStore } from "zustand/vanilla"
-import { NDKParsedPMEvent, useSubscribe } from "./useNDK"
+import { NDKParsedPMEvent } from "./useNDK"
 import useNDKStore from "./useNDKStore"
 
 type PMStoreType = {
@@ -54,7 +54,7 @@ const PMContext = createContext<PMStoreAPI | undefined>(undefined)
 export function PMContextProvider(props: { children: ReactNode }) {
     const ndk = useNDKStore(state => state.ndk)
     const user = useNDKStore(state => state.user)
-    const subscribeAndHandle = useSubscribe()
+    const subscribeAndHandle = useNDKStore(state => state.subscribeAndHandle)
     const subscriptionRef = useRef<NDKSubscription>()
 
     const storeAPI = useRef<PMStoreAPI>()
