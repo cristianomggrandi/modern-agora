@@ -1,9 +1,10 @@
 import { useEffect } from "react"
-import { useNDKContext } from "./useNDK"
+import useNDKStore from "./useNDKStore"
 
 export default function useAuctions() {
     // TODO: Create function to get only active auctions
-    const { auctions, subscribeToAuctions } = useNDKContext()
+    const subscribeToAuctions = useNDKStore(s => s.subscribeToAuctions)
+    const auctions = useNDKStore(s => s.auctions)
 
     useEffect(() => {
         subscribeToAuctions()
@@ -13,7 +14,8 @@ export default function useAuctions() {
 }
 
 export function useAuctionsByStall(stallId?: string) {
-    const { auctionsByStall, subscribeToAuctions } = useNDKContext()
+    const subscribeToAuctions = useNDKStore(s => s.subscribeToAuctions)
+    const auctionsByStall = useNDKStore(s => s.auctionsByStall)
 
     useEffect(() => {
         subscribeToAuctions()

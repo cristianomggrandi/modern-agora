@@ -1,7 +1,6 @@
 "use client"
 
 import { NDKParsedProductEvent } from "@/hooks/useNDK"
-import { nFormatter } from "@/utils/functions"
 import Link from "next/link"
 import LastItemWrapper from "../components/LastItemWrapper"
 
@@ -42,7 +41,7 @@ export default function ProductCard({
                 <div className="flex-1 flex flex-col justify-between">
                     <span className="line-clamp-2 text-sm font-semibold">{product.content.name}</span>
                     <span className="text-sm font-bold uppercase neon-text-sm text-right">
-                        {nFormatter(product.content.price, 2)} {product.content.currency}
+                        {product.content.price /* nFormatter(product.content.price, 2) */} {product.content.currency}
                     </span>
                 </div>
             </Link>

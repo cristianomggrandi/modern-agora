@@ -1,6 +1,6 @@
+import { addContentToProductEvent, NDKParsedProductEvent } from "@/utils/ndk"
 import { NDKKind } from "@nostr-dev-kit/ndk"
 import { useEffect, useState } from "react"
-import { addContentToProductEvent, NDKParsedProductEvent } from "./useNDK"
 import useNDKStore from "./useNDKStore"
 import useProducts from "./useProducts"
 

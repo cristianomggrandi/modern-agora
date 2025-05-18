@@ -3,20 +3,14 @@
 import {
     getAuctionEndDate,
     getBidStatus,
-    getParsedAuctionContent,
     getParsedBidContent,
-    getParsedProductContent,
-    getParsedStallContent,
+    NDKParsedAuctionEvent,
+    NDKParsedProductEvent,
+    NDKParsedStallEvent,
 } from "@/utils/ndk"
-import { NDKEvent, NDKFilter, NDKKind, NDKSubscription, NDKSubscriptionOptions, NDKTag } from "@nostr-dev-kit/ndk"
-import { createContext, useContext, useEffect, useRef, useState } from "react"
+import { NDKEvent, NDKKind, NDKTag } from "@nostr-dev-kit/ndk"
+import { createContext, useContext, useRef, useState } from "react"
 import useNDKStore from "./useNDKStore"
-
-export type NDKParsedProductEvent = ReturnType<typeof addContentToProductEvent>
-
-export type NDKParsedAuctionEvent = ReturnType<typeof addContentToAuctionEvent>
-
-export type NDKParsedStallEvent = ReturnType<typeof addContentToStallEvent>
 
 export type NDKParsedPMEvent = NDKEvent
 
@@ -27,17 +21,6 @@ type NDKContextType = {
     bidStatus: Map<string, "accepted" | "rejected" | "pending" | "winner">
 
     publishEvent: ({ content, kind, tags }: { content: string; kind: NDKKind; tags: NDKTag[] }) => void
-
-    stalls: NDKParsedStallEvent[]
-    subscribeToStalls: () => void
-
-    products: NDKParsedProductEvent[]
-    productsByStall: Map<string, NDKParsedProductEvent[]>
-    subscribeToProducts: () => void
-
-    auctions: NDKParsedAuctionEvent[]
-    auctionsByStall: Map<string, NDKParsedAuctionEvent[]>
-    subscribeToAuctions: () => void
 }
 
 // export type NDKParsedConfirmationBidEvent = ReturnType<typeof addContentToConfirmationBidEvent>
@@ -75,14 +58,6 @@ export const orderProducts = (event: NDKParsedProductEvent, prev: NDKParsedProdu
     return [...prev, event]
 }
 
-export function handleStall(event: NDKEvent, stalls: Map<string, NDKParsedStallEvent>) {
-    const parsedStall = addContentToStallEvent(event)
-
-    if (!parsedStall) return
-
-    stalls.set(parsedStall.content.id, parsedStall)
-}
-
 export function handleBid(event: NDKEvent, bids: AuctionBids) {
     const auctionIdTag = event.tags.find(t => t[0] === "e")
 
@@ -113,40 +88,6 @@ export function handleConfirmBid(event: NDKEvent, bidStatus: Map<string, string>
     const status = getBidStatus(event)
 
     bidStatus.set(bidId, status)
-}
-
-export function addContentToProductEvent(event: NDKEvent) {
-    const content = getParsedProductContent(event)
-
-    return { ...event, content }
-}
-
-export function addContentToAuctionEvent(event: NDKEvent) {
-    const content = getParsedAuctionContent(event)
-
-    return { ...event, content }
-}
-
-export function addContentToStallEvent(event: NDKEvent) {
-    const content = getParsedStallContent(event)
-
-    return { ...event, content }
-}
-
-const addProductToStall = (productEvent: NDKParsedProductEvent, productsByStall: Map<string, NDKParsedProductEvent[]>) => {
-    const stallProducts = productsByStall.get(productEvent.content.stall_id) ?? []
-
-    stallProducts.push(productEvent)
-
-    productsByStall.set(productEvent.content.stall_id, stallProducts)
-}
-
-const addAuctionToStall = (auctionEvent: NDKParsedAuctionEvent, auctionsByStall: Map<string, NDKParsedAuctionEvent[]>) => {
-    const stallAuctions = auctionsByStall.get(auctionEvent.content.stall_id) ?? []
-
-    stallAuctions.push(auctionEvent)
-
-    auctionsByStall.set(auctionEvent.content.stall_id, stallAuctions)
 }
 
 const addMessageToPubkey = (privateMessageEvent: NDKParsedPMEvent, messagesByPubkey: MessageByPubkeyMap, pubkey: string) => {
@@ -195,75 +136,6 @@ export function OLD_NDKContextProvider({ children }: { children: any }) {
     const [bids] = useState<AuctionBids>(new Map())
     const [bidStatus] = useState(new Map<string, "accepted" | "rejected" | "pending" | "winner">())
 
-    const subscribeAndHandle = (
-        filters: NDKFilter | NDKFilter[],
-        handler?: (event: NDKEvent) => void,
-        opts: NDKSubscriptionOptions = { closeOnEose: true }
-    ) => {
-        if (!ndk) return
-
-        const sub = ndk.subscribe(filters, opts)
-
-        if (handler)
-            sub.on("event", (e: NDKEvent) => {
-                handler(e)
-            })
-
-        sub.on("eose", () => {})
-
-        return sub
-    }
-
-    const [isSubscribedToStalls, setIsSubscribedToStalls] = useState(false)
-    const fetchedStalls = useRef<NDKParsedStallEvent[]>([])
-    const stallsSubscription = useRef<NDKSubscription | undefined>(undefined)
-
-    const subscribeToStalls = () => setIsSubscribedToStalls(true)
-
-    const handleNewStall = (stallEvent: NDKEvent) => {
-        try {
-            const parsedStall = addContentToStallEvent(stallEvent)
-
-            if (!parsedStall) return
-
-            fetchedStalls.current.push(parsedStall)
-        } catch (error) {}
-    }
-
-    const [isSubscribedToProducts, setIsSubscribedToProducts] = useState(false)
-    const fetchedProducts = useRef<NDKParsedProductEvent[]>(products ?? [])
-    const productsSubscription = useRef<NDKSubscription | undefined>(undefined)
-
-    const subscribeToProducts = () => setIsSubscribedToProducts(true)
-
-    const handleNewProduct = (productEvent: NDKEvent) => {
-        try {
-            const parsedProduct = addContentToProductEvent(productEvent)
-
-            if (!parsedProduct) return
-
-            fetchedProducts.current.push(parsedProduct)
-            addProductToStall(parsedProduct, productsByStall.current)
-        } catch (error) {}
-    }
-
-    const [isSubscribedToAuctions, setIsSubscribedToAuctions] = useState(false)
-    const fetchedAuctions = useRef<NDKParsedAuctionEvent[]>([])
-    const auctionsSubscription = useRef<NDKSubscription | undefined>(undefined)
-
-    const subscribeToAuctions = () => setIsSubscribedToAuctions(true)
-
-    const handleNewAuction = (auctionEvent: NDKEvent) => {
-        try {
-            const parsedAuction = addContentToAuctionEvent(auctionEvent)
-
-            if (!parsedAuction) return
-
-            fetchedAuctions.current = orderAuctions(parsedAuction, fetchedAuctions.current)
-            addAuctionToStall(parsedAuction, auctionsByStall.current)
-        } catch (error) {}
-    }
-
     const publishEvent = ({ content, kind, tags }: { content: string; kind: NDKKind; tags: NDKTag[] }) => {
         const ndkEvent = new NDKEvent(ndk)
 
@@ -273,106 +145,18 @@ export function OLD_NDKContextProvider({ children }: { children: any }) {
         ndkEvent.publish()
     }
 
-    // TODO: Maybe center all intervals in only one
-    useEffect(() => {
-        let stallsInterval: NodeJS.Timeout | undefined
-        let productsInterval: NodeJS.Timeout | undefined
-        let auctionsInterval: NodeJS.Timeout | undefined
-
-        if (ndk) {
-            if (isSubscribedToStalls && !stallsSubscription.current) {
-                stallsSubscription.current = subscribeAndHandle({ kinds: [NDKKind.MarketStall] }, handleNewStall, { closeOnEose: true })
-
-                stallsInterval = setInterval(() => {
-                    setStalls(prev => {
-                        if (fetchedStalls.current.length && fetchedStalls.current.length === prev.length) clearInterval(stallsInterval)
-
-                        return fetchedStalls.current
-                    })
-                }, 1000)
-            }
-
-            if (isSubscribedToProducts && !productsSubscription.current) {
-                productsSubscription.current = subscribeAndHandle({ kinds: [NDKKind.MarketProduct] }, handleNewProduct, {
-                    closeOnEose: true,
-                })
-
-                productsInterval = setInterval(() => {
-                    setProducts(prev => {
-                        if (fetchedProducts.current === prev) clearInterval(productsInterval)
-
-                        return fetchedProducts.current
-                    })
-                }, 1000)
-            }
-
-            if (isSubscribedToAuctions && !auctionsSubscription.current) {
-                auctionsSubscription.current = subscribeAndHandle({ kinds: [30020 as NDKKind] }, handleNewAuction)
-
-                auctionsInterval = setInterval(() => {
-                    setAuctions(prev => {
-                        if (fetchedAuctions.current === prev) clearInterval(auctionsInterval)
-
-                        return fetchedAuctions.current
-                    })
-                }, 1000)
-            }
-        }
-
-        return () => {
-            stallsSubscription.current?.stop()
-            clearInterval(stallsInterval)
-
-            productsSubscription.current?.stop()
-            clearInterval(productsInterval)
-
-            auctionsSubscription.current?.stop()
-            clearInterval(auctionsInterval)
-        }
-    }, [user, isSubscribedToStalls, isSubscribedToProducts, isSubscribedToAuctions])
-
     return (
         <NDKContext.Provider
             value={{
-                // ndk,
                 bids,
                 bidStatus,
-                // loginWithNIP07,
-                // user,
 
                 publishEvent,
-
-                stalls,
-                subscribeToStalls,
-
-                products,
-                productsByStall: productsByStall.current,
-                subscribeToProducts,
-
-                auctions,
-                auctionsByStall: auctionsByStall.current,
-                subscribeToAuctions,
             }}
         >
             {children}
         </NDKContext.Provider>
     )
-}
-
-// export default function useNDK() {
-//     const context = useContext(NDKContext)
-
-//     if (!context) throw new Error("useNDK must be within a Context Provider")
-
-//     return context.ndk
-// }
-
-export function useNDKContext() {
-    const context = useContext(NDKContext)
-
-    if (!context) throw new Error("useNDKContext must be within a Context Provider")
-
-    return context
 }
 
 export function useBids() {
@@ -394,22 +178,6 @@ export function useBidStatus() {
 
     return context.bidStatus
 }
-
-// export function useLogin() {
-//     const context = useContext(NDKContext)
-
-//     if (!context) throw new Error("useLogin must be within a Context Provider")
-
-//     return context.loginWithNIP07
-// }
-
-// export function useUser() {
-//     const context = useContext(NDKContext)
-
-//     if (!context) throw new Error("useUser must be within a Context Provider")
-
-//     return context.user
-// }
 
 export function usePublishEvent() {
     const context = useContext(NDKContext)

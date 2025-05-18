@@ -1,7 +1,7 @@
+import { addContentToAuctionEvent, NDKParsedAuctionEvent } from "@/utils/ndk"
 import { NDKKind } from "@nostr-dev-kit/ndk"
 import { useEffect, useState } from "react"
 import useAuctions from "./useAuctions"
-import { addContentToAuctionEvent, NDKParsedAuctionEvent } from "./useNDK"
 import useNDKStore from "./useNDKStore"
 
 export default function useAuction(auctionId: string) {

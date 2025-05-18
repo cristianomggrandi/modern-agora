@@ -1,12 +1,17 @@
 "use client"
 
-import useAuctions from "@/hooks/useAuctions"
-import { useState } from "react"
+import useNDKStore from "@/hooks/useNDKStore"
+import { useEffect, useState } from "react"
 import AuctionCard from "../components/AuctionCard"
 
 export default function Auctions() {
-    const auctions = useAuctions()
+    const auctions = useNDKStore(s => s.auctions)
+    const subscribeToAuctions = useNDKStore(s => s.subscribeToAuctions)
     const [numberOfAuctionsToShow, setNumberOfAuctionsToShow] = useState(24)
+
+    useEffect(() => {
+        subscribeToAuctions()
+    }, [])
 
     const onView = (inView: boolean, entry: IntersectionObserverEntry) => {
         if (inView) setNumberOfAuctionsToShow(p => Math.min(p + 24, auctions.length))

@@ -1,7 +1,9 @@
 "use client"
 
 import useCurrencyOptions from "@/hooks/useCurrencyOptions"
-import { NDKParsedAuctionEvent, NDKParsedProductEvent, NDKParsedStallEvent, useNDKContext } from "@/hooks/useNDK"
+// import { NDKParsedAuctionEvent, NDKParsedProductEvent, NDKParsedStallEvent } from "@/hooks/useNDK"
+import useNDKStore from "@/hooks/useNDKStore"
+import { NDKParsedAuctionEvent, NDKParsedProductEvent, NDKParsedStallEvent } from "@/utils/ndk"
 import { faAngleRight } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import Link from "next/link"
@@ -39,7 +41,7 @@ const StallCard = ({
                         {auctionQuantity ? <span>{auctionQuantity} Auctions</span> : null}
                         {productQuantity ? <span>{productQuantity} Products</span> : null}
                     </div>
-                    <div className="flex flex-col items-end justify-end gap-1">
+                    {/* <div className="flex flex-col items-end justify-end gap-1">
                         {stall.content.shipping
                             .map(s => [s.regions, s.cost] as [string[], number])
                             .map(([regions, cost]: [string[], number]) =>
@@ -49,7 +51,7 @@ const StallCard = ({
                                     </span>
                                 ))
                             )}
-                    </div>
+                    </div> */}
                 </div>
             </Link>
         </LastItemWrapper>
@@ -84,8 +86,14 @@ const filterStalls = (
 }
 
 export default function Stalls() {
-    const { stalls, productsByStall, auctionsByStall, subscribeToStalls, subscribeToProducts, subscribeToAuctions } = useNDKContext()
     const [numberOfStallsToShow, setNumberOfStallsToShow] = useState(24)
+
+    const stalls = useNDKStore(s => s.stalls)
+    const productsByStall = useNDKStore(s => s.productsByStall)
+    const auctionsByStall = useNDKStore(s => s.auctionsByStall)
+    const subscribeToProducts = useNDKStore(s => s.subscribeToProducts)
+    const subscribeToStalls = useNDKStore(s => s.subscribeToStalls)
+    const subscribeToAuctions = useNDKStore(s => s.subscribeToAuctions)
 
     const currencyOptions = useCurrencyOptions()
     const [currencyFilter, setCurrencyFilter] = useState<string>()

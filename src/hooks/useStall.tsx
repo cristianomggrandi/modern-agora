@@ -1,6 +1,6 @@
+import { addContentToStallEvent, NDKParsedStallEvent } from "@/utils/ndk"
 import { NDKKind } from "@nostr-dev-kit/ndk"
 import { useEffect, useState } from "react"
-import { addContentToStallEvent, NDKParsedStallEvent } from "./useNDK"
 import useNDKStore from "./useNDKStore"
 import useStalls from "./useStalls"
 

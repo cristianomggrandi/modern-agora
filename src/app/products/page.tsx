@@ -8,9 +8,7 @@ import SearchField from "../components/SearchField"
 
 export default function Products() {
     const products = useNDKStore(s => s.products)
-    console.log("products", products)
     const subscribeToProducts = useNDKStore(s => s.subscribeToProducts)
-    const unSubscribeToProducts = useNDKStore(s => s.unSubscribeToProducts)
     const [numberOfProductsToShow, setNumberOfProductsToShow] = useState(24)
 
     const [search, setSearch] = useState("")

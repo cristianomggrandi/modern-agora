@@ -1,4 +1,3 @@
-import { NDKParsedAuctionEvent } from "@/hooks/useNDK"
 import { NDKEvent } from "@nostr-dev-kit/ndk"
 import { z } from "zod"
 
@@ -52,6 +51,12 @@ export type NDKProductContent = {
     specs?: [string, string][]
     shipping: { id: string; cost: number }[]
 }
+
+export type NDKParsedProductEvent = ReturnType<typeof addContentToProductEvent>
+
+export type NDKParsedAuctionEvent = ReturnType<typeof addContentToAuctionEvent>
+
+export type NDKParsedStallEvent = ReturnType<typeof addContentToStallEvent>
 
 const productContentParser = z.object({
     id: z.string(),
@@ -151,6 +156,18 @@ const stallShippingInfoParser = z.object({
             path: ['cost'],
         });
     }
+}).transform((data) => {
+    // Merge countries into regions
+    const mergedRegions = [
+        ...(data.regions ?? []),
+        ...(data.countries ?? [])
+    ];
+
+    return {
+        ...data,
+        regions: mergedRegions.length > 0 ? mergedRegions : undefined,
+        countries: undefined // optionally remove countries from the output
+    };
 })
 
 const stallContentParser = z.object({
@@ -185,6 +202,12 @@ export function getParsedProductContent(event: NDKEvent): NDKProductContent {
     return content
 }
 
+export function addContentToProductEvent(event: NDKEvent) {
+    const content = getParsedProductContent(event)
+
+    return { ...event, content }
+}
+
 export function getParsedAuctionContent(event: NDKEvent): NDKAuctionContent {
     if (!event.content) throw new Error("Invalid event content")
 
@@ -193,6 +216,12 @@ export function getParsedAuctionContent(event: NDKEvent): NDKAuctionContent {
     if (!isAuctionContentValid(content)) throw new Error("Invalid event content")
 
     return content
+}
+
+export function addContentToAuctionEvent(event: NDKEvent) {
+    const content = getParsedAuctionContent(event)
+
+    return { ...event, content }
 }
 
 export function getAuctionEndDate(auction: NDKParsedAuctionEvent) {
@@ -232,6 +261,12 @@ export function getParsedStallContent(event: NDKEvent): NDKStallContent {
     return content
 }
 
+export function addContentToStallEvent(event: NDKEvent) {
+    const content = getParsedStallContent(event)
+
+    return { ...event, content }
+}
+
 function isConfirmationBidContentValid(confirmationBidContent: NDKConfirmationBidContent) {
     try {
         return confirmationBidContentParser.parse(confirmationBidContent)
@@ -265,3 +300,4 @@ export function parseDescription(description: string) {
 }
 
 export { auctionContentParser, confirmationBidContentParser, productContentParser, stallContentParser, stallShippingInfoParser }
+

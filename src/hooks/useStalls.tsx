@@ -1,8 +1,9 @@
 import { useEffect } from "react"
-import { useNDKContext } from "./useNDK"
+import useNDKStore from "./useNDKStore"
 
 export default function useStalls() {
-    const { stalls, subscribeToStalls } = useNDKContext()
+    const subscribeToStalls = useNDKStore(s => s.subscribeToStalls)
+    const stalls = useNDKStore(s => s.stalls)
 
     useEffect(() => {
         subscribeToStalls()
@@ -12,7 +13,8 @@ export default function useStalls() {
 }
 
 export function useStallsByUser(pubkey?: string) {
-    const { stalls, subscribeToStalls } = useNDKContext()
+    const subscribeToStalls = useNDKStore(s => s.subscribeToStalls)
+    const stalls = useNDKStore(s => s.stalls)
 
     useEffect(() => {
         subscribeToStalls()
