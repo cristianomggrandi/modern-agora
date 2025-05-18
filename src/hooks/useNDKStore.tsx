@@ -6,10 +6,20 @@ import {
     addContentToStallEvent,
     getAuctionEndDate,
     NDKParsedAuctionEvent,
+    NDKParsedPMEvent,
     NDKParsedProductEvent,
     NDKParsedStallEvent,
 } from "@/utils/ndk"
-import NDK, { NDKEvent, NDKFilter, NDKKind, NDKNip07Signer, NDKSubscription, NDKSubscriptionOptions, NDKUser } from "@nostr-dev-kit/ndk"
+import NDK, {
+    NDKEvent,
+    NDKFilter,
+    NDKKind,
+    NDKNip07Signer,
+    NDKSubscription,
+    NDKSubscriptionOptions,
+    NDKTag,
+    NDKUser,
+} from "@nostr-dev-kit/ndk"
 import { create } from "zustand"
 
 const defaultRelays = [
@@ -34,6 +44,7 @@ type NDKStoreType = {
     user?: NDKUser
     loginWithNIP07: () => void
 
+    publishEvent: ({ content, kind, tags }: { content: string; kind: NDKKind; tags: NDKTag[] }) => void
     subscribeAndHandle: (
         filters: NDKFilter | NDKFilter[],
         handler: (event: NDKEvent) => void,
@@ -59,6 +70,14 @@ type NDKStoreType = {
     subscriptionToStalls: NDKSubscription | undefined
     subscribeToStalls: () => void
     unSubscribeToStalls: () => void
+
+    messages: NDKParsedPMEvent[]
+    messagesTemp: NDKParsedPMEvent[]
+    messagesByPubkey: Map<string, NDKParsedPMEvent[]>
+    subscriptionToMessages: NDKSubscription | undefined
+    handleNewPM: (e: NDKParsedPMEvent, user: NDKUser) => Promise<void>
+    subscribeToMessages: () => void
+    unSubscribeToMessages: () => void
 }
 
 const ndk = window.nostr
@@ -125,6 +144,15 @@ const useNDKStore = create<NDKStoreType>()((set, get) => ({
                 set({ user })
             })
         })
+    },
+
+    publishEvent: ({ content, kind, tags }: { content: string; kind: NDKKind; tags: NDKTag[] }) => {
+        const ndkEvent = new NDKEvent(get().ndk)
+
+        ndkEvent.content = content
+        ndkEvent.kind = kind
+        ndkEvent.tags = tags
+        ndkEvent.publish()
     },
 
     subscribeAndHandle: (filters, handler?, opts?) => {
@@ -251,6 +279,73 @@ const useNDKStore = create<NDKStoreType>()((set, get) => ({
         }, 1000)
     },
     unSubscribeToStalls: () => get().subscriptionToStalls?.stop(),
+
+    messages: [],
+    messagesTemp: [],
+    messagesByPubkey: new Map(),
+    subscriptionToMessages: undefined,
+    handleNewPM: async (e: NDKParsedPMEvent, user: NDKUser) => {
+        if (!e.created_at) return
+
+        // TODO: Parse sales and other events
+        // const parsedPM = addContentToPMEvent(auctionEvent)
+        const isSentByUser = e.pubkey === user!.pubkey
+        // if (!messageTargetPubkey) {
+        console.log("error:", e)
+        // return
+        // }
+        const messageTargetPubkey = e.tags.find(([k, v]) => k === "p" && v && v !== "")![1]
+
+        const decryptPubkey = isSentByUser ? messageTargetPubkey : e.pubkey
+
+        const decryptedContent = await window!.nostr!.nip04!.decrypt(decryptPubkey, e.content)
+
+        const prevMessages = get().messagesByPubkey
+
+        // If it's sent by me to myself and already is on the array
+        if (user!.pubkey === messageTargetPubkey && prevMessages.get(decryptPubkey)?.find(m => m.id === e.id)) return
+
+        e.content = decryptedContent
+
+        const storedMessages = prevMessages.get(decryptPubkey)
+        const messages = storedMessages ?? []
+
+        const insertIndex = messages.findIndex(m => m.created_at! < e.created_at!)
+
+        if (insertIndex === -1) messages.push(e)
+        else messages.splice(insertIndex, 0, e)
+
+        if (!storedMessages) prevMessages.set(decryptPubkey, messages)
+        set(prev => ({ messagesByPubkey: new Map(prev.messagesByPubkey) }))
+    },
+    subscribeToMessages: () => {
+        const user = get().user
+
+        if (get().subscriptionToMessages || !user) return
+
+        set({
+            subscriptionToMessages: get().subscribeAndHandle(
+                [
+                    { kinds: [NDKKind.EncryptedDirectMessage], authors: [user.pubkey] },
+                    { kinds: [NDKKind.EncryptedDirectMessage], "#p": [user.pubkey] },
+                ],
+                e => get().handleNewPM(e, user),
+                { closeOnEose: false }
+            ),
+        })
+
+        const startTime = Date.now()
+
+        const messagesInterval = setInterval(() => {
+            set({ messages: get().messagesTemp })
+
+            if (Date.now() > startTime + 15000 && get().messages === get().messagesTemp) {
+                clearInterval(messagesInterval)
+                get().unSubscribeToMessages()
+            }
+        }, 1000)
+    },
+    unSubscribeToMessages: () => get().subscriptionToMessages?.stop(),
 }))
 
 export default useNDKStore

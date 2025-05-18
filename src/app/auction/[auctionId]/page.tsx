@@ -4,7 +4,6 @@ import ParsedDescription from "@/app/components/ParsedDescription"
 import ProductImages from "@/app/components/ProductImages"
 import ProductTags from "@/app/components/ProductTags"
 import useAuction from "@/hooks/useAuction"
-import { useBidStatus, useBids } from "@/hooks/useNDK"
 import useStall from "@/hooks/useStall"
 import { NDKAuctionContent } from "@/utils/ndk"
 import NDK, { NDKEvent, NDKKind } from "@nostr-dev-kit/ndk"
@@ -63,29 +62,32 @@ const AuctionCountdown = ({ auction }: { auction: NDKAuctionContent }) => {
 
 export default function Auction(props: { params: { auctionId: string } }) {
     const auction = useAuction(props.params.auctionId)
-    const bids = useBids()
-    const bidStatus = useBidStatus()
+    // TODO:
+    const bids = new Map() // useBids()
+    // TODO:
+    const bidStatus = new Map() // useBidStatus()
 
     const stall = useStall(auction?.content.stall_id)
 
     if (!auction) return <div>Loading...</div>
 
-    const auctionBids = bids.get(String(auction.id))
-    const highestBid = auctionBids?.reduce(
-        (max, curr) => {
-            if (auction.pubkey !== curr.pubkey) return max // Confirmation came from someone else
-            if (bidStatus.get(max.id) === "winner") return max // Already found the winner
-            if (bidStatus.get(curr.id) === "winner") return curr // Is the winner
-            if (bidStatus.get(curr.id) === "pending" || bidStatus.get(curr.id) === "rejected") return max
+    // TODO:
+    // const auctionBids = bids.get(String(auction.id))
+    // const highestBid = auctionBids?.reduce(
+    //     (max, curr) => {
+    //         if (auction.pubkey !== curr.pubkey) return max // Confirmation came from someone else
+    //         if (bidStatus.get(max.id) === "winner") return max // Already found the winner
+    //         if (bidStatus.get(curr.id) === "winner") return curr // Is the winner
+    //         if (bidStatus.get(curr.id) === "pending" || bidStatus.get(curr.id) === "rejected") return max
 
-            if (!max) return curr
+    //         if (!max) return curr
 
-            if (curr.amount > max.amount) return curr
+    //         if (curr.amount > max.amount) return curr
 
-            return max
-        },
-        { id: "0", amount: 0, pubkey: "default" }
-    )
+    //         return max
+    //     },
+    //     { id: "0", amount: 0, pubkey: "default" }
+    // )
 
     return (
         <main className="flex flex-col justify-center p-6 sm:p-[4%] gap-8 min-h-full">

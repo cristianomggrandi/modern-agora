@@ -1,8 +1,8 @@
 "use client"
 
-import { NDKParsedProductEvent } from "@/hooks/useNDK"
 import Link from "next/link"
 import LastItemWrapper from "../components/LastItemWrapper"
+import { NDKParsedProductEvent } from "@/utils/ndk"
 
 export default function ProductCard({
     product,

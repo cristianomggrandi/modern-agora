@@ -3,13 +3,12 @@
 import AuctionCard from "@/app/components/AuctionCard"
 import ProductCard from "@/app/components/ProductCard"
 import { useAuctionsByStall } from "@/hooks/useAuctions"
-import { NDKParsedStallEvent, usePublishEvent } from "@/hooks/useNDK"
 import useNDKStore from "@/hooks/useNDKStore"
 import { useProductsByStall } from "@/hooks/useProducts"
 import { useStallsByUser } from "@/hooks/useStalls"
 import useUserByPubkey from "@/hooks/useUserByPubkey"
 import { generateRandomId } from "@/utils/functions"
-import { productContentParser, stallContentParser, stallShippingInfoParser } from "@/utils/ndk"
+import { NDKParsedStallEvent, productContentParser, stallContentParser, stallShippingInfoParser } from "@/utils/ndk"
 import { faCopy, faPlus, faXmark } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { NDKKind } from "@nostr-dev-kit/ndk"
@@ -44,7 +43,7 @@ function UserStall({ stall }: { stall: NDKParsedStallEvent }) {
 
 // TODO: Add tags
 function NewStallDialog(props: { modalRef: RefObject<HTMLDialogElement> }) {
-    const publishEvent = usePublishEvent()
+    const publishEvent = useNDKStore(s => s.publishEvent)
     const closeModal = () => props.modalRef.current?.close()
 
     const [newStallShippingInfo, setNewStallShippingInfo] = useState<ShippingInfoType[]>([])
@@ -260,7 +259,7 @@ function NewProductDialog(props: { modalRef: RefObject<HTMLDialogElement>; stall
     const [selectedStall, setSelectedStall] = useState<NDKParsedStallEvent>()
     const [shippingOptions, setShippingOptions] = useState<{ id: string; cost: number }[]>()
 
-    const publishEvent = usePublishEvent()
+    const publishEvent = useNDKStore(s => s.publishEvent)
 
     useEffect(() => {
         setShippingOptions(

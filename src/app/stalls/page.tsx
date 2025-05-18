@@ -1,7 +1,6 @@
 "use client"
 
 import useCurrencyOptions from "@/hooks/useCurrencyOptions"
-// import { NDKParsedAuctionEvent, NDKParsedProductEvent, NDKParsedStallEvent } from "@/hooks/useNDK"
 import useNDKStore from "@/hooks/useNDKStore"
 import { NDKParsedAuctionEvent, NDKParsedProductEvent, NDKParsedStallEvent } from "@/utils/ndk"
 import { faAngleRight } from "@fortawesome/free-solid-svg-icons"

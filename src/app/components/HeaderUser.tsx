@@ -1,13 +1,19 @@
 "use client"
 
-import usePMStore from "@/hooks/privateMessagesStore"
 import useNDKStore from "@/hooks/useNDKStore"
 import { faBasketShopping, faUser } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import Link from "next/link"
+import { useEffect } from "react"
 
 const NewMessagesIcon = () => {
-    const numberOfNewMessages = usePMStore(state => {
+    const subscribeToMessages = useNDKStore(satisfies => satisfies.subscribeToMessages)
+
+    useEffect(() => {
+        subscribeToMessages()
+    }, [])
+
+    const numberOfNewMessages = useNDKStore(state => {
         let number = 0
 
         state.messagesByPubkey.forEach(array => (number += array.length))

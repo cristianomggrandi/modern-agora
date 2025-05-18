@@ -3,6 +3,8 @@ import { z } from "zod"
 
 // TODO: Remove "return {} as SomeType"
 
+export type NDKParsedPMEvent = NDKEvent
+
 export type NDKCheckoutContent =
     | {
         type: 0
@@ -111,6 +113,8 @@ export type NDKStallContent = {
 }
 
 export type NDKBidContent = number
+export type AuctionBids = Map<string, { id: string; amount: number; pubkey: string }[]>
+export type BidStatus = Map<string, "accepted" | "rejected" | "pending" | "winner">
 
 export type NDKConfirmationBidContent = {
     status: string
@@ -298,6 +302,55 @@ export function getBidStatus(event: NDKEvent) {
 export function parseDescription(description: string) {
     return description.replaceAll("&amp;", "&")
 }
+
+
+export function orderProducts(event: NDKParsedProductEvent, prev: NDKParsedProductEvent[]) {
+    if (!event.content || !event.created_at || Object.keys(event.content).length === 0) return prev
+
+    for (let i = 0; i < prev.length; i++) {
+        const e = prev[i]
+
+        if (event.created_at > e.created_at!) {
+            prev.splice(i, 0, event)
+            return [...prev]
+        }
+    }
+
+    return [...prev, event]
+}
+
+export function handleBid(event: NDKEvent, bids: AuctionBids) {
+    const auctionIdTag = event.tags.find(t => t[0] === "e")
+
+    if (!auctionIdTag) return
+
+    const auctionId = auctionIdTag[1] as string
+
+    const bidAmount = getParsedBidContent(event)
+    const prevBids = bids.get(auctionId)
+
+    bids.set(
+        auctionId,
+        [...(prevBids ?? []), { id: event.id, amount: bidAmount, pubkey: event.pubkey }].sort((a, b) => b.amount - a.amount)
+    )
+}
+
+export function handleConfirmBid(event: NDKEvent, bidStatus: Map<string, string>) {
+    // TODO: Check if it is the right pubkey
+
+    const bidIdTag = event.tags[0]
+    const auctionIdTag = event.tags[1]
+
+    if (!bidIdTag || !auctionIdTag) return
+
+    const bidId = bidIdTag[1] as string
+    // const auctionId = auctionIdTag[1] as string
+
+    const status = getBidStatus(event)
+
+    bidStatus.set(bidId, status)
+}
+
 
 export { auctionContentParser, confirmationBidContentParser, productContentParser, stallContentParser, stallShippingInfoParser }
 

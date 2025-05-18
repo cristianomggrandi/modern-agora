@@ -1,8 +1,8 @@
 "use client"
 
+import { NDKParsedPMEvent } from "@/utils/ndk"
 import { NDKEvent, NDKKind, NDKSubscription } from "@nostr-dev-kit/ndk"
 import { createContext, ReactNode, useContext, useEffect, useRef, useState } from "react"
-import { NDKParsedPMEvent } from "./useNDK"
 import useNDKStore from "./useNDKStore"
 
 type NDKContextType = {

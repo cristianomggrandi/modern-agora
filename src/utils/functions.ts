@@ -1,4 +1,4 @@
-import { NDKParsedAuctionEvent, NDKParsedProductEvent } from "@/hooks/useNDK"
+import { NDKParsedAuctionEvent, NDKParsedProductEvent } from "./ndk"
 
 export function nFormatter(num: number, digits: number) {
     const lookup = [

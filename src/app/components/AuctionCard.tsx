@@ -1,4 +1,4 @@
-import { NDKParsedAuctionEvent, useBids, useBidStatus } from "@/hooks/useNDK"
+import { NDKParsedAuctionEvent } from "@/utils/ndk"
 import Link from "next/link"
 import LastItemWrapper from "../components/LastItemWrapper"
 import AuctionCountdown from "./AuctionCountdown"
@@ -12,14 +12,16 @@ export default function AuctionCard({
     isLastAuction: boolean
     onView?: (inView: boolean, entry: IntersectionObserverEntry) => void
 }) {
-    const bids = useBids()
-    const bidStatus = useBidStatus()
+    // TODO:
+    // const bids = new Map() // useBids()
+    // const bidStatus = useBidStatus()
 
     if (!auction.content) return null
 
-    const highestBid = bids
-        ?.get(auction.id)
-        ?.find(bid => auction.pubkey === bid.pubkey && (bidStatus.get(bid.id) === "accepted" || bidStatus.get(bid.id) === "winner"))
+    // TODO:
+    // const highestBid = bids
+    //     ?.get(auction.id)
+    //     ?.find(bid => auction.pubkey === bid.pubkey && (bidStatus.get(bid.id) === "accepted" || bidStatus.get(bid.id) === "winner"))
 
     // TODO: Avaliate: When on mobile, make img the background so the text is over it
 
