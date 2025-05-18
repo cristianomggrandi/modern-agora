@@ -25,10 +25,7 @@ export default function useProduct(productId: string) {
     const [product, setProduct] = useState<NDKParsedProductEvent>()
 
     useEffect(() => {
-        if (ndk)
-            getProductById(productId).then(product => {
-                if (product) setProduct(product)
-            })
+        if (ndk) getProductById(decodeURI(productId)).then(setProduct)
     }, [ndk])
 
     return product

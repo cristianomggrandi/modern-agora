@@ -25,10 +25,7 @@ export default function useAuction(auctionId: string) {
     const [auction, setAuction] = useState<NDKParsedAuctionEvent>()
 
     useEffect(() => {
-        if (ndk)
-            getAuctionById(auctionId).then(auction => {
-                if (auction) setAuction(auction)
-            })
+        if (ndk) getAuctionById(decodeURI(auctionId)).then(setAuction)
     }, [ndk])
 
     return auction

@@ -1,7 +1,7 @@
 import { useEffect } from "react"
 import useNDKStore from "./useNDKStore"
 
-export default function useAuctions() {
+export default function     useAuctions() {
     // TODO: Create function to get only active auctions
     const subscribeToAuctions = useNDKStore(s => s.subscribeToAuctions)
     const auctions = useNDKStore(s => s.auctions)

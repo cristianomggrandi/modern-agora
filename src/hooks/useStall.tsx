@@ -25,10 +25,7 @@ export default function useStall(stallId?: string) {
     }
 
     useEffect(() => {
-        if (ndk && stallId)
-            getStallById(stallId).then(stall => {
-                if (stall) setStall(stall)
-            })
+        if (ndk && stallId) getStallById(decodeURI(stallId)).then(setStall)
     }, [ndk, stallId])
 
     return stall
