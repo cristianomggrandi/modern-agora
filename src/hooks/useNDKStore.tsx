@@ -39,7 +39,7 @@ const defaultRelays = [
 ]
 
 type NDKStoreType = {
-    ndk: NDK
+    ndk?: NDK
     setNDK: (ndk: NDK) => void
     user?: NDKUser
     loginWithNIP07: () => void
@@ -80,16 +80,18 @@ type NDKStoreType = {
     unSubscribeToMessages: () => void
 }
 
-const ndk = window.nostr
-    ? new NDK({
-          explicitRelayUrls: defaultRelays,
-          signer: new NDKNip07Signer(),
-      })
-    : new NDK({
-          explicitRelayUrls: defaultRelays,
-      })
+const ndk = window
+    ? window.nostr
+        ? new NDK({
+              explicitRelayUrls: defaultRelays,
+              signer: new NDKNip07Signer(),
+          })
+        : new NDK({
+              explicitRelayUrls: defaultRelays,
+          })
+    : undefined
 
-ndk.connect().catch(error => console.error("ndk error connecting", error))
+ndk?.connect().catch(error => console.error("ndk error connecting", error))
 
 const orderAuctions = (event: NDKParsedAuctionEvent, prev: NDKParsedAuctionEvent[]) => {
     if (!event.content) return prev
