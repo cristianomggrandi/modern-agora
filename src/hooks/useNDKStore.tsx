@@ -10,7 +10,16 @@ import {
     NDKParsedProductEvent,
     NDKParsedStallEvent,
 } from "@/utils/ndk"
-import NDK, { NDKEvent, NDKFilter, NDKKind, NDKSubscription, NDKSubscriptionOptions, NDKTag, NDKUser } from "@nostr-dev-kit/ndk"
+import NDK, {
+    NDKEvent,
+    NDKFilter,
+    NDKKind,
+    NDKNip07Signer,
+    NDKSubscription,
+    NDKSubscriptionOptions,
+    NDKTag,
+    NDKUser,
+} from "@nostr-dev-kit/ndk"
 import { create } from "zustand"
 
 const defaultRelays = [
@@ -71,19 +80,18 @@ type NDKStoreType = {
     unSubscribeToMessages: () => void
 }
 
-// const ndk = window
-//     ? window.nostr
-//         ? new NDK({
-//               explicitRelayUrls: defaultRelays,
-//               signer: new NDKNip07Signer(),
-//           })
-//         : new NDK({
-//               explicitRelayUrls: defaultRelays,
-//           })
-//     : undefined
-const ndk = new NDK({
-    explicitRelayUrls: defaultRelays,
-})
+let ndk: NDK | undefined = undefined
+
+try {
+    ndk = window.nostr
+        ? new NDK({
+              explicitRelayUrls: defaultRelays,
+              signer: new NDKNip07Signer(),
+          })
+        : new NDK({
+              explicitRelayUrls: defaultRelays,
+          })
+} catch (error) {}
 
 ndk?.connect().catch(error => console.error("ndk error connecting", error))
 
