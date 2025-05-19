@@ -52,21 +52,18 @@ type NDKStoreType = {
     ) => NDKSubscription | undefined
 
     products: NDKParsedProductEvent[]
-    productsTemp: NDKParsedProductEvent[]
     productsByStall: Map<string, NDKParsedProductEvent[]>
     subscriptionToProducts: NDKSubscription | undefined
     subscribeToProducts: () => void
     unSubscribeToProducts: () => void
 
     auctions: NDKParsedAuctionEvent[]
-    auctionsTemp: NDKParsedAuctionEvent[]
     auctionsByStall: Map<string, NDKParsedAuctionEvent[]>
     subscriptionToAuctions: NDKSubscription | undefined
     subscribeToAuctions: () => void
     unSubscribeToAuctions: () => void
 
     stalls: NDKParsedStallEvent[]
-    stallsTemp: NDKParsedStallEvent[]
     subscriptionToStalls: NDKSubscription | undefined
     subscribeToStalls: () => void
     unSubscribeToStalls: () => void
@@ -96,7 +93,7 @@ try {
 ndk?.connect().catch(error => console.error("ndk error connecting", error))
 
 const orderAuctions = (event: NDKParsedAuctionEvent, prev: NDKParsedAuctionEvent[]) => {
-    if (!event.content) return prev
+    if (!event.content) return
 
     const newFinishDate = getAuctionEndDate(event)
 
@@ -108,11 +105,11 @@ const orderAuctions = (event: NDKParsedAuctionEvent, prev: NDKParsedAuctionEvent
 
         if (newFinishDate > currFinishDate) {
             prev.splice(i, 0, event)
-            return [...prev]
+            return
         }
     }
 
-    return [...prev, event]
+    prev.push(event)
 }
 
 const addProductToStall = (productEvent: NDKParsedProductEvent, productsByStall: Map<string, NDKParsedProductEvent[]>) => {
@@ -174,11 +171,12 @@ const useNDKStore = create<NDKStoreType>()((set, get) => ({
     },
 
     products: [],
-    productsTemp: [],
     productsByStall: new Map(),
     subscriptionToProducts: undefined,
     subscribeToProducts: () => {
         if (get().subscriptionToProducts) return
+
+        const products: NDKParsedProductEvent[] = []
 
         set({
             subscriptionToProducts: get().subscribeAndHandle(
@@ -189,7 +187,7 @@ const useNDKStore = create<NDKStoreType>()((set, get) => ({
 
                         if (!parsedProduct) return
 
-                        set(prev => ({ productsTemp: [...prev.productsTemp, parsedProduct] }))
+                        products.push(parsedProduct)
 
                         addProductToStall(parsedProduct, get().productsByStall)
                     } catch (error) {}
@@ -201,9 +199,9 @@ const useNDKStore = create<NDKStoreType>()((set, get) => ({
         const startTime = Date.now()
 
         const productsInterval = setInterval(() => {
-            set({ products: get().productsTemp })
+            set({ products })
 
-            if (Date.now() > startTime + 15000 && get().products === get().productsTemp) {
+            if (Date.now() > startTime + 15000 && get().products === products) {
                 clearInterval(productsInterval)
                 get().unSubscribeToProducts()
             }
@@ -212,11 +210,12 @@ const useNDKStore = create<NDKStoreType>()((set, get) => ({
     unSubscribeToProducts: () => get().subscriptionToProducts?.stop(),
 
     auctions: [],
-    auctionsTemp: [],
     auctionsByStall: new Map(),
     subscriptionToAuctions: undefined,
     subscribeToAuctions: () => {
         if (get().subscriptionToAuctions) return
+
+        const auctions: NDKParsedAuctionEvent[] = []
 
         set({
             subscriptionToAuctions: get().subscribeAndHandle(
@@ -227,7 +226,7 @@ const useNDKStore = create<NDKStoreType>()((set, get) => ({
 
                         if (!parsedAuction) return
 
-                        set(prev => ({ auctionsTemp: orderAuctions(parsedAuction, prev.auctionsTemp) }))
+                        orderAuctions(parsedAuction, auctions)
 
                         addAuctionToStall(parsedAuction, get().auctionsByStall)
                     } catch (error) {}
@@ -239,9 +238,9 @@ const useNDKStore = create<NDKStoreType>()((set, get) => ({
         const startTime = Date.now()
 
         const auctionsInterval = setInterval(() => {
-            set({ auctions: get().auctionsTemp })
+            set({ auctions })
 
-            if (Date.now() > startTime + 15000 && get().auctions === get().auctionsTemp) {
+            if (Date.now() > startTime + 15000 && get().auctions === auctions) {
                 clearInterval(auctionsInterval)
                 get().unSubscribeToAuctions()
             }
@@ -250,10 +249,11 @@ const useNDKStore = create<NDKStoreType>()((set, get) => ({
     unSubscribeToAuctions: () => get().subscriptionToAuctions?.stop(),
 
     stalls: [],
-    stallsTemp: [],
     subscriptionToStalls: undefined,
     subscribeToStalls: () => {
         if (get().subscriptionToStalls) return
+
+        const stalls: NDKParsedStallEvent[] = []
 
         set({
             subscriptionToStalls: get().subscribeAndHandle(
@@ -264,7 +264,7 @@ const useNDKStore = create<NDKStoreType>()((set, get) => ({
 
                         if (!parsedStall) return
 
-                        set(prev => ({ stallsTemp: [...prev.stallsTemp, parsedStall] }))
+                        stalls.push(parsedStall)
                     } catch (error) {}
                 },
                 { closeOnEose: true }
@@ -274,9 +274,9 @@ const useNDKStore = create<NDKStoreType>()((set, get) => ({
         const startTime = Date.now()
 
         const stallsInterval = setInterval(() => {
-            set({ stalls: get().stallsTemp })
+            set({ stalls })
 
-            if (Date.now() > startTime + 15000 && get().stalls === get().stallsTemp) {
+            if (Date.now() > startTime + 15000 && get().stalls === stalls) {
                 clearInterval(stallsInterval)
                 get().unSubscribeToStalls()
             }
@@ -294,10 +294,7 @@ const useNDKStore = create<NDKStoreType>()((set, get) => ({
         // TODO: Parse sales and other events
         // const parsedPM = addContentToPMEvent(auctionEvent)
         const isSentByUser = e.pubkey === user!.pubkey
-        // if (!messageTargetPubkey) {
-        console.log("error:", e)
-        // return
-        // }
+
         const messageTargetPubkey = e.tags.find(([k, v]) => k === "p" && v && v !== "")![1]
 
         const decryptPubkey = isSentByUser ? messageTargetPubkey : e.pubkey
