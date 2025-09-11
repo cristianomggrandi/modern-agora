@@ -199,6 +199,7 @@ const useNDKStore = create<NDKStoreType>()((set, get) => ({
         const startTime = Date.now()
 
         const productsInterval = setInterval(() => {
+            // TODO: Maybe only set when the user tries to scroll
             set({ products })
 
             if (Date.now() > startTime + 15000 && get().products === products) {

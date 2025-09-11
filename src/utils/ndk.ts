@@ -3,6 +3,8 @@ import { z } from "zod"
 
 // TODO: Remove "return {} as SomeType"
 
+// TODO: Study caching and databases with nostr
+
 export type NDKParsedPMEvent = NDKEvent
 
 export type NDKCheckoutContent =
